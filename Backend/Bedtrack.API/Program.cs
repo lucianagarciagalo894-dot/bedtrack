@@ -1,4 +1,6 @@
+using BedTrack.Application.Interfaces;
 using BedTrack.Infrastructure.Data;
+using BedTrack.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -6,6 +8,9 @@ var builder = WebApplication.CreateBuilder(args);
 // 1. Conexión segura a la Base de Datos (SQL Server)
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+// Inyección de Dependencias (Patrón Repository)
+builder.Services.AddScoped<ICamaRepository, CamaRepository>();
 
 // 2. Soporte para Controladores (Tu API RESTful)
 builder.Services.AddControllers();
