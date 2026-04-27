@@ -1,6 +1,6 @@
-@Bedtrack.API_HostAddress = http://localhost:5188
+@BedTrack.API_HostAddress = http://localhost:5065
 
-GET {{Bedtrack.API_HostAddress}}/weatherforecast/
+GET {{BedTrack.API_HostAddress}}/weatherforecast/
 Accept: application/json
 
 ###
