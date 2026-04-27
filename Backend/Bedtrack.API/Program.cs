@@ -12,10 +12,21 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 // Inyección de Dependencias (Patrón Repository)
 builder.Services.AddScoped<ICamaRepository, CamaRepository>();
 
-// 2. Soporte para Controladores (Tu API RESTful)
+// 2. Configuración de CORS (Permite que React se conecte)
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("PermitirReact", policy =>
+    {
+        policy.WithOrigins("http://localhost:5173") // El puerto por defecto de Vite
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
+
+// 3. Soporte para Controladores
 builder.Services.AddControllers();
 
-// 3. Configuración de Swagger (Documentación de la API)
+// 4. Configuración de Swagger
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -30,7 +41,10 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-// 4. Activar las rutas de tus controladores
+// 5. Encender CORS ANTES de los controladores
+app.UseCors("PermitirReact");
+
+// Activar las rutas
 app.MapControllers();
 
 app.Run();

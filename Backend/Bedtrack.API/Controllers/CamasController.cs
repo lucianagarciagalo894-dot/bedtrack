@@ -32,6 +32,60 @@ public class CamasController : ControllerBase
         
         return CreatedAtAction(nameof(GetCamas), new { id = nuevaCama.Id }, nuevaCama);
     }
+
+    [HttpPut("{id}/ocupar")]
+    public async Task<IActionResult> OcuparCama(int id)
+    {
+        var cama = await _repository.ObtenerPorIdAsync(id);
+        if (cama == null) return NotFound("La cama no existe.");
+
+        try
+        {
+            cama.Ocupar(); // Llamamos a tu regla de negocio
+            await _repository.ActualizarAsync(cama);
+            return Ok(cama);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ex.Message); // Devuelve el error exacto si no estaba "Disponible"
+        }
+    }
+
+    [HttpPut("{id}/limpieza")]
+    public async Task<IActionResult> EnviarALimpieza(int id)
+    {
+        var cama = await _repository.ObtenerPorIdAsync(id);
+        if (cama == null) return NotFound("La cama no existe.");
+
+        try
+        {
+            cama.LiberarParaLimpieza();
+            await _repository.ActualizarAsync(cama);
+            return Ok(cama);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [HttpPut("{id}/habilitar")]
+    public async Task<IActionResult> HabilitarCama(int id)
+    {
+        var cama = await _repository.ObtenerPorIdAsync(id);
+        if (cama == null) return NotFound("La cama no existe.");
+
+        try
+        {
+            cama.Habilitar();
+            await _repository.ActualizarAsync(cama);
+            return Ok(cama);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
 }
 
 // Un DTO (Data Transfer Object) simple para recibir los datos desde React
