@@ -12,12 +12,12 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 // Inyección de Dependencias (Patrón Repository)
 builder.Services.AddScoped<ICamaRepository, CamaRepository>();
 
-// 2. Configuración de CORS (Permite que React se conecte)
+// 2. Configuración de CORS (Permite que React se conecte de forma segura)
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("PermitirReact", policy =>
     {
-        policy.WithOrigins("http://localhost:5173") // El puerto por defecto de Vite
+        policy.WithOrigins("https://localhost:5173") // Origen del Frontend
               .AllowAnyHeader()
               .AllowAnyMethod();
     });
@@ -26,25 +26,33 @@ builder.Services.AddCors(options =>
 // 3. Soporte para Controladores
 builder.Services.AddControllers();
 
-// 4. Configuración de Swagger
+// 4. Configuración de Swagger (Documentación de la API)
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-// Configuración del entorno
+// --- CONFIGURACIÓN DE SEGURIDAD ---
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+else
+{
+    // HSTS: Le dice a los navegadores que solo usen HTTPS 
+    app.UseHsts();
+}
 
+// REDIRECCIÓN OBLIGATORIA: Si alguien intenta entrar por HTTP, se le cierra la puerta 
+// y se le redirige automáticamente al túnel cifrado HTTPS.
 app.UseHttpsRedirection();
 
 // 5. Encender CORS ANTES de los controladores
 app.UseCors("PermitirReact");
 
-// Activar las rutas
+// 6. Activar las rutas de los Controladores
 app.MapControllers();
 
 app.Run();

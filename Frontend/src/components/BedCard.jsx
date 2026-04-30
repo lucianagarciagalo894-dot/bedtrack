@@ -3,20 +3,20 @@ import { FaBed, FaCheckCircle, FaTimesCircle, FaExclamationTriangle } from "reac
 export default function BedCard({ bed, onChangeStatus, role }) {
 
   const getStatusClass = () => {
-    if (bed.status === "disponible") return "available";
-    if (bed.status === "ocupada") return "occupied";
+    if (bed.estado === "Disponible") return "available";
+    if (bed.estado === "Ocupada") return "occupied";
     return "unavailable";
   };
 
   const getBorderColor = () => {
-    if (bed.status === "disponible") return "#22C55E";
-    if (bed.status === "ocupada") return "#EF4444";
+    if (bed.estado === "Disponible") return "#22C55E";
+    if (bed.estado === "Ocupada") return "#EF4444";
     return "#F59E0B";
   };
 
   const getIcon = () => {
-    if (bed.status === "disponible") return <FaCheckCircle />;
-    if (bed.status === "ocupada") return <FaTimesCircle />;
+    if (bed.estado === "Disponible") return <FaCheckCircle />;
+    if (bed.estado === "Ocupada") return <FaTimesCircle />;
     return <FaExclamationTriangle />;
   };
 
@@ -27,10 +27,11 @@ export default function BedCard({ bed, onChangeStatus, role }) {
     >
       <FaBed size={30} />
 
-      <h2>Cama {bed.id}</h2>
+      {/* Usamos el Número de cama real que viene de la base de datos */}
+      <h2>{bed.numero}</h2>
 
       <p className={getStatusClass()}>
-        {getIcon()} {bed.status}
+        {getIcon()} {bed.estado}
       </p>
 
       {/* SOLO ENFERMERÍA */}
@@ -38,23 +39,23 @@ export default function BedCard({ bed, onChangeStatus, role }) {
         <div>
           <button
             className="btn-green"
-            onClick={() => onChangeStatus(bed.id, "disponible")}
+            onClick={() => onChangeStatus(bed.id, "habilitar")}
           >
             Disponible
           </button>
 
           <button
             className="btn-red"
-            onClick={() => onChangeStatus(bed.id, "ocupada")}
+            onClick={() => onChangeStatus(bed.id, "ocupar")}
           >
             Ocupada
           </button>
 
           <button
             className="btn-yellow"
-            onClick={() => onChangeStatus(bed.id, "no disponible")}
+            onClick={() => onChangeStatus(bed.id, "limpieza")}
           >
-            No disponible
+            A Limpieza
           </button>
         </div>
       )}

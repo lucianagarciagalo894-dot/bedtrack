@@ -16,7 +16,7 @@ public class Cama
         Estado = "Disponible"; 
     }
 
-    // Métodos de comportamiento (Aplicando POO pura)
+    
     public void Ocupar()
     {
         if (Estado != "Disponible")

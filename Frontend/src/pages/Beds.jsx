@@ -1,83 +1,76 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import BedCard from "../components/BedCard";
 
 export default function Beds({ role }) {
+  const [sector, setSector] = useState("Terapia Intensiva");
+  const [beds, setBeds] = useState([]);
+  
+  // 1. Creamos el "disparador"
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
-  const [floor, setFloor] = useState("Piso 1");
+  // ⚠️ REEMPLAZA EL 7XXX POR EL PUERTO REAL DE TU BACKEND
+  const API_URL = "http://localhost:5065/api/Camas";
 
-  const generateBeds = () => {
-    const floors = ["Piso 1", "Piso 2", "Piso 3", "Piso 4", "Piso 5"];
-    let allBeds = [];
-    let id = 1;
-
-    floors.forEach((floor) => {
-      for (let i = 1; i <= 9; i++) {
-        allBeds.push({
-          id: id++,
-          status:
-            i % 3 === 0
-              ? "no disponible"
-              : i % 2 === 0
-              ? "ocupada"
-              : "disponible",
-          floor: floor
-        });
+  // 2. Todo el proceso de carga vive DENTRO del useEffect
+  useEffect(() => {
+    const cargarCamas = async () => {
+      try {
+        const response = await fetch(API_URL);
+        if (response.ok) {
+          const data = await response.json();
+          setBeds(data);
+        }
+      } catch (error) {
+        console.error("Error al conectar con la API de .NET:", error);
       }
-    });
+    };
 
-    return allBeds;
+    cargarCamas();
+  }, [refreshTrigger]); // Le decimos a React: "Vuelve a ejecutar esto cada vez que refreshTrigger cambie"
+
+  const changeStatus = async (id, action) => {
+    try {
+      const response = await fetch(`${API_URL}/${id}/${action}`, {
+        method: "PUT",
+      });
+
+      if (response.ok) {
+        // 3. Si se guardó en SQL Server, "apretamos el botón" para que React recargue la pantalla
+        setRefreshTrigger(prev => prev + 1); 
+      } else {
+        const errorMsg = await response.text();
+        alert("Regla de negocio: " + errorMsg); 
+      }
+    } catch (error) {
+      console.error("Error al cambiar estado:", error);
+    }
   };
 
-  const [beds, setBeds] = useState(generateBeds());
+  const filteredBeds = beds.filter((bed) => bed.sector === sector);
 
-  const changeStatus = (id, newStatus) => {
-    const updatedBeds = beds.map((bed) =>
-      bed.id === id ? { ...bed, status: newStatus } : bed
-    );
-    setBeds(updatedBeds);
-  };
-
-  const filteredBeds = beds.filter(
-    (bed) => bed.floor === floor
-  );
-
-  const availableBeds = filteredBeds.filter(
-    (bed) => bed.status === "disponible"
-  ).length;
-
-  const occupiedBeds = filteredBeds.filter(
-    (bed) => bed.status === "ocupada"
-  ).length;
-
-  const unavailableBeds = filteredBeds.filter(
-    (bed) => bed.status === "no disponible"
-  ).length;
+  const availableBeds = filteredBeds.filter((bed) => bed.estado === "Disponible").length;
+  const occupiedBeds = filteredBeds.filter((bed) => bed.estado === "Ocupada").length;
+  const unavailableBeds = filteredBeds.filter((bed) => bed.estado === "En Limpieza").length;
 
   return (
     <div className="container">
-
-      {/* TÍTULO */}
       <h2 style={{ textAlign: "center" }}>
-        {floor} - Estado de Camas
+        {sector} - Estado de Camas
       </h2>
 
-      {/* SELECTOR */}
       <div style={{ textAlign: "center", marginTop: "20px" }}>
         <select
-          value={floor}
-          onChange={(e) => setFloor(e.target.value)}
+          value={sector}
+          onChange={(e) => setSector(e.target.value)}
         >
-          <option>Piso 1</option>
-          <option>Piso 2</option>
-          <option>Piso 3</option>
-          <option>Piso 4</option>
-          <option>Piso 5</option>
+          <option value="Terapia Intensiva">Terapia Intensiva</option>
+          <option value="Guardia">Guardia</option>
+          <option value="Piso 1">Piso 1</option>
+          <option value="Piso 2">Piso 2</option>
         </select>
       </div>
 
-      {/* DASHBOARD */}
       <div className="summary-cards">
-
         <div className="summary-card green">
           <h3>{availableBeds}</h3>
           <p>Disponibles</p>
@@ -90,23 +83,16 @@ export default function Beds({ role }) {
 
         <div className="summary-card yellow">
           <h3>{unavailableBeds}</h3>
-          <p>No disponibles</p>
+          <p>En Limpieza</p>
         </div>
-
       </div>
 
-      {/* ALERTA */}
-      {availableBeds < 3 && (
-        <p style={{
-          color: "red",
-          textAlign: "center",
-          fontWeight: "bold"
-        }}>
-          ⚠ Pocas camas disponibles
+      {availableBeds < 3 && filteredBeds.length > 0 && (
+        <p style={{ color: "red", textAlign: "center", fontWeight: "bold" }}>
+          ⚠ Pocas camas disponibles en este sector
         </p>
       )}
 
-      {/* GRID */}
       <div
         style={{
           display: "grid",
@@ -115,16 +101,21 @@ export default function Beds({ role }) {
           marginTop: "20px"
         }}
       >
-        {filteredBeds.map((bed) => (
-          <BedCard
-            key={bed.id}
-            bed={bed}
-            onChangeStatus={changeStatus}
-            role={role}
-          />
-        ))}
+        {filteredBeds.length === 0 ? (
+          <p style={{ textAlign: "center", width: "100%" }}>
+            No hay camas registradas en este sector. Créalas desde Swagger.
+          </p>
+        ) : (
+          filteredBeds.map((bed) => (
+            <BedCard
+              key={bed.id}
+              bed={bed}
+              onChangeStatus={changeStatus}
+              role={role} 
+            />
+          ))
+        )}
       </div>
-
     </div>
   );
 }
