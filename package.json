@@ -1,0 +1,35 @@
+{
+  "name": "bedtrack-frontend",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "lint": "eslint .",
+    "preview": "vite preview",
+    "test": "set NODE_TLS_REJECT_UNAUTHORIZED=0 && vitest",
+    "test:ui": "set NODE_TLS_REJECT_UNAUTHORIZED=0 && vitest --ui"
+  },
+  "dependencies": {
+    "@vitejs/plugin-basic-ssl": "^2.3.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-icons": "^5.6.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^14.3.1",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.1",
+    "eslint": "^10.2.1",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "eslint-plugin-react-refresh": "^0.5.2",
+    "globals": "^17.5.0",
+    "jsdom": "^24.1.3",
+    "vite": "^8.0.10",
+    "vitest": "^4.1.5"
+  }
+}
