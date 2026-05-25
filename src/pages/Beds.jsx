@@ -1,121 +1,130 @@
 import { useState } from "react";
 import BedCard from "../components/BedCard";
+import {
+  FaCheckCircle,
+  FaTimesCircle,
+  FaExclamationTriangle,
+  FaExclamationCircle,
+} from "react-icons/fa";
+
+const FLOORS = ["Piso 1", "Piso 2", "Piso 3", "Piso 4", "Piso 5"];
+
+function generateBeds() {
+  let allBeds = [];
+  let id = 1;
+  FLOORS.forEach((floor) => {
+    for (let i = 1; i <= 9; i++) {
+      allBeds.push({
+        id: id++,
+        floor,
+        status:
+          i % 3 === 0 ? "no disponible" : i % 2 === 0 ? "ocupada" : "disponible",
+      });
+    }
+  });
+  return allBeds;
+}
 
 export default function Beds({ role }) {
-
   const [floor, setFloor] = useState("Piso 1");
+  const [beds, setBeds] = useState(generateBeds);
 
-  const generateBeds = () => {
-    const floors = ["Piso 1", "Piso 2", "Piso 3", "Piso 4", "Piso 5"];
-    let allBeds = [];
-    let id = 1;
-
-    floors.forEach((floor) => {
-      for (let i = 1; i <= 9; i++) {
-        allBeds.push({
-          id: id++,
-          status:
-            i % 3 === 0
-              ? "no disponible"
-              : i % 2 === 0
-              ? "ocupada"
-              : "disponible",
-          floor: floor
-        });
-      }
-    });
-
-    return allBeds;
-  };
-
-  const [beds, setBeds] = useState(generateBeds());
-
-  const changeStatus = (id, newStatus) => {
-    const updatedBeds = beds.map((bed) =>
-      bed.id === id ? { ...bed, status: newStatus } : bed
+  const changeStatus = (id, newStatus) =>
+    setBeds((prev) =>
+      prev.map((bed) => (bed.id === id ? { ...bed, status: newStatus } : bed))
     );
-    setBeds(updatedBeds);
-  };
 
-  const filteredBeds = beds.filter(
-    (bed) => bed.floor === floor
-  );
-
-  const availableBeds = filteredBeds.filter(
-    (bed) => bed.status === "disponible"
-  ).length;
-
-  const occupiedBeds = filteredBeds.filter(
-    (bed) => bed.status === "ocupada"
-  ).length;
-
-  const unavailableBeds = filteredBeds.filter(
-    (bed) => bed.status === "no disponible"
-  ).length;
+  const filtered = beds.filter((bed) => bed.floor === floor);
+  const available = filtered.filter((b) => b.status === "disponible").length;
+  const occupied = filtered.filter((b) => b.status === "ocupada").length;
+  const unavailable = filtered.filter((b) => b.status === "no disponible").length;
 
   return (
-    <div className="container">
-
-      {/* TÍTULO */}
-      <h2 style={{ textAlign: "center" }}>
-        {floor} - Estado de Camas
-      </h2>
-
-      {/* SELECTOR */}
-      <div style={{ textAlign: "center", marginTop: "20px" }}>
-        <select
-          value={floor}
-          onChange={(e) => setFloor(e.target.value)}
-        >
-          <option>Piso 1</option>
-          <option>Piso 2</option>
-          <option>Piso 3</option>
-          <option>Piso 4</option>
-          <option>Piso 5</option>
-        </select>
-      </div>
-
-      {/* DASHBOARD */}
-      <div className="summary-cards">
-
-        <div className="summary-card green">
-          <h3>{availableBeds}</h3>
-          <p>Disponibles</p>
-        </div>
-
-        <div className="summary-card red">
-          <h3>{occupiedBeds}</h3>
-          <p>Ocupadas</p>
-        </div>
-
-        <div className="summary-card yellow">
-          <h3>{unavailableBeds}</h3>
-          <p>No disponibles</p>
-        </div>
-
-      </div>
-
-      {/* ALERTA */}
-      {availableBeds < 3 && (
-        <p style={{
-          color: "red",
-          textAlign: "center",
-          fontWeight: "bold"
-        }}>
-          ⚠ Pocas camas disponibles
+    <div className="page-wrapper">
+      {/* Page heading */}
+      <header className="page-header">
+        <h1 className="page-title">Estado de Camas</h1>
+        <p className="page-subtitle">
+          Monitoreo en tiempo real &middot; {floor}
         </p>
+      </header>
+
+      {/* Floor selector */}
+      <div className="floor-selector-wrap">
+        <div
+          className="floor-selector"
+          role="group"
+          aria-label="Selector de piso"
+        >
+          {FLOORS.map((f) => (
+            <button
+              key={f}
+              className={`floor-btn${floor === f ? " active" : ""}`}
+              onClick={() => setFloor(f)}
+              aria-pressed={floor === f}
+            >
+              {f}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Stats */}
+      <div className="stats-grid" role="region" aria-label="Resumen de camas">
+        <div className="stat-card">
+          <div className="stat-icon success" aria-hidden="true">
+            <FaCheckCircle />
+          </div>
+          <div className="stat-info">
+            <div className="stat-value">{available}</div>
+            <div className="stat-label">Disponibles</div>
+          </div>
+        </div>
+
+        <div className="stat-card">
+          <div className="stat-icon error" aria-hidden="true">
+            <FaTimesCircle />
+          </div>
+          <div className="stat-info">
+            <div className="stat-value">{occupied}</div>
+            <div className="stat-label">Ocupadas</div>
+          </div>
+        </div>
+
+        <div className="stat-card">
+          <div className="stat-icon warning" aria-hidden="true">
+            <FaExclamationTriangle />
+          </div>
+          <div className="stat-info">
+            <div className="stat-value">{unavailable}</div>
+            <div className="stat-label">No disponibles</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Low availability alert */}
+      {available < 3 && (
+        <div className="alert alert-warning" role="alert" aria-live="polite">
+          <span className="alert-icon" aria-hidden="true">
+            <FaExclamationCircle />
+          </span>
+          <span>
+            Atención: quedan{" "}
+            <strong>{available}</strong> cama{available !== 1 ? "s" : ""}{" "}
+            disponible{available !== 1 ? "s" : ""} en{" "}
+            <strong>{floor}</strong>. Se recomienda tomar medidas.
+          </span>
+        </div>
       )}
 
-      {/* GRID */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
-          gap: "20px",
-          marginTop: "20px"
-        }}
-      >
-        {filteredBeds.map((bed) => (
+      {/* Bed grid */}
+      <div className="beds-header">
+        <h2 className="beds-section-title">Camas del {floor}</h2>
+        <span className="beds-count-badge">{filtered.length} camas</span>
+      </div>
+
+      <div className="beds-grid" role="list" aria-label={`Camas del ${floor}`}>
+        {filtered.map((bed) => (
           <BedCard
             key={bed.id}
             bed={bed}
@@ -124,7 +133,6 @@ export default function Beds({ role }) {
           />
         ))}
       </div>
-
     </div>
   );
 }

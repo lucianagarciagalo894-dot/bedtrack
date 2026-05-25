@@ -1,63 +1,81 @@
-import { FaBed, FaCheckCircle, FaTimesCircle, FaExclamationTriangle } from "react-icons/fa";
+import {
+  FaBed,
+  FaCheckCircle,
+  FaTimesCircle,
+  FaExclamationTriangle,
+} from "react-icons/fa";
+
+const STATUS_CONFIG = {
+  disponible: {
+    cardClass: "status-available",
+    badgeClass: "badge-available",
+    btnClass: "btn-avail",
+    label: "Disponible",
+    Icon: FaCheckCircle,
+  },
+  ocupada: {
+    cardClass: "status-occupied",
+    badgeClass: "badge-occupied",
+    btnClass: "btn-occup",
+    label: "Ocupada",
+    Icon: FaTimesCircle,
+  },
+  "no disponible": {
+    cardClass: "status-unavailable",
+    badgeClass: "badge-unavailable",
+    btnClass: "btn-unavail",
+    label: "No disponible",
+    Icon: FaExclamationTriangle,
+  },
+};
 
 export default function BedCard({ bed, onChangeStatus, role }) {
+  const cfg = STATUS_CONFIG[bed.status] ?? STATUS_CONFIG["no disponible"];
+  const { Icon } = cfg;
 
-  const getStatusClass = () => {
-    if (bed.status === "disponible") return "available";
-    if (bed.status === "ocupada") return "occupied";
-    return "unavailable";
-  };
-
-  const getBorderColor = () => {
-    if (bed.status === "disponible") return "#22C55E";
-    if (bed.status === "ocupada") return "#EF4444";
-    return "#F59E0B";
-  };
-
-  const getIcon = () => {
-    if (bed.status === "disponible") return <FaCheckCircle />;
-    if (bed.status === "ocupada") return <FaTimesCircle />;
-    return <FaExclamationTriangle />;
-  };
+  const actions = [
+    { key: "disponible", label: "Disponible", cls: "btn-avail" },
+    { key: "ocupada", label: "Ocupada", cls: "btn-occup" },
+    { key: "no disponible", label: "No disp.", cls: "btn-unavail" },
+  ];
 
   return (
-    <div
-      className="bed-card"
-      style={{ borderLeft: `8px solid ${getBorderColor()}` }}
+    <article
+      className={`bed-card ${cfg.cardClass}`}
+      aria-label={`Cama ${bed.id}, ${bed.floor}, estado: ${cfg.label}`}
     >
-      <FaBed size={30} />
+      {/* Header row */}
+      <div className="bed-card-header">
+        <div className="bed-icon-wrap" aria-hidden="true">
+          <FaBed />
+        </div>
+        <span className={`bed-status-badge ${cfg.badgeClass}`}>
+          <Icon size={9} aria-hidden="true" />
+          {cfg.label}
+        </span>
+      </div>
 
-      <h2>Cama {bed.id}</h2>
+      {/* Info */}
+      <div className="bed-name">Cama {bed.id}</div>
+      <div className="bed-floor-label">{bed.floor}</div>
 
-      <p className={getStatusClass()}>
-        {getIcon()} {bed.status}
-      </p>
-
-      {/* SOLO ENFERMERÍA */}
+      {/* Actions – enfermería only */}
       {role === "enfermeria" && (
-        <div>
-          <button
-            className="btn-green"
-            onClick={() => onChangeStatus(bed.id, "disponible")}
-          >
-            Disponible
-          </button>
-
-          <button
-            className="btn-red"
-            onClick={() => onChangeStatus(bed.id, "ocupada")}
-          >
-            Ocupada
-          </button>
-
-          <button
-            className="btn-yellow"
-            onClick={() => onChangeStatus(bed.id, "no disponible")}
-          >
-            No disponible
-          </button>
+        <div className="bed-actions" role="group" aria-label="Cambiar estado">
+          {actions.map(({ key, label, cls }) => (
+            <button
+              key={key}
+              className={`bed-action-btn ${cls}`}
+              onClick={() => onChangeStatus(bed.id, key)}
+              disabled={bed.status === key}
+              aria-pressed={bed.status === key}
+              aria-label={`Marcar como ${label}`}
+            >
+              {label}
+            </button>
+          ))}
         </div>
       )}
-    </div>
+    </article>
   );
 }
