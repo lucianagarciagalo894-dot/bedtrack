@@ -1,3 +1,4 @@
+import { NavLink } from "react-router-dom";
 import {
   FaHospitalAlt,
   FaChartLine,
@@ -6,6 +7,9 @@ import {
   FaSignOutAlt,
   FaTimes,
 } from "react-icons/fa";
+
+const navLinkClass = ({ isActive }) =>
+  `nav-item${isActive ? " active" : ""}`;
 
 export default function Sidebar({ role, onLogout, isOpen, onClose }) {
   const isEnfermeria = role === "enfermeria";
@@ -39,19 +43,19 @@ export default function Sidebar({ role, onLogout, isOpen, onClose }) {
       <nav className="sidebar-nav" aria-label="Menú principal">
         <span className="nav-section-label">Principal</span>
 
-        <button className="nav-item active" aria-current="page">
+        <NavLink to="/dashboard" className={navLinkClass} onClick={onClose}>
           <span className="nav-item-icon" aria-hidden="true">
             <FaChartLine />
           </span>
           Dashboard
-        </button>
+        </NavLink>
 
-        <button className="nav-item">
+        <NavLink to="/camas" className={navLinkClass} onClick={onClose}>
           <span className="nav-item-icon" aria-hidden="true">
             <FaBed />
           </span>
           Camas
-        </button>
+        </NavLink>
 
         <span className="nav-section-label" style={{ marginTop: "8px" }}>
           Sistema

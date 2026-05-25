@@ -1,23 +1,34 @@
 import { useState } from "react";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { FaBars } from "react-icons/fa";
-import Beds from "./pages/Beds";
 import Sidebar from "./components/Sidebar";
 import Login from "./pages/Login";
+import Dashboard from "./pages/Dashboard";
+import Beds from "./pages/Beds";
+import { generateBeds } from "./data/beds";
 
 function App() {
   const [role, setRole] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [beds, setBeds] = useState(generateBeds);
+
+  const changeStatus = (id, newStatus) =>
+    setBeds((prev) =>
+      prev.map((bed) => (bed.id === id ? { ...bed, status: newStatus } : bed))
+    );
+
+  const closeSidebar = () => setSidebarOpen(false);
 
   if (!role) {
     return <Login onLogin={setRole} />;
   }
 
   return (
-    <>
+    <BrowserRouter>
       {/* Mobile overlay */}
       <div
         className={`sidebar-overlay${sidebarOpen ? " open" : ""}`}
-        onClick={() => setSidebarOpen(false)}
+        onClick={closeSidebar}
         aria-hidden="true"
       />
 
@@ -25,7 +36,7 @@ function App() {
         role={role}
         onLogout={() => setRole(null)}
         isOpen={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
+        onClose={closeSidebar}
       />
 
       <div className="main-content">
@@ -42,9 +53,22 @@ function App() {
           <span className="topbar-title">BedTrack</span>
         </div>
 
-        <Beds role={role} />
+        <Routes>
+          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          <Route
+            path="/dashboard"
+            element={<Dashboard role={role} beds={beds} />}
+          />
+          <Route
+            path="/camas"
+            element={
+              <Beds role={role} beds={beds} onChangeStatus={changeStatus} />
+            }
+          />
+          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        </Routes>
       </div>
-    </>
+    </BrowserRouter>
   );
 }
 

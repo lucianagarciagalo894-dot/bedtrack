@@ -1,5 +1,6 @@
 import { useState } from "react";
 import BedCard from "../components/BedCard";
+import { FLOORS } from "../data/beds";
 import {
   FaCheckCircle,
   FaTimesCircle,
@@ -7,32 +8,8 @@ import {
   FaExclamationCircle,
 } from "react-icons/fa";
 
-const FLOORS = ["Piso 1", "Piso 2", "Piso 3", "Piso 4", "Piso 5"];
-
-function generateBeds() {
-  let allBeds = [];
-  let id = 1;
-  FLOORS.forEach((floor) => {
-    for (let i = 1; i <= 9; i++) {
-      allBeds.push({
-        id: id++,
-        floor,
-        status:
-          i % 3 === 0 ? "no disponible" : i % 2 === 0 ? "ocupada" : "disponible",
-      });
-    }
-  });
-  return allBeds;
-}
-
-export default function Beds({ role }) {
+export default function Beds({ role, beds, onChangeStatus }) {
   const [floor, setFloor] = useState("Piso 1");
-  const [beds, setBeds] = useState(generateBeds);
-
-  const changeStatus = (id, newStatus) =>
-    setBeds((prev) =>
-      prev.map((bed) => (bed.id === id ? { ...bed, status: newStatus } : bed))
-    );
 
   const filtered = beds.filter((bed) => bed.floor === floor);
   const available = filtered.filter((b) => b.status === "disponible").length;
@@ -51,11 +28,7 @@ export default function Beds({ role }) {
 
       {/* Floor selector */}
       <div className="floor-selector-wrap">
-        <div
-          className="floor-selector"
-          role="group"
-          aria-label="Selector de piso"
-        >
+        <div className="floor-selector" role="group" aria-label="Selector de piso">
           {FLOORS.map((f) => (
             <button
               key={f}
@@ -109,10 +82,10 @@ export default function Beds({ role }) {
             <FaExclamationCircle />
           </span>
           <span>
-            Atención: quedan{" "}
-            <strong>{available}</strong> cama{available !== 1 ? "s" : ""}{" "}
-            disponible{available !== 1 ? "s" : ""} en{" "}
-            <strong>{floor}</strong>. Se recomienda tomar medidas.
+            Atención: quedan <strong>{available}</strong> cama
+            {available !== 1 ? "s" : ""} disponible
+            {available !== 1 ? "s" : ""} en <strong>{floor}</strong>.
+            Se recomienda tomar medidas.
           </span>
         </div>
       )}
@@ -128,7 +101,7 @@ export default function Beds({ role }) {
           <BedCard
             key={bed.id}
             bed={bed}
-            onChangeStatus={changeStatus}
+            onChangeStatus={onChangeStatus}
             role={role}
           />
         ))}
