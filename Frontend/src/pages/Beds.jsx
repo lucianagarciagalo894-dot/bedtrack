@@ -4,7 +4,7 @@ import { FLOORS } from "../data/beds";
 import {
   FaCheckCircle,
   FaTimesCircle,
-  FaExclamationTriangle,
+  FaBroom,
   FaExclamationCircle,
 } from "react-icons/fa";
 
@@ -14,7 +14,7 @@ export default function Beds({ role, beds, onChangeStatus }) {
   const filtered = beds.filter((bed) => bed.floor === floor);
   const available = filtered.filter((b) => b.status === "disponible").length;
   const occupied = filtered.filter((b) => b.status === "ocupada").length;
-  const unavailable = filtered.filter((b) => b.status === "no disponible").length;
+  const cleaning = filtered.filter((b) => b.status === "limpieza").length;
 
   return (
     <div className="page-wrapper">
@@ -65,12 +65,12 @@ export default function Beds({ role, beds, onChangeStatus }) {
         </div>
 
         <div className="stat-card">
-          <div className="stat-icon warning" aria-hidden="true">
-            <FaExclamationTriangle />
+          <div className="stat-icon cleaning" aria-hidden="true">
+            <FaBroom />
           </div>
           <div className="stat-info">
-            <div className="stat-value">{unavailable}</div>
-            <div className="stat-label">No disponibles</div>
+            <div className="stat-value">{cleaning}</div>
+            <div className="stat-label">En limpieza</div>
           </div>
         </div>
       </div>
