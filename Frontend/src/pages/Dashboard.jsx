@@ -41,7 +41,7 @@ export default function Dashboard({ role, beds }) {
           </p>
         </div>
         <Link to="/camas" className="btn-go-beds">
-          Gestionar camas
+          {role === "admin" ? "Ver camas" : "Gestionar camas"}
           <FaArrowRight size={13} />
         </Link>
       </div>
