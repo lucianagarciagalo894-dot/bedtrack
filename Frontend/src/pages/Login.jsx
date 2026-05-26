@@ -46,12 +46,12 @@ export default function Login({ onLogin }) {
 
         <div className="login-hero">
           <h1 className="login-hero-title">
-            Gestión inteligente de{" "}
+            Gestión online de{" "}
             <span>camas hospitalarias</span>
           </h1>
           <p className="login-hero-desc">
             Monitoreá en tiempo real la disponibilidad de camas en cada
-            piso del hospital con total claridad y eficiencia.
+            piso del hospital con total claridad.
           </p>
         </div>
 
