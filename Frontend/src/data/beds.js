@@ -9,7 +9,7 @@ export function generateBeds() {
         id: id++,
         floor,
         status:
-          i % 3 === 0 ? "no disponible" : i % 2 === 0 ? "ocupada" : "disponible",
+          i % 3 === 0 ? "limpieza" : i % 2 === 0 ? "ocupada" : "disponible",
       });
     }
   });

@@ -4,7 +4,7 @@ import {
   FaBed,
   FaCheckCircle,
   FaTimesCircle,
-  FaExclamationTriangle,
+  FaBroom,
   FaArrowRight,
   FaExclamationCircle,
 } from "react-icons/fa";
@@ -15,7 +15,7 @@ export default function Dashboard({ role, beds }) {
   const totalBeds = beds.length;
   const totalAvailable = beds.filter((b) => b.status === "disponible").length;
   const totalOccupied = beds.filter((b) => b.status === "ocupada").length;
-  const totalUnavailable = beds.filter((b) => b.status === "no disponible").length;
+  const totalCleaning = beds.filter((b) => b.status === "limpieza").length;
 
   const floorStats = FLOORS.map((floor) => {
     const fb = beds.filter((b) => b.floor === floor);
@@ -24,7 +24,7 @@ export default function Dashboard({ role, beds }) {
       total: fb.length,
       available: fb.filter((b) => b.status === "disponible").length,
       occupied: fb.filter((b) => b.status === "ocupada").length,
-      unavailable: fb.filter((b) => b.status === "no disponible").length,
+      cleaning: fb.filter((b) => b.status === "limpieza").length,
     };
   });
 
@@ -98,12 +98,12 @@ export default function Dashboard({ role, beds }) {
         </div>
 
         <div className="stat-card">
-          <div className="stat-icon warning" aria-hidden="true">
-            <FaExclamationTriangle />
+          <div className="stat-icon cleaning" aria-hidden="true">
+            <FaBroom />
           </div>
           <div className="stat-info">
-            <div className="stat-value">{totalUnavailable}</div>
-            <div className="stat-label">No disponibles</div>
+            <div className="stat-value">{totalCleaning}</div>
+            <div className="stat-label">En limpieza</div>
           </div>
         </div>
       </div>
@@ -122,18 +122,18 @@ export default function Dashboard({ role, beds }) {
               Ocupada
             </span>
             <span className="legend-item">
-              <span className="legend-dot legend-dot-warning" />
-              No disponible
+              <span className="legend-dot legend-dot-cleaning" />
+              En limpieza
             </span>
           </div>
         </div>
 
         <div className="floor-breakdown">
-          {floorStats.map(({ floor, total, available, occupied, unavailable }) => (
+          {floorStats.map(({ floor, total, available, occupied, cleaning }) => (
             <div key={floor} className="floor-row">
               <span className="floor-row-name">{floor}</span>
 
-              <div className="floor-row-bars" aria-label={`${floor}: ${available} disponibles, ${occupied} ocupadas, ${unavailable} no disponibles`}>
+              <div className="floor-row-bars" aria-label={`${floor}: ${available} disponibles, ${occupied} ocupadas, ${cleaning} en limpieza`}>
                 {available > 0 && (
                   <div
                     className="floor-bar floor-bar-available"
@@ -148,11 +148,11 @@ export default function Dashboard({ role, beds }) {
                     title={`${occupied} ocupadas`}
                   />
                 )}
-                {unavailable > 0 && (
+                {cleaning > 0 && (
                   <div
-                    className="floor-bar floor-bar-unavailable"
-                    style={{ width: `${(unavailable / total) * 100}%` }}
-                    title={`${unavailable} no disponibles`}
+                    className="floor-bar floor-bar-cleaning"
+                    style={{ width: `${(cleaning / total) * 100}%` }}
+                    title={`${cleaning} en limpieza`}
                   />
                 )}
               </div>
@@ -160,7 +160,7 @@ export default function Dashboard({ role, beds }) {
               <div className="floor-row-chips">
                 <span className="floor-chip floor-chip-available">{available}</span>
                 <span className="floor-chip floor-chip-occupied">{occupied}</span>
-                <span className="floor-chip floor-chip-unavailable">{unavailable}</span>
+                <span className="floor-chip floor-chip-cleaning">{cleaning}</span>
               </div>
 
               <Link to="/camas" className="floor-row-link" aria-label={`Ver camas del ${floor}`}>
