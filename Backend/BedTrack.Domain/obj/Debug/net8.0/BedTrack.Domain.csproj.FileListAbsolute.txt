@@ -1,0 +1,12 @@
+D:\FACULTAD\TERCER AÑO\PROYECTO FINAL\BEDTRACK PROYECTO FINAL\bedtrack-frontend-final\Backend\BedTrack.Domain\bin\Debug\net8.0\BedTrack.Domain.deps.json
+D:\FACULTAD\TERCER AÑO\PROYECTO FINAL\BEDTRACK PROYECTO FINAL\bedtrack-frontend-final\Backend\BedTrack.Domain\bin\Debug\net8.0\BedTrack.Domain.dll
+D:\FACULTAD\TERCER AÑO\PROYECTO FINAL\BEDTRACK PROYECTO FINAL\bedtrack-frontend-final\Backend\BedTrack.Domain\bin\Debug\net8.0\BedTrack.Domain.pdb
+D:\FACULTAD\TERCER AÑO\PROYECTO FINAL\BEDTRACK PROYECTO FINAL\bedtrack-frontend-final\Backend\BedTrack.Domain\obj\Debug\net8.0\BedTrack.Domain.GeneratedMSBuildEditorConfig.editorconfig
+D:\FACULTAD\TERCER AÑO\PROYECTO FINAL\BEDTRACK PROYECTO FINAL\bedtrack-frontend-final\Backend\BedTrack.Domain\obj\Debug\net8.0\BedTrack.Domain.AssemblyInfoInputs.cache
+D:\FACULTAD\TERCER AÑO\PROYECTO FINAL\BEDTRACK PROYECTO FINAL\bedtrack-frontend-final\Backend\BedTrack.Domain\obj\Debug\net8.0\BedTrack.Domain.AssemblyInfo.cs
+D:\FACULTAD\TERCER AÑO\PROYECTO FINAL\BEDTRACK PROYECTO FINAL\bedtrack-frontend-final\Backend\BedTrack.Domain\obj\Debug\net8.0\BedTrack.Domain.csproj.CoreCompileInputs.cache
+D:\FACULTAD\TERCER AÑO\PROYECTO FINAL\BEDTRACK PROYECTO FINAL\bedtrack-frontend-final\Backend\BedTrack.Domain\obj\Debug\net8.0\BedTrack.Domain.sourcelink.json
+D:\FACULTAD\TERCER AÑO\PROYECTO FINAL\BEDTRACK PROYECTO FINAL\bedtrack-frontend-final\Backend\BedTrack.Domain\obj\Debug\net8.0\BedTrack.Domain.dll
+D:\FACULTAD\TERCER AÑO\PROYECTO FINAL\BEDTRACK PROYECTO FINAL\bedtrack-frontend-final\Backend\BedTrack.Domain\obj\Debug\net8.0\refint\BedTrack.Domain.dll
+D:\FACULTAD\TERCER AÑO\PROYECTO FINAL\BEDTRACK PROYECTO FINAL\bedtrack-frontend-final\Backend\BedTrack.Domain\obj\Debug\net8.0\BedTrack.Domain.pdb
+D:\FACULTAD\TERCER AÑO\PROYECTO FINAL\BEDTRACK PROYECTO FINAL\bedtrack-frontend-final\Backend\BedTrack.Domain\obj\Debug\net8.0\ref\BedTrack.Domain.dll
