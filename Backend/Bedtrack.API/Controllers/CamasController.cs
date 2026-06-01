@@ -1,6 +1,7 @@
+using BedTrack.Application.DTOs;
 using BedTrack.Application.Interfaces;
-using BedTrack.Domain.Entities;
 using Microsoft.AspNetCore.Mvc;
+using System.ComponentModel.DataAnnotations;
 
 namespace BedTrack.API.Controllers;
 
@@ -8,60 +9,64 @@ namespace BedTrack.API.Controllers;
 [Route("api/[controller]")]
 public class CamasController : ControllerBase
 {
-    private readonly ICamaRepository _repository;
+    private readonly ICamaService _camaService;
 
-    public CamasController(ICamaRepository repository)
+    public CamasController(ICamaService camaService)
     {
-        _repository = repository;
+        _camaService = camaService;
     }
 
     [HttpGet]
     public async Task<IActionResult> GetCamas()
     {
-        var camas = await _repository.ObtenerTodasAsync();
+        var camas = await _camaService.ObtenerTodasAsync();
         return Ok(camas);
     }
 
     [HttpPost]
-    public async Task<IActionResult> CrearCama([FromBody] CrearCamaRequest request)
+    public async Task<IActionResult> CrearCama([FromBody] CrearCamaRequestDto request)
     {
-        // Aplicamos la regla de negocio al crear una cama nueva
-        var nuevaCama = new Cama(request.Numero, request.Sector);
-        
-        await _repository.AgregarAsync(nuevaCama);
-        
-        return CreatedAtAction(nameof(GetCamas), new { id = nuevaCama.Id }, nuevaCama);
+        try
+        {
+            var nuevaCama = await _camaService.CrearCamaAsync(request);
+            return CreatedAtAction(nameof(GetCamas), new { id = nuevaCama.Id }, nuevaCama);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
 
     [HttpPut("{id}/ocupar")]
-    public async Task<IActionResult> OcuparCama(int id)
+    public async Task<IActionResult> OcuparCama(int id, [FromBody] OcuparCamaRequestDto request)
     {
-        var cama = await _repository.ObtenerPorIdAsync(id);
-        if (cama == null) return NotFound("La cama no existe.");
-
         try
         {
-            cama.Ocupar(); // Llamamos a tu regla de negocio
-            await _repository.ActualizarAsync(cama);
-            return Ok(cama);
+            // Pasamos el ID y los datos del paciente al servicio
+            var camaOcupada = await _camaService.OcuparCamaAsync(id, request);
+            return Ok(camaOcupada);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
         }
         catch (InvalidOperationException ex)
         {
-            return BadRequest(ex.Message); // Devuelve el error exacto si no estaba "Disponible"
+            return BadRequest(ex.Message); 
         }
     }
 
     [HttpPut("{id}/limpieza")]
     public async Task<IActionResult> EnviarALimpieza(int id)
     {
-        var cama = await _repository.ObtenerPorIdAsync(id);
-        if (cama == null) return NotFound("La cama no existe.");
-
         try
         {
-            cama.LiberarParaLimpieza();
-            await _repository.ActualizarAsync(cama);
-            return Ok(cama);
+            var camaEnLimpieza = await _camaService.EnviarALimpiezaAsync(id);
+            return Ok(camaEnLimpieza);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
         }
         catch (InvalidOperationException ex)
         {
@@ -72,25 +77,18 @@ public class CamasController : ControllerBase
     [HttpPut("{id}/habilitar")]
     public async Task<IActionResult> HabilitarCama(int id)
     {
-        var cama = await _repository.ObtenerPorIdAsync(id);
-        if (cama == null) return NotFound("La cama no existe.");
-
         try
         {
-            cama.Habilitar();
-            await _repository.ActualizarAsync(cama);
-            return Ok(cama);
+            var camaDisponible = await _camaService.HabilitarCamaAsync(id);
+            return Ok(camaDisponible);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
         }
         catch (InvalidOperationException ex)
         {
             return BadRequest(ex.Message);
         }
     }
-}
-
-// Un DTO (Data Transfer Object) simple para recibir los datos desde React
-public class CrearCamaRequest
-{
-    public string Numero { get; set; } = string.Empty;
-    public string Sector { get; set; } = string.Empty;
 }

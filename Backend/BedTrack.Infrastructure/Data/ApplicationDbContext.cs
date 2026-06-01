@@ -22,7 +22,18 @@ public class ApplicationDbContext : DbContext
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Numero).IsRequired().HasMaxLength(50);
             entity.Property(e => e.Sector).IsRequired().HasMaxLength(100);
-            entity.Property(e => e.Estado).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.Estado)
+                  .HasConversion<string>()
+                  .IsRequired()
+                  .HasMaxLength(50);
+
+            // Configuramos RowVersion para manejar concurrencia
+            entity.Property(e => e.RowVersion).IsRowVersion();
+            
+            // Configuraciones de los nuevos campos de paciente
+            entity.Property(e => e.NombrePaciente).HasMaxLength(150);
+            entity.Property(e => e.RegistroPaciente).HasMaxLength(50);
+            entity.Property(e => e.Patologia).HasMaxLength(200);
         });
     }
 }
