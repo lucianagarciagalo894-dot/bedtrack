@@ -23,3 +23,13 @@ dist-ssr
 *.sln
 *.sw?
 .claude/
+
+# .NET ignores
+[Bb]in/
+[Oo]bj/
+appsettings.Development.json
+appsettings.Local.json
+*.userprefs
+*.user
+*.suo
+*.userosscache

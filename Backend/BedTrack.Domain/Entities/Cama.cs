@@ -17,7 +17,7 @@ public class Cama
     public DateTime? FechaIngreso { get; private set; }
 
     // Concurrencia Optimista
-    public byte[] RowVersion { get; private set; }
+    public byte[] RowVersion { get; private set; } = null!;
 
     // Constructor: Al crear una cama nueva en el sistema, por regla, nace "Disponible"
     public Cama(string numero, string sector)
