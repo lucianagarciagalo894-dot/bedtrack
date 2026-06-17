@@ -1,20 +1,51 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { FaBars } from "react-icons/fa";
 import Sidebar from "./components/Sidebar";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Beds from "./pages/Beds";
-import { generateBeds } from "./data/beds";
+import Habitaciones from "./pages/Habitaciones";
+import RoomDetail from "./pages/RoomDetail";
+import Pacientes from "./pages/Pacientes";
+import { generateRooms } from "./data/beds";
 
 function App() {
-  const [role, setRole] = useState(null);
+  const [role, setRole]               = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [beds, setBeds] = useState(generateBeds);
+  const [rooms, setRooms]             = useState(generateRooms);
 
-  const changeStatus = (id, newStatus) =>
-    setBeds((prev) =>
-      prev.map((bed) => (bed.id === id ? { ...bed, status: newStatus } : bed))
+  // Fuente única de verdad: beds derivado de rooms
+  const beds = useMemo(
+    () =>
+      rooms.flatMap((room) =>
+        room.beds.map((bed) => ({
+          id:         bed.id,
+          number:     bed.number,
+          floor:      room.floor,
+          roomId:     room.id,
+          roomNumber: room.number,
+          status:     bed.status,
+          patient:    bed.patient,
+        }))
+      ),
+    [rooms]
+  );
+
+  const changeStatus = (bedId, newStatus, patientData = null) =>
+    setRooms((prev) =>
+      prev.map((room) => ({
+        ...room,
+        beds: room.beds.map((bed) =>
+          bed.id === bedId
+            ? {
+                ...bed,
+                status:  newStatus,
+                patient: newStatus === "ocupada" ? patientData : null,
+              }
+            : bed
+        ),
+      }))
     );
 
   const closeSidebar = () => setSidebarOpen(false);
@@ -25,7 +56,6 @@ function App() {
 
   return (
     <BrowserRouter>
-      {/* Mobile overlay */}
       <div
         className={`sidebar-overlay${sidebarOpen ? " open" : ""}`}
         onClick={closeSidebar}
@@ -40,7 +70,6 @@ function App() {
       />
 
       <div className="main-content">
-        {/* Mobile topbar */}
         <div className="topbar">
           <button
             className="hamburger"
@@ -54,16 +83,23 @@ function App() {
         </div>
 
         <Routes>
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
-          <Route
-            path="/dashboard"
-            element={<Dashboard role={role} beds={beds} />}
-          />
+          <Route path="/"              element={<Navigate to="/dashboard" replace />} />
+          <Route path="/dashboard"     element={<Dashboard role={role} beds={beds} />} />
           <Route
             path="/camas"
-            element={
-              <Beds role={role} beds={beds} onChangeStatus={changeStatus} />
-            }
+            element={<Beds role={role} beds={beds} onChangeStatus={changeStatus} />}
+          />
+          <Route
+            path="/habitaciones"
+            element={<Habitaciones rooms={rooms} />}
+          />
+          <Route
+            path="/habitaciones/:roomId"
+            element={<RoomDetail rooms={rooms} role={role} onChangeBedStatus={changeStatus} />}
+          />
+          <Route
+            path="/pacientes"
+            element={<Pacientes rooms={rooms} />}
           />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>

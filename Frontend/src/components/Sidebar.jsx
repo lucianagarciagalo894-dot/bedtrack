@@ -3,6 +3,8 @@ import {
   FaHospitalAlt,
   FaChartLine,
   FaBed,
+  FaDoorOpen,
+  FaUserInjured,
   FaCog,
   FaSignOutAlt,
   FaTimes,
@@ -55,6 +57,20 @@ export default function Sidebar({ role, onLogout, isOpen, onClose }) {
             <FaBed />
           </span>
           Camas
+        </NavLink>
+
+        <NavLink to="/habitaciones" className={navLinkClass} onClick={onClose}>
+          <span className="nav-item-icon" aria-hidden="true">
+            <FaDoorOpen />
+          </span>
+          Habitaciones
+        </NavLink>
+
+        <NavLink to="/pacientes" className={navLinkClass} onClick={onClose}>
+          <span className="nav-item-icon" aria-hidden="true">
+            <FaUserInjured />
+          </span>
+          Pacientes
         </NavLink>
 
         <span className="nav-section-label" style={{ marginTop: "8px" }}>

@@ -4,13 +4,6 @@ import '@testing-library/jest-dom';
 import { describe, test, expect } from 'vitest';
 import Beds from './Beds';
 
-
-// Pruebas Unitarias con Front End y Back End
-// Para que lo puedan probar los chicos se inicia cd Frontend y para iniciar el testeo npm run test
-// Las pruebas Unitarias las probe con Jest para la parte del Front End y Back End
-// En el Caso Para hacer el Testeo Unitario tuve que  Ignorar SSL - configurar en vite.config.js o package.json
-// Para este test, tuve que en el backend está en https://localhost:7186
-// Los testeo que diga si paso o no significa que estan bien porque cumple lo que esta haciendo el Front End y Back End
 describe('Pruebas del componente Beds con Backend Real', () => {
 
   
@@ -111,21 +104,18 @@ test('Caso de Prueba 5: El componente muestra 1 cama disponible en Piso 2', asyn
   
   await waitFor(() => {
 
-    // Verificar que NO aparece el mensaje de "No hay camas"
     const noCamasMsg = screen.queryByText(/No hay camas registradas en este sector/i);
     expect(noCamasMsg).not.toBeInTheDocument();
   }, { timeout: 10000 });
 
-  // Verificar el contador de disponibles
   await waitFor(() => {
-    // ✅ CORREGIDO: primero obtener el array, luego el primer elemento
+  
     const disponiblesElements = screen.getAllByText(/Disponibles/i);
     const contadorElement = disponiblesElements[0].previousSibling;
     const disponibles = parseInt(contadorElement.textContent || '0');
     
     console.log('📊 Disponibles en Piso 2 (prueba):', disponibles);
-    
-    // Verificar que muestra 1 cama disponible
+
     expect(disponibles).toBe(1);
   });
 }, 15000);
