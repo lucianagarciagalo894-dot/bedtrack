@@ -1117,6 +1117,1052 @@ body {
   outline-offset: 2px;
 }
 
+/* ─── Back Button ────────────────────────────────────────────── */
+.btn-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--t);
+  font-family: inherit;
+  margin-bottom: 20px;
+  text-decoration: none;
+}
+
+.btn-back:hover {
+  background: var(--bg);
+  color: var(--primary);
+  border-color: var(--primary-light);
+}
+
+/* ─── Bed patient info (BedCard) ─────────────────────────────── */
+.bed-patient-info {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #7F1D1D;
+  margin-bottom: 2px;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ─── Room Card clickable + footer ───────────────────────────── */
+.room-card-clickable {
+  cursor: pointer;
+}
+
+.room-card-clickable:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.room-bed-patient-name {
+  font-weight: 500;
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+}
+
+.room-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 5px;
+  padding: 8px 16px 14px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--primary);
+  letter-spacing: -0.01em;
+  margin-top: auto;
+}
+
+/* ─── Room Detail Page ───────────────────────────────────────── */
+.room-detail-header {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  margin-bottom: 28px;
+  box-shadow: var(--shadow-sm);
+}
+
+.room-detail-accent {
+  height: 5px;
+}
+
+.room-detail-body {
+  padding: 20px 24px;
+}
+
+.room-detail-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.room-detail-title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: -0.035em;
+  line-height: 1.2;
+}
+
+.room-detail-subtitle {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  margin-top: 3px;
+}
+
+.room-detail-badges {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.room-type-badge-lg {
+  font-size: 0.75rem !important;
+  padding: 5px 12px !important;
+}
+
+.room-detail-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  flex-wrap: wrap;
+}
+
+.meta-sep      { color: var(--text-muted); }
+.meta-available{ color: var(--success); font-weight: 600; }
+.meta-occupied { color: var(--error);   font-weight: 600; }
+.meta-cleaning { color: var(--cleaning);font-weight: 600; }
+
+.room-detail-beds-section {
+  margin-top: 4px;
+}
+
+/* ─── RD Bed Cards ───────────────────────────────────────────── */
+.rd-beds-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.rd-bed-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 20px;
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow var(--t);
+}
+
+.rd-bed-card.rd-bed-disponible { border-left: 4px solid var(--success); }
+.rd-bed-card.rd-bed-ocupada    { border-left: 4px solid var(--error); }
+.rd-bed-card.rd-bed-limpieza   { border-left: 4px solid var(--cleaning); }
+
+.rd-bed-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.rd-bed-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+}
+
+/* Patient card inside bed */
+.rd-patient-card {
+  background: var(--error-bg);
+  border: 1px solid var(--error-border);
+  border-radius: var(--r-md);
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.rd-patient-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.rd-patient-name {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+}
+
+.rd-patient-age {
+  font-weight: 400;
+  color: var(--text-secondary);
+}
+
+.rd-patient-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.btn-patient-edit,
+.btn-patient-discharge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: var(--r-sm);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--t);
+  font-family: inherit;
+  border: 1.5px solid;
+  background: transparent;
+}
+
+.btn-patient-edit {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+.btn-patient-edit:hover {
+  background: var(--primary);
+  color: #fff;
+}
+
+.btn-patient-discharge {
+  border-color: var(--success);
+  color: var(--success);
+}
+.btn-patient-discharge:hover {
+  background: var(--success);
+  color: #fff;
+}
+
+.rd-patient-details {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 10px;
+}
+
+.rd-detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.rd-detail-label {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+}
+
+.rd-detail-value {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.rd-patient-empty {
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+  font-style: italic;
+  margin-bottom: 16px;
+  padding: 8px 0;
+}
+
+.rd-bed-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* ─── Patients Page ──────────────────────────────────────────── */
+.patients-search-wrap {
+  margin-bottom: 20px;
+}
+
+.patients-search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-md);
+  padding: 10px 16px;
+  max-width: 480px;
+  transition: border-color var(--t), box-shadow var(--t);
+}
+
+.patients-search:focus-within {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.10);
+}
+
+.search-icon {
+  color: var(--text-muted);
+  flex-shrink: 0;
+  font-size: 14px;
+}
+
+.search-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-size: 0.9375rem;
+  font-family: inherit;
+  color: var(--text-primary);
+  background: transparent;
+}
+
+.search-input::placeholder { color: var(--text-muted); }
+
+.patients-table-wrap {
+  overflow-x: auto;
+  border-radius: var(--r-lg);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+}
+
+.patients-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+  background: var(--surface);
+}
+
+.patients-table thead tr {
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+}
+
+.patients-table th {
+  padding: 12px 16px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  text-align: left;
+  white-space: nowrap;
+}
+
+.patients-table td {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-primary);
+  vertical-align: middle;
+}
+
+.patients-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.patients-table tbody tr:hover td {
+  background: var(--bg);
+}
+
+.col-center { text-align: center; }
+
+.patient-row-name {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.patient-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: var(--r-full);
+  background: linear-gradient(135deg, var(--primary), #7C3AED);
+  color: #fff;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  letter-spacing: 0;
+}
+
+.patient-fullname {
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+}
+
+.td-value {
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.td-unit {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.patient-diagnostico {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 240px;
+}
+
+.diag-icon { color: var(--text-muted); flex-shrink: 0; }
+
+.patient-ingreso {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.cal-icon { color: var(--text-muted); flex-shrink: 0; }
+
+.location-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--r-full);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.location-chip-bed {
+  background: var(--primary-surface);
+  border-color: var(--primary-light);
+  color: var(--primary);
+}
+
+.btn-go-room {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 12px;
+  background: var(--primary);
+  color: #fff;
+  border-radius: var(--r-sm);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all var(--t);
+  white-space: nowrap;
+}
+
+.btn-go-room:hover {
+  background: var(--primary-dark);
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
+}
+
+/* ─── Floor Tabs (Habitaciones page) ────────────────────────── */
+.floor-tabs-wrap {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.floor-tab {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 10px 20px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-bottom: 3px solid transparent;
+  border-radius: var(--r-md);
+  cursor: pointer;
+  transition: all var(--t);
+  font-family: inherit;
+  min-width: 120px;
+  box-shadow: var(--shadow-xs);
+}
+
+.floor-tab:hover {
+  background: var(--bg);
+  border-color: #CBD5E1;
+}
+
+.floor-tab.active {
+  box-shadow: var(--shadow-sm);
+}
+
+.floor-tab-name {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: inherit;
+  letter-spacing: -0.02em;
+}
+
+.floor-tab-type {
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  letter-spacing: 0.01em;
+}
+
+/* ─── Floor Info Banner ──────────────────────────────────────── */
+.floor-info-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 20px;
+  border: 1px solid;
+  border-radius: var(--r-lg);
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.floor-info-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.floor-info-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--r-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.floor-info-title {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.3;
+}
+
+.floor-info-desc {
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+  margin-top: 2px;
+  font-weight: 500;
+}
+
+.floor-info-chips {
+  display: flex;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.floor-info-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: var(--r-full);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  backdrop-filter: blur(4px);
+}
+
+/* ─── Rooms Grid ─────────────────────────────────────────────── */
+.rooms-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+/* ─── Room Card ──────────────────────────────────────────────── */
+.room-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 0;
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  transition: transform var(--t), box-shadow var(--t);
+  display: flex;
+  flex-direction: column;
+}
+
+.room-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
+}
+
+.room-card-accent {
+  height: 4px;
+  width: 100%;
+  flex-shrink: 0;
+}
+
+.room-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 16px 16px 4px;
+}
+
+.room-card-number {
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: -0.03em;
+}
+
+.room-type-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 9px;
+  border-radius: var(--r-full);
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.room-card-floor {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-weight: 400;
+  padding: 0 16px;
+  margin-bottom: 10px;
+}
+
+.room-card-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin: 0 16px 12px;
+  padding: 4px 10px;
+  border-radius: var(--r-full);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  width: fit-content;
+}
+
+.room-status-available { background: var(--success-bg);  color: #065F46; }
+.room-status-occupied  { background: var(--error-bg);    color: #7F1D1D; }
+.room-status-cleaning  { background: var(--cleaning-bg); color: #78350F; }
+.room-status-partial   { background: #F0FDF4;             color: #166534; }
+
+.room-card-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 0 0 12px;
+}
+
+/* ─── Bed items inside room card ─────────────────────────────── */
+.room-card-beds {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 0 16px 16px;
+}
+
+.room-bed-item {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: 8px 10px;
+  border-radius: var(--r-sm);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  background: var(--bg);
+}
+
+.room-bed-item.room-bed-disponible { background: var(--success-bg); }
+.room-bed-item.room-bed-ocupada    { background: var(--error-bg); }
+.room-bed-item.room-bed-limpieza   { background: var(--cleaning-bg); }
+
+/* Fila principal dentro de la cama */
+.room-bed-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.room-bed-icon {
+  flex-shrink: 0;
+  color: var(--text-muted);
+}
+
+.room-bed-item.room-bed-disponible .room-bed-icon { color: var(--success); }
+.room-bed-item.room-bed-ocupada    .room-bed-icon { color: var(--error); }
+.room-bed-item.room-bed-limpieza   .room-bed-icon { color: var(--cleaning); }
+
+.room-bed-label {
+  flex: 1;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.room-bed-item.room-bed-disponible .room-bed-label { color: #065F46; }
+.room-bed-item.room-bed-ocupada    .room-bed-label { color: #7F1D1D; }
+.room-bed-item.room-bed-limpieza   .room-bed-label { color: #78350F; }
+
+.room-bed-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.room-bed-dot-disponible { background: var(--success); }
+.room-bed-dot-ocupada    { background: var(--error); }
+.room-bed-dot-limpieza   { background: var(--cleaning); }
+
+/* Datos del paciente dentro de la cama */
+.room-bed-patient {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 8px;
+  background: rgba(255, 255, 255, 0.6);
+  border-left: 2px solid var(--error);
+  border-radius: 0 var(--r-sm) var(--r-sm) 0;
+}
+
+.patient-name {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+}
+
+.patient-age {
+  font-weight: 400;
+  color: var(--text-secondary);
+}
+
+.patient-meta {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.patient-days {
+  font-size: 0.6875rem;
+  color: var(--text-muted);
+}
+
+/* Botones de acción por cama */
+.room-bed-actions {
+  display: flex;
+  gap: 5px;
+}
+
+.room-bed-action-btn {
+  flex: 1;
+  padding: 5px 4px;
+  border: 1.5px solid;
+  border-radius: var(--r-sm);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--t);
+  background: transparent;
+  font-family: inherit;
+  text-align: center;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+
+.room-bed-action-btn:hover { opacity: 1; }
+
+.rba-avail { border-color: var(--success); color: var(--success); }
+.rba-avail:hover { background: var(--success); color: #fff; }
+
+.rba-occup { border-color: var(--error); color: var(--error); }
+.rba-occup:hover { background: var(--error); color: #fff; }
+
+.rba-clean { border-color: var(--cleaning); color: var(--cleaning); }
+.rba-clean:hover { background: var(--cleaning); color: #fff; }
+
+/* ─── Rooms Empty / Loading states ──────────────────────────── */
+.rooms-empty {
+  text-align: center;
+  padding: 64px 32px;
+  color: var(--text-muted);
+}
+
+.rooms-empty-icon {
+  font-size: 3rem;
+  margin-bottom: 16px;
+  opacity: 0.4;
+}
+
+.rooms-empty-text {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+}
+
+.rooms-empty-hint {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}
+
+.rooms-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 48px;
+  font-size: 0.9375rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+.rooms-spinner {
+  animation: spin 0.9s linear infinite;
+  font-size: 1.25rem;
+  color: var(--primary);
+}
+
+/* ─── Alert Error variant ────────────────────────────────────── */
+.alert-error {
+  background: var(--error-bg);
+  color: #7F1D1D;
+  border-color: var(--error-border);
+}
+
+/* ─── Form required indicator ────────────────────────────────── */
+.form-required {
+  color: var(--error);
+  margin-left: 2px;
+}
+
+/* ─── Input with inline unit (edad, días) ────────────────────── */
+.input-with-unit {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-with-unit .form-input {
+  padding-right: 52px;
+}
+
+.input-unit {
+  position: absolute;
+  right: 14px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  pointer-events: none;
+  user-select: none;
+}
+
+/* ─── Patient Form Modal ─────────────────────────────────────── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.modal-card {
+  background: var(--surface);
+  border-radius: var(--r-xl);
+  box-shadow: var(--shadow-xl);
+  border: 1px solid var(--border);
+  width: 100%;
+  max-width: 520px;
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: modal-in 0.18s ease;
+}
+
+@keyframes modal-in {
+  from { opacity: 0; transform: scale(0.96) translateY(8px); }
+  to   { opacity: 1; transform: scale(1)    translateY(0); }
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24px 28px 20px;
+  border-bottom: 1px solid var(--border);
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.modal-header-info {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.modal-title-icon {
+  width: 44px;
+  height: 44px;
+  background: var(--primary-surface);
+  color: var(--primary);
+  border-radius: var(--r-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.modal-title {
+  font-size: 1.125rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: -0.025em;
+  line-height: 1.25;
+}
+
+.modal-subtitle {
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+  font-weight: 500;
+}
+
+.modal-close-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 16px;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: var(--r-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--t);
+  flex-shrink: 0;
+}
+
+.modal-close-btn:hover {
+  background: var(--bg);
+  color: var(--text-primary);
+}
+
+.modal-form {
+  padding: 24px 28px;
+}
+
+.modal-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 20px;
+}
+
+.form-group-full {
+  grid-column: 1 / -1;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+  margin-top: 8px;
+}
+
+.btn-modal-cancel {
+  padding: 10px 20px;
+  background: transparent;
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-md);
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--t);
+  font-family: inherit;
+  letter-spacing: -0.01em;
+}
+
+.btn-modal-cancel:hover {
+  border-color: #CBD5E1;
+  background: var(--bg);
+  color: var(--text-primary);
+}
+
+.btn-modal-confirm {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: var(--primary);
+  border: none;
+  border-radius: var(--r-md);
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #fff;
+  cursor: pointer;
+  transition: all var(--t);
+  font-family: inherit;
+  letter-spacing: -0.01em;
+}
+
+.btn-modal-confirm:hover {
+  background: var(--primary-dark);
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.32);
+  transform: translateY(-1px);
+}
+
+.btn-modal-confirm:active {
+  transform: none;
+  box-shadow: none;
+}
+
 /* ─── Responsive ─────────────────────────────────────────────── */
 
 /* Desktop login left panel */
@@ -1125,6 +2171,29 @@ body {
     display: flex;
     width: 460px;
     flex-shrink: 0;
+  }
+}
+
+/* Tablet / Mobile – sidebar collapses */
+@media (max-width: 1023px) {
+  .floor-tabs-wrap {
+    gap: 6px;
+  }
+
+  .floor-tab {
+    min-width: 100px;
+    padding: 8px 14px;
+  }
+
+  .rooms-grid {
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 12px;
+  }
+
+  .floor-info-banner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
   }
 }
 
@@ -1172,6 +2241,52 @@ body {
 
   .stat-value {
     font-size: 1.625rem;
+  }
+}
+
+/* Mobile */
+@media (max-width: 640px) {
+  .floor-tabs-wrap {
+    gap: 4px;
+  }
+
+  .floor-tab {
+    flex: 1;
+    min-width: 80px;
+    padding: 8px 10px;
+    align-items: center;
+  }
+
+  .floor-tab-name {
+    font-size: 0.8125rem;
+  }
+
+  .floor-tab-type {
+    font-size: 0.625rem;
+  }
+
+  .rooms-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .floor-info-chips {
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .modal-fields {
+    grid-template-columns: 1fr;
+  }
+
+  .modal-card {
+    border-radius: var(--r-lg);
+  }
+
+  .modal-header,
+  .modal-form {
+    padding-left: 20px;
+    padding-right: 20px;
   }
 }
 
