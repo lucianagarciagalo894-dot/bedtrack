@@ -5,9 +5,9 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// 1. Conexión segura a la Base de Datos (SQL Server)
+// 1. Conexión segura a la Base de Datos (PostgreSQL en Supabase)
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Inyección de Dependencias (Patrón Repository)
 builder.Services.AddScoped<ICamaRepository, CamaRepository>();
