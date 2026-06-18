@@ -4,39 +4,30 @@ namespace BedTrack.Domain.Entities;
 
 public class Cama
 {
-    // Las propiedades tienen 'private set' para que nadie las modifique libremente
     public int Id { get; private set; }
-    public string Numero { get; private set; }
-    public string Sector { get; private set; } // Ej: Pediatría, Guardia
+    public int Numero { get; private set; }
     public EstadoCama Estado { get; private set; } 
     
-    // Datos del Paciente
-    public string? NombrePaciente { get; private set; }
-    public string? RegistroPaciente { get; private set; }
-    public string? Patologia { get; private set; }
-    public DateTime? FechaIngreso { get; private set; }
+    public int HabitacionId { get; private set; }
+    public Habitacion Habitacion { get; private set; } = null!;
 
-    // Concurrencia Optimista
-    public byte[] RowVersion { get; private set; } = null!;
+    public int? PacienteId { get; private set; }
+    public Paciente? Paciente { get; set; }
 
-    // Constructor: Al crear una cama nueva en el sistema, por regla, nace "Disponible"
-    public Cama(string numero, string sector)
+    public Cama(int numero, int habitacionId)
     {
         Numero = numero;
-        Sector = sector;
+        HabitacionId = habitacionId;
         Estado = EstadoCama.Disponible; 
     }
 
-    public void Ocupar(string nombrePaciente, string registroPaciente, string patologia, DateTime fechaIngreso)
+    public void Ocupar(int pacienteId)
     {
         if (Estado != EstadoCama.Disponible)
             throw new InvalidOperationException($"La cama {Numero} no se puede ocupar porque está en estado: {Estado}.");
         
         Estado = EstadoCama.Ocupada;
-        NombrePaciente = nombrePaciente;
-        RegistroPaciente = registroPaciente;
-        Patologia = patologia;
-        FechaIngreso = fechaIngreso;
+        PacienteId = pacienteId;
     }
 
     public void LiberarParaLimpieza()
@@ -45,11 +36,7 @@ public class Cama
             throw new InvalidOperationException($"La cama {Numero} debe estar ocupada para pasar a limpieza.");
         
         Estado = EstadoCama.EnLimpieza;
-        // Limpiamos los datos del paciente al desocupar la cama
-        NombrePaciente = null;
-        RegistroPaciente = null;
-        Patologia = null;
-        FechaIngreso = null;
+        PacienteId = null;
     }
 
     public void Habilitar()

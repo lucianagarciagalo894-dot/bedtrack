@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { FaBars } from "react-icons/fa";
 import Sidebar from "./components/Sidebar";
@@ -8,12 +8,20 @@ import Beds from "./pages/Beds";
 import Habitaciones from "./pages/Habitaciones";
 import RoomDetail from "./pages/RoomDetail";
 import Pacientes from "./pages/Pacientes";
-import { generateRooms } from "./data/beds";
+import { getAllRooms, updateBedStatus } from "./services/roomService";
 
 function App() {
   const [role, setRole]               = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [rooms, setRooms]             = useState(generateRooms);
+  const [rooms, setRooms]             = useState([]);
+
+  useEffect(() => {
+    if (role) {
+      getAllRooms()
+        .then(data => setRooms(data))
+        .catch(err => console.error("Error cargando habitaciones", err));
+    }
+  }, [role]);
 
   // Fuente única de verdad: beds derivado de rooms
   const beds = useMemo(
@@ -32,21 +40,29 @@ function App() {
     [rooms]
   );
 
-  const changeStatus = (bedId, newStatus, patientData = null) =>
-    setRooms((prev) =>
-      prev.map((room) => ({
-        ...room,
-        beds: room.beds.map((bed) =>
-          bed.id === bedId
-            ? {
-                ...bed,
-                status:  newStatus,
-                patient: newStatus === "ocupada" ? patientData : null,
-              }
-            : bed
-        ),
-      }))
-    );
+  const changeStatus = async (bedId, newStatus, patientData = null) => {
+    try {
+      const updatedBed = await updateBedStatus(bedId, newStatus, patientData);
+      
+      setRooms((prev) =>
+        prev.map((room) => ({
+          ...room,
+          beds: room.beds.map((bed) =>
+            bed.id === bedId
+              ? {
+                  ...bed,
+                  status:  updatedBed.status,
+                  patient: updatedBed.patient,
+                }
+              : bed
+          ),
+        }))
+      );
+    } catch (error) {
+      console.error("Error al actualizar estado de la cama:", error);
+      alert("Hubo un error al actualizar la cama. Revisa tu conexión.");
+    }
+  };
 
   const closeSidebar = () => setSidebarOpen(false);
 

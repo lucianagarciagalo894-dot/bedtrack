@@ -6,6 +6,12 @@ export async function getFloors() {
   return res.json();
 }
 
+export async function getAllRooms() {
+  const res = await fetch(`${API_BASE}/rooms`);
+  if (!res.ok) throw new Error("Error al obtener las habitaciones");
+  return res.json();
+}
+
 export async function getRoomsByFloor(floorId) {
   const res = await fetch(`${API_BASE}/floors/${floorId}/rooms`);
   if (!res.ok) throw new Error("Error al obtener las habitaciones del piso");
@@ -18,11 +24,11 @@ export async function getRoomById(roomId) {
   return res.json();
 }
 
-export async function updateBedStatus(bedId, status) {
+export async function updateBedStatus(bedId, status, patient = null) {
   const res = await fetch(`${API_BASE}/beds/${bedId}/status`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ status }),
+    body: JSON.stringify({ status, patient }),
   });
   if (!res.ok) throw new Error("Error al actualizar el estado de la cama");
   return res.json();
