@@ -33,3 +33,6 @@ appsettings.Local.json
 *.user
 *.suo
 *.userosscache
+
+# Scripts con credenciales / archivos sensibles locales
+test_db.ps1

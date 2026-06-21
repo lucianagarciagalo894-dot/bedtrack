@@ -23,7 +23,7 @@ const STATUS_CONFIG = {
 
 const BED_TRANSITIONS = {
   disponible: ["ocupada", "limpieza"],
-  ocupada:    ["disponible", "limpieza"],
+  ocupada:    ["limpieza"],
   limpieza:   ["disponible", "ocupada"],
 };
 
@@ -82,7 +82,7 @@ export default function RoomDetail({ rooms, role, onChangeBedStatus }) {
   };
 
   const handleEditPatient  = (bed) => setModalState({ bed, mode: "edit" });
-  const handleDischarge    = (bed) => onChangeBedStatus(bed.id, "disponible", null);
+  const handleDischarge    = (bed) => onChangeBedStatus(bed.id, "limpieza", null);
 
   const handleModalConfirm = (patientData) => {
     if (modalState) {

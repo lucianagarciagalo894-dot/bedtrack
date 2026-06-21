@@ -10,6 +10,12 @@ import RoomDetail from "./pages/RoomDetail";
 import Pacientes from "./pages/Pacientes";
 import { getAllRooms, updateBedStatus } from "./services/roomService";
 
+const VALID_TRANSITIONS = {
+  disponible: ["ocupada", "limpieza"],
+  ocupada:    ["limpieza"],
+  limpieza:   ["disponible", "ocupada"],
+};
+
 function App() {
   const [role, setRole]               = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -41,9 +47,14 @@ function App() {
   );
 
   const changeStatus = async (bedId, newStatus, patientData = null) => {
+    const currentBed = rooms.flatMap((r) => r.beds).find((b) => b.id === bedId);
+    if (!currentBed || !VALID_TRANSITIONS[currentBed.status]?.includes(newStatus)) {
+      return;
+    }
+
     try {
       const updatedBed = await updateBedStatus(bedId, newStatus, patientData);
-      
+
       setRooms((prev) =>
         prev.map((room) => ({
           ...room,
