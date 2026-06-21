@@ -1,135 +1,73 @@
-
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
-import '@testing-library/jest-dom';
-import { describe, test, expect } from 'vitest';
+import { render, screen, fireEvent, within } from '@testing-library/react';
+import { describe, test, expect, vi } from 'vitest';
 import Beds from './Beds';
+import { generateBeds, FLOORS } from '../data/beds';
 
-describe('Pruebas del componente Beds con Backend Real', () => {
+const mockBeds = generateBeds();
+const noop = vi.fn();
 
-  
-  test('Caso de Prueba 1: El componente se renderiza correctamente', () => {
-    render(<Beds role="enfermeria" />);
-    
-    expect(screen.getByText(/Estado de Camas/i)).toBeInTheDocument();
-    expect(screen.getByRole('combobox')).toBeInTheDocument();
-    expect(screen.getByText('Disponibles')).toBeInTheDocument();
-    expect(screen.getByText('Ocupadas')).toBeInTheDocument();
-    expect(screen.getByText('En Limpieza')).toBeInTheDocument();
-  });
+describe('Componente Beds', () => {
 
-  
-  test('Caso de Prueba 2: El componente muestra las 5 camas disponibles en Piso 1', async () => {
-    render(<Beds role="enfermeria" />);
+  test('Caso 1: el componente se renderiza con título, botones de piso y panel de estadísticas', () => {
+    render(<Beds role="enfermeria" beds={mockBeds} onChangeStatus={noop} />);
 
-    const select = screen.getByRole('combobox');
-    fireEvent.change(select, { target: { value: 'Piso 1' } });
+    expect(screen.getByText('Estado de Camas')).toBeInTheDocument();
 
-    
-       await waitFor(() => {
-      
-        const noCamasMsg = screen.queryByText(/No hay camas registradas en este sector/i);
-        expect(noCamasMsg).not.toBeInTheDocument();
-    }, { timeout: 10000 });
-
-    
-    await waitFor(() => {
-      const disponiblesElement = screen.getByText(/Disponibles/i).previousSibling;
-      const disponibles = parseInt(disponiblesElement.textContent || '0');
-      
-      console.log('📊 Disponibles en Piso 1 (prueba):', disponibles);
-      
-      
-      expect(disponibles).toBe(3);
+    const floorGroup = screen.getByRole('group', { name: 'Selector de piso' });
+    FLOORS.forEach((floor) => {
+      expect(within(floorGroup).getByRole('button', { name: floor })).toBeInTheDocument();
     });
-  }, 15000);
 
-  
-  test('Caso de Prueba 3: El componente muestra mensaje cuando no hay camas', async () => {
-    render(<Beds role="enfermeria" />);
-
-    const select = screen.getByRole('combobox');
-    fireEvent.change(select, { target: { value: 'Guardia' } });
-
-    await waitFor(() => {
-      const disponiblesElement = screen.getByText(/Disponibles/i).previousSibling;
-      expect(disponiblesElement).toBeInTheDocument();
-      
-      const disponibles = parseInt(disponiblesElement.textContent || '0');
-      const ocupadas = parseInt(screen.getByText(/Ocupadas/i).previousSibling?.textContent || '0');
-      const enLimpieza = parseInt(screen.getByText(/En Limpieza/i).previousSibling?.textContent || '0');
-      const total = disponibles + ocupadas + enLimpieza;
-      
-      console.log('📊 Estado actual de Guardia:', { disponibles, ocupadas, enLimpieza, total });
-      
-      // Si no hay camas, debe mostrar el mensaje
-      if (total === 0) {
-        const mensaje = screen.getByText(/No hay camas registradas en este sector/i);
-        expect(mensaje).toBeInTheDocument();
-      }
-    }, { timeout: 10000 });
-});
-
-
-test('Caso de Prueba 4: El componente muestra 1 cama disponible en Terapia Intensiva', async () => {
-  render(<Beds role="enfermeria" />);
-
-  const select = screen.getByRole('combobox');
-  fireEvent.change(select, { target: { value: 'Terapia Intensiva' } });
-
-  await waitFor(() => {
-    const noCamasMsg = screen.queryByText(/No hay camas registradas en este sector/i);
-    expect(noCamasMsg).not.toBeInTheDocument();
-  }, { timeout: 10000 });
-
-  await waitFor(() => {
-    
-    const disponiblesElements = screen.getAllByText(/Disponibles/i);
-    
-    const contadorElement = disponiblesElements[0].previousSibling;
-    const disponibles = parseInt(contadorElement.textContent || '0');
-    
-    console.log('📊 Disponibles en Terapia Intensiva (prueba):', disponibles);
-    expect(disponibles).toBe(1);
+    const stats = screen.getByRole('region', { name: 'Resumen de camas' });
+    expect(within(stats).getByText('Disponibles')).toBeInTheDocument();
+    expect(within(stats).getByText('Ocupadas')).toBeInTheDocument();
+    expect(within(stats).getByText('En limpieza')).toBeInTheDocument();
   });
-}, 15000);
 
+  test('Caso 2: el piso inicial es Piso 1, su botón aparece activo y muestra 12 camas', () => {
+    render(<Beds role="enfermeria" beds={mockBeds} onChangeStatus={noop} />);
 
- 
-test('Caso de Prueba 5: El componente muestra 1 cama disponible en Piso 2', async () => {
-  render(<Beds role="enfermeria" />);
-
-  const select = screen.getByRole('combobox');
-  fireEvent.change(select, { target: { value: 'Piso 2' } });
-
-  
-  await waitFor(() => {
-
-    const noCamasMsg = screen.queryByText(/No hay camas registradas en este sector/i);
-    expect(noCamasMsg).not.toBeInTheDocument();
-  }, { timeout: 10000 });
-
-  await waitFor(() => {
-  
-    const disponiblesElements = screen.getAllByText(/Disponibles/i);
-    const contadorElement = disponiblesElements[0].previousSibling;
-    const disponibles = parseInt(contadorElement.textContent || '0');
-    
-    console.log('📊 Disponibles en Piso 2 (prueba):', disponibles);
-
-    expect(disponibles).toBe(1);
+    const floorGroup = screen.getByRole('group', { name: 'Selector de piso' });
+    expect(within(floorGroup).getByRole('button', { name: 'Piso 1' })).toHaveClass('active');
+    expect(within(floorGroup).getByRole('button', { name: 'Piso 2' })).not.toHaveClass('active');
+    expect(screen.getByText('12 camas')).toBeInTheDocument();
   });
-}, 15000);
 
+  test('Caso 3: al hacer clic en otro piso, el botón activo y el encabezado de sección se actualizan', () => {
+    render(<Beds role="enfermeria" beds={mockBeds} onChangeStatus={noop} />);
 
-test('Caso de Prueba 6: El componente NO muestra mensaje cuando hay camas en Piso 2', async () => {
-  render(<Beds role="enfermeria" />);
+    const floorGroup = screen.getByRole('group', { name: 'Selector de piso' });
+    fireEvent.click(within(floorGroup).getByRole('button', { name: 'Piso 3' }));
 
-  const select = screen.getByRole('combobox');
-  fireEvent.change(select, { target: { value: 'Piso 2' } });
+    expect(within(floorGroup).getByRole('button', { name: 'Piso 3' })).toHaveClass('active');
+    expect(within(floorGroup).getByRole('button', { name: 'Piso 1' })).not.toHaveClass('active');
+    expect(screen.getByText('Camas del Piso 3')).toBeInTheDocument();
+  });
 
-  await waitFor(() => {
-    const mensaje = screen.queryByText(/No hay camas registradas en este sector/i);
-    expect(mensaje).not.toBeInTheDocument();
-  }, { timeout: 10000 });
-});
+  test('Caso 4: las estadísticas de Piso 1 muestran 4 disponibles, 4 ocupadas y 4 en limpieza', () => {
+    render(<Beds role="enfermeria" beds={mockBeds} onChangeStatus={noop} />);
+
+    // Piso 1 es el piso por defecto (12 camas, ciclo de 3 estados → 4 de cada uno)
+    const stats = screen.getByRole('region', { name: 'Resumen de camas' });
+    expect(within(stats).getByText('Disponibles').previousElementSibling.textContent).toBe('4');
+    expect(within(stats).getByText('Ocupadas').previousElementSibling.textContent).toBe('4');
+    expect(within(stats).getByText('En limpieza').previousElementSibling.textContent).toBe('4');
+  });
+
+  test('Caso 5: muestra alerta cuando hay menos de 3 camas disponibles en el piso seleccionado', () => {
+    const sinDisponibles = mockBeds.map((bed) =>
+      bed.floor === 'Piso 1' ? { ...bed, status: 'ocupada' } : bed
+    );
+    render(<Beds role="enfermeria" beds={sinDisponibles} onChangeStatus={noop} />);
+
+    expect(screen.getByRole('alert')).toBeInTheDocument();
+    expect(screen.getByText(/quedan/i)).toBeInTheDocument();
+  });
+
+  test('Caso 6: el rol admin no ve los grupos de acciones de cambio de estado en las camas', () => {
+    render(<Beds role="admin" beds={mockBeds} onChangeStatus={noop} />);
+
+    expect(screen.queryAllByRole('group', { name: /Cambiar estado/i })).toHaveLength(0);
+  });
+
 });
