@@ -32,8 +32,8 @@ public class Cama
 
     public void LiberarParaLimpieza()
     {
-        if (Estado != EstadoCama.Ocupada)
-            throw new InvalidOperationException($"La cama {Numero} debe estar ocupada para pasar a limpieza.");
+        if (Estado != EstadoCama.Ocupada && Estado != EstadoCama.Disponible)
+            throw new InvalidOperationException($"La cama {Numero} debe estar ocupada o disponible para pasar a limpieza.");
         
         Estado = EstadoCama.EnLimpieza;
         PacienteId = null;

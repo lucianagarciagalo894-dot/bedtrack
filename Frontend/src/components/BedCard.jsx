@@ -8,7 +8,7 @@ const STATUS_CONFIG = {
 
 const TRANSITIONS = {
   disponible: ["ocupada", "limpieza"],
-  ocupada:    ["disponible", "limpieza"],
+  ocupada:    ["limpieza"],
   limpieza:   ["disponible", "ocupada"],
 };
 
