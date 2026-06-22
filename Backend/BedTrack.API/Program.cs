@@ -40,8 +40,7 @@ using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     
-    // Limpieza de la base de datos anterior (Temporal para la reestructuración)
-    context.Database.ExecuteSqlRaw("DROP TABLE IF EXISTS \"Camas\" CASCADE; DROP TABLE IF EXISTS \"Pacientes\" CASCADE; DROP TABLE IF EXISTS \"Habitaciones\" CASCADE; DROP TABLE IF EXISTS \"Pisos\" CASCADE; DROP TABLE IF EXISTS \"__EFMigrationsHistory\" CASCADE;");
+    // Limpieza removida - ya no borramos la base de datos en cada inicio
 
     // Aplica las migraciones automáticamente
     context.Database.Migrate();
