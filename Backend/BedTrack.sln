@@ -1,0 +1,40 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BedTrack.API", "BedTrack.API\BedTrack.API.csproj", "{68348D7F-F4F5-46B8-86E5-61EEF38696FA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BedTrack.Application", "BedTrack.Application\BedTrack.Application.csproj", "{55750B2E-7EC0-4E14-A10C-DF27F3EE9832}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BedTrack.Domain", "BedTrack.Domain\BedTrack.Domain.csproj", "{B9BE39DB-8C4E-4EAC-924D-39678D116CC2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BedTrack.Infrastructure", "BedTrack.Infrastructure\BedTrack.Infrastructure.csproj", "{0EDFD130-C412-47FE-9F9B-546ECDA69118}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{68348D7F-F4F5-46B8-86E5-61EEF38696FA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{68348D7F-F4F5-46B8-86E5-61EEF38696FA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{68348D7F-F4F5-46B8-86E5-61EEF38696FA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{68348D7F-F4F5-46B8-86E5-61EEF38696FA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{55750B2E-7EC0-4E14-A10C-DF27F3EE9832}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{55750B2E-7EC0-4E14-A10C-DF27F3EE9832}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{55750B2E-7EC0-4E14-A10C-DF27F3EE9832}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{55750B2E-7EC0-4E14-A10C-DF27F3EE9832}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B9BE39DB-8C4E-4EAC-924D-39678D116CC2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B9BE39DB-8C4E-4EAC-924D-39678D116CC2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B9BE39DB-8C4E-4EAC-924D-39678D116CC2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B9BE39DB-8C4E-4EAC-924D-39678D116CC2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0EDFD130-C412-47FE-9F9B-546ECDA69118}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0EDFD130-C412-47FE-9F9B-546ECDA69118}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0EDFD130-C412-47FE-9F9B-546ECDA69118}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0EDFD130-C412-47FE-9F9B-546ECDA69118}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
