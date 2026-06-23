@@ -16,13 +16,25 @@ builder.Services.AddScoped<IHospitalRepository, HospitalRepository>();
 builder.Services.AddScoped<IHospitalService, HospitalService>();
 
 // 2. Configuración de CORS (Permite que React se conecte de forma segura)
+var allowedOrigins = builder.Configuration.GetSection("AllowedOrigins").Get<string[]>();
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("PermitirReact", policy =>
     {
-        policy.WithOrigins("http://localhost:5173", "https://localhost:5173") // Origen del Frontend
-              .AllowAnyHeader()
-              .AllowAnyMethod();
+        if (allowedOrigins != null && allowedOrigins.Length > 0)
+        {
+            policy.WithOrigins(allowedOrigins)
+                  .AllowAnyHeader()
+                  .AllowAnyMethod();
+        }
+        else
+        {
+            // Fallback para desarrollo local
+            policy.WithOrigins("http://localhost:5173", "https://localhost:5173")
+                  .AllowAnyHeader()
+                  .AllowAnyMethod();
+        }
     });
 });
 
