@@ -1,4 +1,4 @@
-const API_BASE = import.meta.env.VITE_API_URL || "/api";
+const API_BASE = "https://bedtrack-frontend-final-production.up.railway.app/api";
 
 export async function getFloors() {
   const res = await fetch(`${API_BASE}/floors`);

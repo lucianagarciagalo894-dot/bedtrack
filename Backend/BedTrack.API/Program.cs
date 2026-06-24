@@ -22,19 +22,11 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("PermitirReact", policy =>
     {
-        if (allowedOrigins != null && allowedOrigins.Length > 0)
-        {
-            policy.WithOrigins(allowedOrigins)
-                  .AllowAnyHeader()
-                  .AllowAnyMethod();
-        }
-        else
-        {
-            // Fallback para desarrollo local
-            policy.WithOrigins("http://localhost:5173", "https://localhost:5173")
-                  .AllowAnyHeader()
-                  .AllowAnyMethod();
-        }
+        // Para este proyecto universitario, permitimos cualquier origen (Vercel, Localhost, etc)
+        // para evitar dolores de cabeza con configuraciones de entorno.
+        policy.AllowAnyOrigin()
+              .AllowAnyHeader()
+              .AllowAnyMethod();
     });
 });
 
