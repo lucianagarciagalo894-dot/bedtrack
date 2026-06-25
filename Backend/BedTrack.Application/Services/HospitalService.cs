@@ -70,7 +70,7 @@ public class HospitalService : IHospitalService
 
             cama.Ocupar(paciente.Id);
         }
-        else if (estadoStr == "limpieza")
+        else if (estadoStr == "enlimpieza")
         {
             if (cama.Paciente != null)
             {
@@ -116,7 +116,7 @@ public class HospitalService : IHospitalService
             {
                 Id = c.Id,
                 Number = c.Numero,
-                Status = c.Estado.ToString().ToLower(),
+                Status = c.Estado == EstadoCama.EnLimpieza ? "enLimpieza" : c.Estado.ToString().ToLower(),
                 Patient = c.Paciente == null ? null : new PacienteDto
                 {
                     Id = c.Paciente.Id,
