@@ -36,7 +36,7 @@ export default function Habitaciones({ rooms }) {
   const totalBeds     = floorRooms.reduce((s, r) => s + r.beds.length, 0);
   const availableBeds = floorRooms.reduce((s, r) => s + r.beds.filter((b) => b.status === "disponible").length, 0);
   const occupiedBeds  = floorRooms.reduce((s, r) => s + r.beds.filter((b) => b.status === "ocupada").length, 0);
-  const cleaningBeds  = floorRooms.reduce((s, r) => s + r.beds.filter((b) => b.status === "limpieza").length, 0);
+  const cleaningBeds  = floorRooms.reduce((s, r) => s + r.beds.filter((b) => b.status === "enlimpieza").length, 0);
 
   return (
     <div className="page-wrapper">

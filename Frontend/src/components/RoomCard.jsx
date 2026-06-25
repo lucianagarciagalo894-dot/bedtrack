@@ -11,14 +11,14 @@ export const TYPE_CONFIG = {
 const STATUS_CONFIG = {
   disponible: { label: "Disponible",    cls: "room-status-available", Icon: FaCheckCircle },
   ocupada:    { label: "Ocupada",       cls: "room-status-occupied",  Icon: FaTimesCircle },
-  limpieza:   { label: "En limpieza",   cls: "room-status-cleaning",  Icon: FaBroom       },
+  enlimpieza:   { label: "En limpieza",   cls: "room-status-cleaning",  Icon: FaBroom       },
   parcial:    { label: "Parc. ocupada", cls: "room-status-partial",   Icon: FaUsers       },
 };
 
 function getRoomStatus(beds) {
   if (beds.every((b) => b.status === "disponible")) return "disponible";
   if (beds.every((b) => b.status === "ocupada"))    return "ocupada";
-  if (beds.some((b)  => b.status === "limpieza"))   return "limpieza";
+  if (beds.some((b)  => b.status === "enlimpieza"))   return "enlimpieza";
   return "parcial";
 }
 

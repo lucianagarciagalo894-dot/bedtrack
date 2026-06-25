@@ -15,7 +15,7 @@ export default function Dashboard({ role, beds }) {
   const totalBeds = beds.length;
   const totalAvailable = beds.filter((b) => b.status === "disponible").length;
   const totalOccupied = beds.filter((b) => b.status === "ocupada").length;
-  const totalCleaning = beds.filter((b) => b.status === "limpieza").length;
+  const totalCleaning = beds.filter((b) => b.status === "enlimpieza").length;
 
   const floorStats = FLOORS.map((floor) => {
     const fb = beds.filter((b) => b.floor === floor);
@@ -24,7 +24,7 @@ export default function Dashboard({ role, beds }) {
       total: fb.length,
       available: fb.filter((b) => b.status === "disponible").length,
       occupied: fb.filter((b) => b.status === "ocupada").length,
-      cleaning: fb.filter((b) => b.status === "limpieza").length,
+      cleaning: fb.filter((b) => b.status === "enlimpieza").length,
     };
   });
 

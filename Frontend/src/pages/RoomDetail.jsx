@@ -17,26 +17,26 @@ import {
 const STATUS_CONFIG = {
   disponible: { label: "Disponible",    cls: "room-status-available", Icon: FaCheckCircle },
   ocupada:    { label: "Ocupada",       cls: "room-status-occupied",  Icon: FaTimesCircle },
-  limpieza:   { label: "En limpieza",   cls: "room-status-cleaning",  Icon: FaBroom       },
+  enlimpieza:   { label: "En limpieza",   cls: "room-status-cleaning",  Icon: FaBroom       },
   parcial:    { label: "Parc. ocupada", cls: "room-status-partial",   Icon: FaUsers       },
 };
 
 const BED_TRANSITIONS = {
-  disponible: ["ocupada", "limpieza"],
-  ocupada:    ["limpieza"],
-  limpieza:   ["disponible", "ocupada"],
+  disponible: ["ocupada", "enlimpieza"],
+  ocupada:    ["enlimpieza"],
+  enlimpieza:   ["disponible", "ocupada"],
 };
 
 const BED_ACTION_CONFIG = {
   disponible: { label: "Disponible", cls: "rba-avail" },
   ocupada:    { label: "Ocupada",    cls: "rba-occup" },
-  limpieza:   { label: "Limpieza",   cls: "rba-clean" },
+  enlimpieza:   { label: "Limpieza",   cls: "rba-clean" },
 };
 
 function getRoomStatus(beds) {
   if (beds.every((b) => b.status === "disponible")) return "disponible";
   if (beds.every((b) => b.status === "ocupada"))    return "ocupada";
-  if (beds.some((b)  => b.status === "limpieza"))   return "limpieza";
+  if (beds.some((b)  => b.status === "enlimpieza"))   return "enlimpieza";
   return "parcial";
 }
 
@@ -71,7 +71,7 @@ export default function RoomDetail({ rooms, role, onChangeBedStatus }) {
 
   const availCount  = room.beds.filter((b) => b.status === "disponible").length;
   const occupCount  = room.beds.filter((b) => b.status === "ocupada").length;
-  const cleanCount  = room.beds.filter((b) => b.status === "limpieza").length;
+  const cleanCount  = room.beds.filter((b) => b.status === "enlimpieza").length;
 
   const handleBedAction = (bed, newStatus) => {
     if (newStatus === "ocupada") {
@@ -82,7 +82,7 @@ export default function RoomDetail({ rooms, role, onChangeBedStatus }) {
   };
 
   const handleEditPatient  = (bed) => setModalState({ bed, mode: "edit" });
-  const handleDischarge    = (bed) => onChangeBedStatus(bed.id, "limpieza", null);
+  const handleDischarge    = (bed) => onChangeBedStatus(bed.id, "enlimpieza", null);
 
   const handleModalConfirm = (patientData) => {
     if (modalState) {

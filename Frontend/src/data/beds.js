@@ -8,7 +8,7 @@ export const FLOOR_CONFIG = [
 
 export const FLOORS = FLOOR_CONFIG.map((f) => f.label);
 
-const STATUSES = ["disponible", "ocupada", "limpieza"];
+const STATUSES = ["disponible", "ocupada", "enlimpieza"];
 
 const MOCK_PATIENTS = [
   { nombre: "María",   apellido: "González",  edad: 68, diagnostico: "Fractura de cadera",    diasInternacion: 14, fechaIngreso: "2026-06-10" },

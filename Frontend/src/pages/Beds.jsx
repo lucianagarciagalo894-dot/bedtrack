@@ -16,7 +16,7 @@ export default function Beds({ role, beds, onChangeStatus }) {
   const filtered  = beds.filter((b) => b.floor === floor);
   const available = filtered.filter((b) => b.status === "disponible").length;
   const occupied  = filtered.filter((b) => b.status === "ocupada").length;
-  const cleaning  = filtered.filter((b) => b.status === "limpieza").length;
+  const cleaning  = filtered.filter((b) => b.status === "enlimpieza").length;
 
   // Intercepta "ocupada": muestra formulario de paciente primero
   const handleChangeStatus = (bedId, newStatus) => {
