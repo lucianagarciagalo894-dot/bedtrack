@@ -3,23 +3,23 @@ import { FaBed, FaCheckCircle, FaTimesCircle, FaBroom } from "react-icons/fa";
 const STATUS_CONFIG = {
   disponible: { cardClass: "status-available", badgeClass: "badge-available", label: "Disponible", Icon: FaCheckCircle },
   ocupada:    { cardClass: "status-occupied",  badgeClass: "badge-occupied",  label: "Ocupada",    Icon: FaTimesCircle },
-  limpieza:   { cardClass: "status-cleaning",  badgeClass: "badge-cleaning",  label: "En limpieza",Icon: FaBroom       },
+  enLimpieza:   { cardClass: "status-cleaning",  badgeClass: "badge-cleaning",  label: "En limpieza",Icon: FaBroom       },
 };
 
 const TRANSITIONS = {
-  disponible: ["ocupada", "limpieza"],
-  ocupada:    ["limpieza"],
-  limpieza:   ["disponible", "ocupada"],
+  disponible: ["ocupada", "enLimpieza"],
+  ocupada:    ["enLimpieza"],
+  enLimpieza:   ["disponible", "ocupada"],
 };
 
 const ALL_ACTIONS = [
   { key: "disponible", label: "Disponible", cls: "btn-avail" },
   { key: "ocupada",    label: "Ocupada",    cls: "btn-occup" },
-  { key: "limpieza",   label: "Limpieza",   cls: "btn-clean" },
+  { key: "enLimpieza",   label: "Limpieza",   cls: "btn-clean" },
 ];
 
 export default function BedCard({ bed, onChangeStatus, role }) {
-  const cfg    = STATUS_CONFIG[bed.status] ?? STATUS_CONFIG.limpieza;
+  const cfg    = STATUS_CONFIG[bed.status] ?? STATUS_CONFIG.enLimpieza;
   const { Icon } = cfg;
   const actions  = ALL_ACTIONS.filter(({ key }) => TRANSITIONS[bed.status]?.includes(key));
 

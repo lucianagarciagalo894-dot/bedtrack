@@ -30,8 +30,13 @@ builder.Services.AddCors(options =>
     });
 });
 
-// 3. Soporte para Controladores
-builder.Services.AddControllers();
+// 3. Soporte para Controladores y serialización de Enums como strings (ej: "disponible" en vez de 0)
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter(System.Text.Json.JsonNamingPolicy.CamelCase));
+    });
+
 
 // 4. Configuración de Swagger (Documentación de la API)
 builder.Services.AddEndpointsApiExplorer();
