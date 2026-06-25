@@ -11,9 +11,9 @@ import Pacientes from "./pages/Pacientes";
 import { getAllRooms, updateBedStatus } from "./services/roomService";
 
 const VALID_TRANSITIONS = {
-  disponible: ["ocupada", "enLimpieza"],
-  ocupada:    ["enLimpieza"],
-  enLimpieza:   ["disponible", "ocupada"],
+  disponible: ["ocupada", "enlimpieza"],
+  ocupada:    ["enlimpieza"],
+  enlimpieza:   ["disponible", "ocupada"],
 };
 
 function App() {
