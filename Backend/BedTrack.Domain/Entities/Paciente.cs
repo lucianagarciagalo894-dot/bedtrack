@@ -9,14 +9,25 @@ public class Paciente
     public string Diagnostico { get; private set; }
     public DateTime FechaIngreso { get; private set; }
 
+    public int DiasInternacion { get; private set; }
     public Cama? Cama { get; private set; }
 
-    public Paciente(string nombre, string apellido, int edad, string diagnostico, DateTime fechaIngreso)
+    public Paciente(string nombre, string apellido, int edad, string diagnostico, int diasInternacion, DateTime fechaIngreso)
     {
         Nombre = nombre;
         Apellido = apellido;
         Edad = edad;
         Diagnostico = diagnostico;
+        DiasInternacion = diasInternacion;
         FechaIngreso = fechaIngreso;
+    }
+
+    public void ActualizarDatos(string nombre, string apellido, int edad, string diagnostico, int diasInternacion)
+    {
+        Nombre = nombre;
+        Apellido = apellido;
+        Edad = edad;
+        Diagnostico = diagnostico;
+        DiasInternacion = diasInternacion;
     }
 }

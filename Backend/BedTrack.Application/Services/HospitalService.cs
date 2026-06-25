@@ -57,18 +57,34 @@ public class HospitalService : IHospitalService
         {
             if (request.Patient == null) throw new ArgumentException("Faltan datos del paciente");
             
-            var paciente = new Paciente(
-                request.Patient.Nombre,
-                request.Patient.Apellido,
-                request.Patient.Edad,
-                request.Patient.Diagnostico,
-                DateTime.Parse(request.Patient.FechaIngreso).ToUniversalTime()
-            );
-            
-            await _repo.AgregarPacienteAsync(paciente);
-            await _repo.GuardarCambiosAsync(); // Para generar el Id
+            if (cama.Estado == EstadoCama.Ocupada && cama.Paciente != null)
+            {
+                // Si la cama ya está ocupada y tiene un paciente, actualizamos sus datos en lugar de crear uno nuevo
+                cama.Paciente.ActualizarDatos(
+                    request.Patient.Nombre,
+                    request.Patient.Apellido,
+                    request.Patient.Edad,
+                    request.Patient.Diagnostico,
+                    request.Patient.DiasInternacion
+                );
+            }
+            else
+            {
+                // Es un paciente nuevo
+                var paciente = new Paciente(
+                    request.Patient.Nombre,
+                    request.Patient.Apellido,
+                    request.Patient.Edad,
+                    request.Patient.Diagnostico,
+                    request.Patient.DiasInternacion,
+                    DateTime.Parse(request.Patient.FechaIngreso).ToUniversalTime()
+                );
+                
+                await _repo.AgregarPacienteAsync(paciente);
+                await _repo.GuardarCambiosAsync(); // Para generar el Id
 
-            cama.Ocupar(paciente.Id);
+                cama.Ocupar(paciente.Id);
+            }
         }
         else if (estadoStr == "enlimpieza")
         {
@@ -125,7 +141,7 @@ public class HospitalService : IHospitalService
                     Edad = c.Paciente.Edad,
                     Diagnostico = c.Paciente.Diagnostico,
                     FechaIngreso = c.Paciente.FechaIngreso.ToString("yyyy-MM-dd"),
-                    DiasInternacion = (DateTime.UtcNow - c.Paciente.FechaIngreso).Days
+                    DiasInternacion = c.Paciente.DiasInternacion
                 }
             }).ToList()
         };
