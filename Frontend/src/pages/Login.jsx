@@ -105,6 +105,7 @@ export default function Login({ onLogin }) {
             </label>
             <input
               id="email"
+              name="email"
               type="email"
               className={`form-input${errors.email ? " input-error" : ""}`}
               placeholder="ejemplo@gmail.com"
@@ -132,6 +133,7 @@ export default function Login({ onLogin }) {
             </label>
             <input
               id="password"
+              name="password"
               type="password"
               className={`form-input${errors.password ? " input-error" : ""}`}
               placeholder="Mínimo 4 caracteres"

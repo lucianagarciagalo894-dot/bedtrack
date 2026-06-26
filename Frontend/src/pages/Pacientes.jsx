@@ -66,6 +66,8 @@ export default function Pacientes({ rooms }) {
           <div className="patients-search">
             <FaSearch className="search-icon" aria-hidden="true" />
             <input
+              id="search-patients"
+              name="search-patients"
               type="search"
               className="search-input"
               placeholder="Buscar por nombre, diagnóstico o piso…"
