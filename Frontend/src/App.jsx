@@ -12,7 +12,7 @@ import { getAllRooms, updateBedStatus } from "./services/roomService";
 
 const VALID_TRANSITIONS = {
   disponible: ["ocupada", "enlimpieza"],
-  ocupada:    ["enlimpieza"],
+  ocupada:    ["enlimpieza", "ocupada"],
   enlimpieza:   ["disponible", "ocupada"],
 };
 
