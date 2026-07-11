@@ -1,6 +1,6 @@
 import { render, screen, fireEvent, within } from '@testing-library/react';
 import { describe, test, expect, vi } from 'vitest';
-import Beds from './Beds';
+import Beds from '../pages/Beds';
 import { generateBeds, FLOORS } from '../data/beds';
 
 const mockBeds = generateBeds();

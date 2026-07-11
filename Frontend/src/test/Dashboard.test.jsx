@@ -14,7 +14,6 @@ vi.mock('react-icons/fa', () => ({
   FaExclamationCircle: () => <span data-testid="fa-exclamation">FaExclamationCircle</span>
 }));
 
-
 const renderWithRouter = (component) => {
   return render(<BrowserRouter>{component}</BrowserRouter>);
 };

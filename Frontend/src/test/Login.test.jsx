@@ -30,7 +30,6 @@ describe('Componente Login', () => {
     expect(within(select).getByText('Enfermería')).toBeInTheDocument();
     expect(within(select).getByText('Administrador')).toBeInTheDocument();
   });
-
   test('Caso 2: el rol por defecto es "enfermeria" y el select lo muestra correctamente', () => {
     const mockOnLogin = vi.fn();
     render(<Login onLogin={mockOnLogin} />);
