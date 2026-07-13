@@ -56,5 +56,6 @@ it("Probar contraseña con 3 digitos y  como login de administrador" , () => {
     cy.get('input[name="email"]').type('administrador@hotmail.com')
     cy.get('input[name="password"]').type('1234')
 
+    
 })
 })
