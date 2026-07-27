@@ -84,6 +84,7 @@ public class HospitalService : IHospitalService
                 await _repo.GuardarCambiosAsync(); // Para generar el Id
 
                 cama.Ocupar(paciente.Id);
+                cama.Paciente = paciente;
             }
         }
         else if (estadoStr == "enlimpieza")
@@ -114,7 +115,16 @@ public class HospitalService : IHospitalService
             Id = cama.Id,
             Number = cama.Numero,
             Status = estadoStr,
-            Patient = request.Patient
+            Patient = cama.Paciente == null ? null : new PacienteDto
+            {
+                Id = cama.Paciente.Id,
+                Nombre = cama.Paciente.Nombre,
+                Apellido = cama.Paciente.Apellido,
+                Edad = cama.Paciente.Edad,
+                Diagnostico = cama.Paciente.Diagnostico,
+                FechaIngreso = cama.Paciente.FechaIngreso.ToString("yyyy-MM-dd"),
+                DiasInternacion = cama.Paciente.DiasInternacion
+            }
         };
     }
 
@@ -132,7 +142,7 @@ public class HospitalService : IHospitalService
             {
                 Id = c.Id,
                 Number = c.Numero,
-                Status = c.Estado == EstadoCama.EnLimpieza ? "enLimpieza" : c.Estado.ToString().ToLower(),
+                Status = c.Estado == EstadoCama.EnLimpieza ? "enlimpieza" : c.Estado.ToString().ToLower(),
                 Patient = c.Paciente == null ? null : new PacienteDto
                 {
                     Id = c.Paciente.Id,

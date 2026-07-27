@@ -23,7 +23,7 @@ public class Cama
 
     public void Ocupar(int pacienteId)
     {
-        if (Estado != EstadoCama.Disponible)
+        if (Estado != EstadoCama.Disponible && Estado != EstadoCama.EnLimpieza)
             throw new InvalidOperationException($"La cama {Numero} no se puede ocupar porque está en estado: {Estado}.");
         
         Estado = EstadoCama.Ocupada;
@@ -32,18 +32,15 @@ public class Cama
 
     public void LiberarParaLimpieza()
     {
-        if (Estado != EstadoCama.Ocupada && Estado != EstadoCama.Disponible)
-            throw new InvalidOperationException($"La cama {Numero} debe estar ocupada o disponible para pasar a limpieza.");
-        
         Estado = EstadoCama.EnLimpieza;
         PacienteId = null;
+        Paciente = null;
     }
 
     public void Habilitar()
     {
-        if (Estado != EstadoCama.EnLimpieza)
-            throw new InvalidOperationException($"La cama {Numero} debe ser limpiada antes de volver a estar disponible.");
-        
         Estado = EstadoCama.Disponible;
+        PacienteId = null;
+        Paciente = null;
     }
 }

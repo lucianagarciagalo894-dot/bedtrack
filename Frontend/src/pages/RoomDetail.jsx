@@ -34,9 +34,9 @@ const BED_ACTION_CONFIG = {
 };
 
 function getRoomStatus(beds) {
-  if (beds.every((b) => b.status === "disponible")) return "disponible";
-  if (beds.every((b) => b.status === "ocupada"))    return "ocupada";
-  if (beds.some((b)  => b.status === "enlimpieza"))   return "enlimpieza";
+  if (beds.every((b) => b.status?.toLowerCase() === "disponible")) return "disponible";
+  if (beds.every((b) => b.status?.toLowerCase() === "ocupada"))    return "ocupada";
+  if (beds.some((b)  => b.status?.toLowerCase() === "enlimpieza")) return "enlimpieza";
   return "parcial";
 }
 
@@ -155,11 +155,12 @@ export default function RoomDetail({ rooms, role, onChangeBedStatus }) {
 
         <div className="rd-beds-list">
           {room.beds.map((bed) => {
-            const bedCfg  = STATUS_CONFIG[bed.status] ?? STATUS_CONFIG.disponible;
+            const statusKey = bed.status?.toLowerCase();
+            const bedCfg  = STATUS_CONFIG[statusKey] ?? STATUS_CONFIG.disponible;
             const BedIcon = bedCfg.Icon;
 
             return (
-              <div key={bed.id} className={`rd-bed-card rd-bed-${bed.status}`}>
+              <div key={bed.id} className={`rd-bed-card rd-bed-${statusKey}`}>
 
                 {/* Encabezado de cama */}
                 <div className="rd-bed-header">
@@ -221,7 +222,7 @@ export default function RoomDetail({ rooms, role, onChangeBedStatus }) {
                       )}
                     </div>
                   </div>
-                ) : bed.status === "ocupada" ? (
+                ) : statusKey === "ocupada" ? (
                   <div className="rd-patient-empty">
                     Sin paciente registrado
                   </div>
@@ -234,7 +235,7 @@ export default function RoomDetail({ rooms, role, onChangeBedStatus }) {
                     role="group"
                     aria-label={`Cambiar estado cama ${bed.number}`}
                   >
-                    {BED_TRANSITIONS[bed.status]?.map((target) => (
+                    {BED_TRANSITIONS[statusKey]?.map((target) => (
                       <button
                         key={target}
                         className={`room-bed-action-btn ${BED_ACTION_CONFIG[target].cls}`}
