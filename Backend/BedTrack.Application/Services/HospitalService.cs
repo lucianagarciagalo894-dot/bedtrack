@@ -48,6 +48,9 @@ public class HospitalService : IHospitalService
 
     public async Task<CamaDto> UpdateBedStatusAsync(int bedId, UpdateBedStatusDto request)
     {
+        if (request == null || string.IsNullOrWhiteSpace(request.Status))
+            throw new ArgumentException("El estado es requerido");
+
         var cama = await _repo.ObtenerCamaPorIdAsync(bedId);
         if (cama == null) throw new KeyNotFoundException("Cama no encontrada");
 
@@ -71,13 +74,19 @@ public class HospitalService : IHospitalService
             else
             {
                 // Es un paciente nuevo
+                var fechaIngreso = string.IsNullOrWhiteSpace(request.Patient.FechaIngreso)
+                    ? DateTime.UtcNow
+                    : DateTime.TryParse(request.Patient.FechaIngreso, out var parsedDate)
+                        ? parsedDate.ToUniversalTime()
+                        : DateTime.UtcNow;
+
                 var paciente = new Paciente(
                     request.Patient.Nombre,
                     request.Patient.Apellido,
                     request.Patient.Edad,
                     request.Patient.Diagnostico,
                     request.Patient.DiasInternacion,
-                    DateTime.Parse(request.Patient.FechaIngreso).ToUniversalTime()
+                    fechaIngreso
                 );
                 
                 await _repo.AgregarPacienteAsync(paciente);
@@ -133,7 +142,7 @@ public class HospitalService : IHospitalService
         return new HabitacionDto
         {
             Id = h.Id,
-            Number = h.Piso.Id * 100 + h.Numero,
+            Number = (h.Piso != null ? h.Piso.Id * 100 : 0) + h.Numero,
             FloorId = h.PisoId,
             Floor = h.Piso?.Nombre ?? "",
             Type = h.Piso?.Tipo ?? "",

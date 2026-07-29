@@ -18,6 +18,9 @@ public class BedsController : ControllerBase
     [HttpPatch("{id}/status")]
     public async Task<IActionResult> UpdateBedStatus(int id, [FromBody] UpdateBedStatusDto request)
     {
+        if (request == null)
+            return BadRequest("El cuerpo de la solicitud no puede ser nulo");
+
         try
         {
             var result = await _service.UpdateBedStatusAsync(id, request);

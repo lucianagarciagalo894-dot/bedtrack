@@ -40,10 +40,10 @@ export default function Pacientes({ rooms }) {
     const q = search.toLowerCase();
     return patients.filter(
       (p) =>
-        p.nombre.toLowerCase().includes(q) ||
-        p.apellido.toLowerCase().includes(q) ||
-        p.diagnostico.toLowerCase().includes(q) ||
-        p.floor.toLowerCase().includes(q)
+        (p.nombre ?? "").toLowerCase().includes(q) ||
+        (p.apellido ?? "").toLowerCase().includes(q) ||
+        (p.diagnostico ?? "").toLowerCase().includes(q) ||
+        (p.floor ?? "").toLowerCase().includes(q)
     );
   }, [patients, search]);
 

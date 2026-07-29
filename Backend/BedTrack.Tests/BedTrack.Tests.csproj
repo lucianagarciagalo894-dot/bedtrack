@@ -9,6 +9,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.9.0" />
     <PackageReference Include="xunit" Version="2.7.0" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.5.7">
@@ -23,6 +27,7 @@
     <ProjectReference Include="..\BedTrack.Domain\BedTrack.Domain.csproj" />
     <ProjectReference Include="..\BedTrack.Application\BedTrack.Application.csproj" />
     <ProjectReference Include="..\BedTrack.Infrastructure\BedTrack.Infrastructure.csproj" />
+    <ProjectReference Include="..\BedTrack.API\BedTrack.API.csproj" />
   </ItemGroup>
 
 </Project>

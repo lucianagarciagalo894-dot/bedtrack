@@ -153,4 +153,62 @@ public class HospitalServiceTests
         Assert.Equal(7, paciente.DiasInternacion);
         Assert.Equal("ocupada", result.Status);
     }
+
+    [Fact]
+    public async Task UpdateBedStatusAsync_NullRequest_ShouldThrowArgumentException()
+    {
+        await Assert.ThrowsAsync<ArgumentException>(() => _service.UpdateBedStatusAsync(1, null!));
+    }
+
+    [Fact]
+    public async Task UpdateBedStatusAsync_InvalidDate_ShouldFallbackToCurrentDate()
+    {
+        var cama = new Cama(1, 101);
+        _repoMock.Setup(r => r.ObtenerCamaPorIdAsync(1)).ReturnsAsync(cama);
+
+        var request = new UpdateBedStatusDto
+        {
+            Status = "ocupada",
+            Patient = new PacienteDto
+            {
+                Nombre = "Pedro",
+                Apellido = "Díaz",
+                Edad = 60,
+                Diagnostico = "Chequeo",
+                DiasInternacion = 2,
+                FechaIngreso = "FECHA_INVALIDA"
+            }
+        };
+
+        var result = await _service.UpdateBedStatusAsync(1, request);
+
+        Assert.NotNull(result.Patient);
+        Assert.Equal("Pedro", result.Patient.Nombre);
+    }
+
+    [Fact]
+    public async Task GetFloorsAsync_ShouldReturnMappedFloors()
+    {
+        var pisos = new List<Piso> { new Piso("Piso 1", "Privada", "privada") };
+        _repoMock.Setup(r => r.ObtenerPisosAsync()).ReturnsAsync(pisos);
+
+        var result = await _service.GetFloorsAsync();
+
+        Assert.Single(result);
+    }
+
+    [Fact]
+    public async Task GetRoomByIdAsync_Found_ShouldReturnMappedHabitacion()
+    {
+        var piso = new Piso("Piso 1", "Privada", "privada");
+        var room = new Habitacion(1, 1);
+        piso.Habitaciones.Add(room);
+
+        _repoMock.Setup(r => r.ObtenerHabitacionPorIdAsync(1)).ReturnsAsync(room);
+
+        var result = await _service.GetRoomByIdAsync(1);
+
+        Assert.NotNull(result);
+        Assert.Equal(1, result.Number);
+    }
 }
