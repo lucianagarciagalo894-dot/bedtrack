@@ -13,18 +13,18 @@ export default function Dashboard({ role, beds }) {
   const userName = role === "enfermeria" ? "Enfermería" : "Administrador";
 
   const totalBeds = beds.length;
-  const totalAvailable = beds.filter((b) => b.status === "disponible").length;
-  const totalOccupied = beds.filter((b) => b.status === "ocupada").length;
-  const totalCleaning = beds.filter((b) => b.status === "enlimpieza").length;
+  const totalAvailable = beds.filter((b) => b.status?.toLowerCase() === "disponible").length;
+  const totalOccupied = beds.filter((b) => b.status?.toLowerCase() === "ocupada").length;
+  const totalCleaning = beds.filter((b) => b.status?.toLowerCase() === "enlimpieza").length;
 
   const floorStats = FLOORS.map((floor) => {
     const fb = beds.filter((b) => b.floor === floor);
     return {
       floor,
       total: fb.length,
-      available: fb.filter((b) => b.status === "disponible").length,
-      occupied: fb.filter((b) => b.status === "ocupada").length,
-      cleaning: fb.filter((b) => b.status === "enlimpieza").length,
+      available: fb.filter((b) => b.status?.toLowerCase() === "disponible").length,
+      occupied: fb.filter((b) => b.status?.toLowerCase() === "ocupada").length,
+      cleaning: fb.filter((b) => b.status?.toLowerCase() === "enlimpieza").length,
     };
   });
 

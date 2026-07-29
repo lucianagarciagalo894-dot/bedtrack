@@ -16,9 +16,9 @@ const STATUS_CONFIG = {
 };
 
 function getRoomStatus(beds) {
-  if (beds.every((b) => b.status === "disponible")) return "disponible";
-  if (beds.every((b) => b.status === "ocupada"))    return "ocupada";
-  if (beds.some((b)  => b.status === "enlimpieza"))   return "enlimpieza";
+  if (beds.every((b) => b.status?.toLowerCase() === "disponible")) return "disponible";
+  if (beds.every((b) => b.status?.toLowerCase() === "ocupada"))    return "ocupada";
+  if (beds.some((b)  => b.status?.toLowerCase() === "enlimpieza")) return "enlimpieza";
   return "parcial";
 }
 

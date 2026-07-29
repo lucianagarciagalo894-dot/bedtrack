@@ -69,9 +69,9 @@ export default function RoomDetail({ rooms, role, onChangeBedStatus }) {
   const StatusIcon = statusCfg.Icon;
   const isNurse    = role === "enfermeria";
 
-  const availCount  = room.beds.filter((b) => b.status === "disponible").length;
-  const occupCount  = room.beds.filter((b) => b.status === "ocupada").length;
-  const cleanCount  = room.beds.filter((b) => b.status === "enlimpieza").length;
+  const availCount  = room.beds.filter((b) => b.status?.toLowerCase() === "disponible").length;
+  const occupCount  = room.beds.filter((b) => b.status?.toLowerCase() === "ocupada").length;
+  const cleanCount  = room.beds.filter((b) => b.status?.toLowerCase() === "enlimpieza").length;
 
   const handleBedAction = (bed, newStatus) => {
     if (newStatus === "ocupada") {

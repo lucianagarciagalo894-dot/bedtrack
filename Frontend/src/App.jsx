@@ -39,7 +39,7 @@ function App() {
           floor:      room.floor,
           roomId:     room.id,
           roomNumber: room.number,
-          status:     bed.status,
+          status:     bed.status?.toLowerCase(),
           patient:    bed.patient,
         }))
       ),
@@ -48,7 +48,8 @@ function App() {
 
   const changeStatus = async (bedId, newStatus, patientData = null) => {
     const currentBed = rooms.flatMap((r) => r.beds).find((b) => b.id === bedId);
-    if (!currentBed || !VALID_TRANSITIONS[currentBed.status]?.includes(newStatus)) {
+    const currentStatus = currentBed?.status?.toLowerCase();
+    if (!currentBed || !VALID_TRANSITIONS[currentStatus]?.includes(newStatus)) {
       return;
     }
 
