@@ -14,9 +14,9 @@ public class HospitalService : IHospitalService
         _repo = repo;
     }
 
-    public async Task<IEnumerable<PisoDto>> GetFloorsAsync()
+    public async Task<IEnumerable<PisoDto>> GetFloorsAsync(int? sucursalId = null)
     {
-        var pisos = await _repo.ObtenerPisosAsync();
+        var pisos = await _repo.ObtenerPisosAsync(sucursalId);
         return pisos.Select(p => new PisoDto
         {
             Id = p.Id,
@@ -27,9 +27,9 @@ public class HospitalService : IHospitalService
         });
     }
 
-    public async Task<IEnumerable<HabitacionDto>> GetAllRoomsAsync()
+    public async Task<IEnumerable<HabitacionDto>> GetAllRoomsAsync(int? sucursalId = null)
     {
-        var habitaciones = await _repo.ObtenerHabitacionesAsync();
+        var habitaciones = await _repo.ObtenerHabitacionesAsync(sucursalId);
         return habitaciones.Select(MapToHabitacionDto);
     }
 

@@ -4,11 +4,11 @@ namespace BedTrack.Application.Interfaces;
 
 public interface IHospitalService
 {
-    Task<IEnumerable<PisoDto>> GetFloorsAsync();
+    Task<IEnumerable<PisoDto>> GetFloorsAsync(int? sucursalId = null);
     Task<IEnumerable<HabitacionDto>> GetRoomsByFloorAsync(int floorId);
     Task<HabitacionDto?> GetRoomByIdAsync(int roomId);
     Task<CamaDto> UpdateBedStatusAsync(int bedId, UpdateBedStatusDto request);
-    Task<IEnumerable<HabitacionDto>> GetAllRoomsAsync();
+    Task<IEnumerable<HabitacionDto>> GetAllRoomsAsync(int? sucursalId = null);
 
     // Métodos para Superadmin / Desarrollador
     Task<IEnumerable<NosocomioDto>> GetNosocomiosAsync();

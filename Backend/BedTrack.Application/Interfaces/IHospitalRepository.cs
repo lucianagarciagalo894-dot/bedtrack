@@ -21,8 +21,8 @@ public interface IHospitalRepository
     Task<Piso?> ObtenerPisoPorIdAsync(int floorId);
     Task AgregarPisoAsync(Piso piso);
 
-    Task<IEnumerable<Piso>> ObtenerPisosAsync();
-    Task<IEnumerable<Habitacion>> ObtenerHabitacionesAsync();
+    Task<IEnumerable<Piso>> ObtenerPisosAsync(int? sucursalId = null);
+    Task<IEnumerable<Habitacion>> ObtenerHabitacionesAsync(int? sucursalId = null);
     Task<IEnumerable<Habitacion>> ObtenerHabitacionesPorPisoAsync(int floorId);
     Task<Habitacion?> ObtenerHabitacionPorIdAsync(int roomId);
     Task<Cama?> ObtenerCamaPorIdAsync(int bedId);

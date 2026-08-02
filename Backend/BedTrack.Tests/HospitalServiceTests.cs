@@ -190,9 +190,9 @@ public class HospitalServiceTests
     public async Task GetFloorsAsync_ShouldReturnMappedFloors()
     {
         var pisos = new List<Piso> { new Piso("Piso 1", "Privada", "privada") };
-        _repoMock.Setup(r => r.ObtenerPisosAsync()).ReturnsAsync(pisos);
+        _repoMock.Setup(r => r.ObtenerPisosAsync(It.IsAny<int?>())).ReturnsAsync(pisos);
 
-        var result = await _service.GetFloorsAsync();
+        var result = await _service.GetFloorsAsync(null);
 
         Assert.Single(result);
     }

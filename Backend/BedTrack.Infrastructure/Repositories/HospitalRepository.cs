@@ -82,18 +82,28 @@ public class HospitalRepository : IHospitalRepository
         await _context.Pisos.AddAsync(piso);
     }
 
-    public async Task<IEnumerable<Piso>> ObtenerPisosAsync()
+    public async Task<IEnumerable<Piso>> ObtenerPisosAsync(int? sucursalId = null)
     {
-        return await _context.Pisos.Include(p => p.Habitaciones).ToListAsync();
+        var query = _context.Pisos.Include(p => p.Habitaciones).AsQueryable();
+        if (sucursalId.HasValue)
+        {
+            query = query.Where(p => p.SucursalId == sucursalId.Value);
+        }
+        return await query.ToListAsync();
     }
 
-    public async Task<IEnumerable<Habitacion>> ObtenerHabitacionesAsync()
+    public async Task<IEnumerable<Habitacion>> ObtenerHabitacionesAsync(int? sucursalId = null)
     {
-        return await _context.Habitaciones
+        var query = _context.Habitaciones
             .Include(h => h.Piso)
             .Include(h => h.Camas)
                 .ThenInclude(c => c.Paciente)
-            .ToListAsync();
+            .AsQueryable();
+        if (sucursalId.HasValue)
+        {
+            query = query.Where(h => h.Piso.SucursalId == sucursalId.Value);
+        }
+        return await query.ToListAsync();
     }
 
     public async Task<IEnumerable<Habitacion>> ObtenerHabitacionesPorPisoAsync(int floorId)

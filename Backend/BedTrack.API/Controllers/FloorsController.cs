@@ -15,9 +15,9 @@ public class FloorsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetFloors()
+    public async Task<IActionResult> GetFloors([FromQuery] int? sucursalId = null)
     {
-        return Ok(await _service.GetFloorsAsync());
+        return Ok(await _service.GetFloorsAsync(sucursalId));
     }
 
     [HttpGet("{id}/rooms")]

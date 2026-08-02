@@ -15,9 +15,9 @@ public class RoomsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetAllRooms()
+    public async Task<IActionResult> GetAllRooms([FromQuery] int? sucursalId = null)
     {
-        return Ok(await _service.GetAllRoomsAsync());
+        return Ok(await _service.GetAllRoomsAsync(sucursalId));
     }
 
     [HttpGet("{id}")]

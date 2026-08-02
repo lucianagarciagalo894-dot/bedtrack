@@ -66,9 +66,9 @@ public class ControllersTests
         var controller = new FloorsController(_serviceMock.Object);
         var floors = new List<PisoDto> { new PisoDto { Id = 1, Nombre = "Piso 1" } };
 
-        _serviceMock.Setup(s => s.GetFloorsAsync()).ReturnsAsync(floors);
+        _serviceMock.Setup(s => s.GetFloorsAsync(It.IsAny<int?>())).ReturnsAsync(floors);
 
-        var result = await controller.GetFloors();
+        var result = await controller.GetFloors(null);
 
         var okResult = Assert.IsType<OkObjectResult>(result);
         Assert.Equal(floors, okResult.Value);
@@ -94,9 +94,9 @@ public class ControllersTests
         var controller = new RoomsController(_serviceMock.Object);
         var rooms = new List<HabitacionDto> { new HabitacionDto { Id = 101 } };
 
-        _serviceMock.Setup(s => s.GetAllRoomsAsync()).ReturnsAsync(rooms);
+        _serviceMock.Setup(s => s.GetAllRoomsAsync(It.IsAny<int?>())).ReturnsAsync(rooms);
 
-        var result = await controller.GetAllRooms();
+        var result = await controller.GetAllRooms(null);
 
         var okResult = Assert.IsType<OkObjectResult>(result);
         Assert.Equal(rooms, okResult.Value);
