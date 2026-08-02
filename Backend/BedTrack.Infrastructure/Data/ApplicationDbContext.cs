@@ -9,6 +9,8 @@ public class ApplicationDbContext : DbContext
     {
     }
 
+    public DbSet<Nosocomio> Nosocomios { get; set; }
+    public DbSet<Sucursal> Sucursales { get; set; }
     public DbSet<Piso> Pisos { get; set; }
     public DbSet<Habitacion> Habitaciones { get; set; }
     public DbSet<Paciente> Pacientes { get; set; }
@@ -18,12 +20,34 @@ public class ApplicationDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
+        modelBuilder.Entity<Nosocomio>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Nombre).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.Codigo).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.Direccion).IsRequired().HasMaxLength(200);
+        });
+
+        modelBuilder.Entity<Sucursal>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Nombre).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.Direccion).IsRequired().HasMaxLength(200);
+            entity.HasOne(s => s.Nosocomio)
+                  .WithMany(n => n.Sucursales)
+                  .HasForeignKey(s => s.NosocomioId);
+        });
+
         modelBuilder.Entity<Piso>(entity =>
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Nombre).IsRequired().HasMaxLength(50);
             entity.Property(e => e.Tipo).IsRequired().HasMaxLength(50);
             entity.Property(e => e.TipoKey).IsRequired().HasMaxLength(50);
+            entity.HasOne(p => p.Sucursal)
+                  .WithMany(s => s.Pisos)
+                  .HasForeignKey(p => p.SucursalId)
+                  .IsRequired(false);
         });
 
         modelBuilder.Entity<Habitacion>(entity =>

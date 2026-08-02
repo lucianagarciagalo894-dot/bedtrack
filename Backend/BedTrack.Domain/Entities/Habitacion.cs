@@ -14,4 +14,10 @@ public class Habitacion
         Numero = numero;
         PisoId = pisoId;
     }
+
+    public void ActualizarDatos(int numero, int pisoId)
+    {
+        Numero = numero;
+        PisoId = pisoId;
+    }
 }

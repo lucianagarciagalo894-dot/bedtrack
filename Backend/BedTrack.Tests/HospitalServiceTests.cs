@@ -211,4 +211,27 @@ public class HospitalServiceTests
         Assert.NotNull(result);
         Assert.Equal(1, result.Number);
     }
+
+    [Fact]
+    public void ValidateDevLogin_ValidCredentials_ShouldSucceed()
+    {
+        var request = new DevLoginRequestDto { Email = "developer@bedtrack.dev", DevKey = "bedtrack2026" };
+        var response = _service.ValidateDevLogin(request);
+
+        Assert.True(response.Success);
+        Assert.Equal("superadmin", response.Role);
+    }
+
+    [Fact]
+    public async Task CreateNosocomioAsync_ValidData_ShouldReturnNosocomio()
+    {
+        var dto = new CreateNosocomioDto { Nombre = "Hospital Italiano", Codigo = "HI-01", Direccion = "Av. Central 123" };
+        _repoMock.Setup(r => r.AgregarNosocomioAsync(It.IsAny<Nosocomio>())).Returns(Task.CompletedTask);
+        _repoMock.Setup(r => r.GuardarCambiosAsync()).Returns(Task.CompletedTask);
+
+        var result = await _service.CreateNosocomioAsync(dto);
+
+        Assert.NotNull(result);
+        Assert.Equal("Hospital Italiano", result.Nombre);
+    }
 }

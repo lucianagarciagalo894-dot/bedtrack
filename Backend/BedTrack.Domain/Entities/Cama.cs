@@ -43,4 +43,14 @@ public class Cama
         PacienteId = null;
         Paciente = null;
     }
+
+    public void ActualizarDatos(int numero, int habitacionId, EstadoCama? estado = null)
+    {
+        Numero = numero;
+        HabitacionId = habitacionId;
+        if (estado.HasValue)
+        {
+            Estado = estado.Value;
+        }
+    }
 }

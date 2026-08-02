@@ -46,3 +46,76 @@ public class UpdateBedStatusDto
     public string Status { get; set; } = string.Empty;
     public PacienteDto? Patient { get; set; }
 }
+
+public class NosocomioDto
+{
+    public int Id { get; set; }
+    public string Nombre { get; set; } = string.Empty;
+    public string Codigo { get; set; } = string.Empty;
+    public string Direccion { get; set; } = string.Empty;
+    public List<SucursalDto> Sucursales { get; set; } = new();
+}
+
+public class SucursalDto
+{
+    public int Id { get; set; }
+    public string Nombre { get; set; } = string.Empty;
+    public string Direccion { get; set; } = string.Empty;
+    public int NosocomioId { get; set; }
+}
+
+public class CreateNosocomioDto
+{
+    public string Nombre { get; set; } = string.Empty;
+    public string Codigo { get; set; } = string.Empty;
+    public string Direccion { get; set; } = string.Empty;
+}
+
+public class CreateSucursalDto
+{
+    public string Nombre { get; set; } = string.Empty;
+    public string Direccion { get; set; } = string.Empty;
+    public int NosocomioId { get; set; }
+}
+
+public class CreateHabitacionDto
+{
+    public int Numero { get; set; }
+    public int PisoId { get; set; }
+    public int CantidadCamasInicial { get; set; } = 1;
+}
+
+public class UpdateHabitacionDto
+{
+    public int Numero { get; set; }
+    public int PisoId { get; set; }
+}
+
+public class CreateCamaDto
+{
+    public int Numero { get; set; }
+    public int HabitacionId { get; set; }
+    public string Status { get; set; } = "disponible";
+}
+
+public class UpdateCamaDto
+{
+    public int Numero { get; set; }
+    public int HabitacionId { get; set; }
+    public string Status { get; set; } = "disponible";
+}
+
+public class DevLoginRequestDto
+{
+    public string Email { get; set; } = string.Empty;
+    public string DevKey { get; set; } = string.Empty;
+}
+
+public class DevLoginResponseDto
+{
+    public bool Success { get; set; }
+    public string Message { get; set; } = string.Empty;
+    public string Role { get; set; } = "superadmin";
+    public string Token { get; set; } = string.Empty;
+}
+

@@ -14,6 +14,69 @@ public class HospitalRepository : IHospitalRepository
         _context = context;
     }
 
+    public async Task<IEnumerable<Nosocomio>> ObtenerNosocomiosAsync()
+    {
+        return await _context.Nosocomios
+            .Include(n => n.Sucursales)
+            .ToListAsync();
+    }
+
+    public async Task<Nosocomio?> ObtenerNosocomioPorIdAsync(int id)
+    {
+        return await _context.Nosocomios
+            .Include(n => n.Sucursales)
+            .FirstOrDefaultAsync(n => n.Id == id);
+    }
+
+    public async Task AgregarNosocomioAsync(Nosocomio nosocomio)
+    {
+        await _context.Nosocomios.AddAsync(nosocomio);
+    }
+
+    public async Task<IEnumerable<Sucursal>> ObtenerSucursalesPorNosocomioAsync(int nosocomioId)
+    {
+        return await _context.Sucursales
+            .Where(s => s.NosocomioId == nosocomioId)
+            .ToListAsync();
+    }
+
+    public async Task<Sucursal?> ObtenerSucursalPorIdAsync(int id)
+    {
+        return await _context.Sucursales
+            .Include(s => s.Nosocomio)
+            .FirstOrDefaultAsync(s => s.Id == id);
+    }
+
+    public async Task AgregarSucursalAsync(Sucursal sucursal)
+    {
+        await _context.Sucursales.AddAsync(sucursal);
+    }
+
+    public async Task AgregarHabitacionAsync(Habitacion habitacion)
+    {
+        await _context.Habitaciones.AddAsync(habitacion);
+    }
+
+    public void EliminarHabitacion(Habitacion habitacion)
+    {
+        _context.Habitaciones.Remove(habitacion);
+    }
+
+    public async Task AgregarCamaAsync(Cama cama)
+    {
+        await _context.Camas.AddAsync(cama);
+    }
+
+    public void EliminarCama(Cama cama)
+    {
+        _context.Camas.Remove(cama);
+    }
+
+    public async Task<Piso?> ObtenerPisoPorIdAsync(int floorId)
+    {
+        return await _context.Pisos.FirstOrDefaultAsync(p => p.Id == floorId);
+    }
+
     public async Task<IEnumerable<Piso>> ObtenerPisosAsync()
     {
         return await _context.Pisos.Include(p => p.Habitaciones).ToListAsync();

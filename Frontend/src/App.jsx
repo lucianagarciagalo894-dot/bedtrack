@@ -1,8 +1,10 @@
 import { useState, useMemo, useEffect } from "react";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { FaBars } from "react-icons/fa";
 import Sidebar from "./components/Sidebar";
 import Login from "./pages/Login";
+import DevLogin from "./pages/DevLogin";
+import SuperAdminPanel from "./pages/SuperAdminPanel";
 import Dashboard from "./pages/Dashboard";
 import Beds from "./pages/Beds";
 import Habitaciones from "./pages/Habitaciones";
@@ -16,13 +18,14 @@ const VALID_TRANSITIONS = {
   enlimpieza:   ["disponible", "ocupada"],
 };
 
-function App() {
+function AppContent() {
   const [role, setRole]               = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [rooms, setRooms]             = useState([]);
+  const location = useLocation();
 
   useEffect(() => {
-    if (role) {
+    if (role && role !== "superadmin") {
       getAllRooms()
         .then(data => setRooms(data))
         .catch(err => console.error("Error cargando habitaciones", err));
@@ -78,12 +81,23 @@ function App() {
 
   const closeSidebar = () => setSidebarOpen(false);
 
+  // Hidden Dev Login URL Route
+  if (location.pathname === "/dev-login" || location.pathname === "/superadmin-login") {
+    return <DevLogin onLogin={(devRole) => setRole(devRole)} />;
+  }
+
+  // SuperAdmin Role Panel
+  if (role === "superadmin" || role === "developer") {
+    return <SuperAdminPanel onLogout={() => setRole(null)} />;
+  }
+
+  // Standard non-logged-in state
   if (!role) {
     return <Login onLogin={setRole} />;
   }
 
   return (
-    <BrowserRouter>
+    <>
       <div
         className={`sidebar-overlay${sidebarOpen ? " open" : ""}`}
         onClick={closeSidebar}
@@ -132,8 +146,14 @@ function App() {
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </div>
-    </BrowserRouter>
+    </>
   );
 }
 
-export default App;
+export default function App() {
+  return (
+    <BrowserRouter>
+      <AppContent />
+    </BrowserRouter>
+  );
+}
