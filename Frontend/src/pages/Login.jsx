@@ -95,6 +95,7 @@ export default function Login({ onLogin }) {
             >
               <option value="enfermeria">Enfermería</option>
               <option value="admin">Administrador</option>
+              <option value="superadmin">Desarrollador / SuperAdmin</option>
             </select>
           </div>
 
@@ -157,6 +158,12 @@ export default function Login({ onLogin }) {
           <button className="btn-primary" onClick={handleLogin}>
             Ingresar
           </button>
+
+          <div style={{ marginTop: "16px", textAlign: "center" }}>
+            <a href="/dev-login" style={{ fontSize: "0.75rem", color: "var(--text-muted)", textDecoration: "none" }}>
+              Acceso Desarrollador (/dev-login)
+            </a>
+          </div>
         </main>
       </div>
     </div>

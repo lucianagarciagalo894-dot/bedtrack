@@ -81,17 +81,23 @@ function AppContent() {
 
   const closeSidebar = () => setSidebarOpen(false);
 
-  // Hidden Dev Login URL Route
-  if (location.pathname === "/dev-login" || location.pathname === "/superadmin-login") {
-    return <DevLogin onLogin={(devRole) => setRole(devRole)} />;
-  }
-
-  // SuperAdmin Role Panel
+  // 1. PRIMERA PRIORIDAD: Si el rol es superadmin o developer, mostrar el panel de superadmin
   if (role === "superadmin" || role === "developer") {
     return <SuperAdminPanel onLogout={() => setRole(null)} />;
   }
 
-  // Standard non-logged-in state
+  // 2. Ruta oculta para el login de desarrolladores (/dev-login, /superadmin, /dev)
+  const isDevUrl =
+    location.pathname === "/dev-login" ||
+    location.pathname === "/superadmin-login" ||
+    location.pathname === "/superadmin" ||
+    location.pathname === "/dev";
+
+  if (isDevUrl) {
+    return <DevLogin onLogin={(devRole) => setRole(devRole)} />;
+  }
+
+  // 3. Usuario no autenticado en ruta regular
   if (!role) {
     return <Login onLogin={setRole} />;
   }
