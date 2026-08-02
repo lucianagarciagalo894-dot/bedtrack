@@ -55,9 +55,9 @@ export default function Login({ onLogin }) {
     setErrors(next);
     if (Object.keys(next).length === 0) {
       const selectedHospital = currentNosocomio?.nombre || "Hospital Central";
-      const selectedSede = sucursalesList.find((s) => s.id.toString() === selectedSucursalId)?.nombre || "Sede Central";
+      const selectedEstablecimiento = sucursalesList.find((s) => s.id.toString() === selectedSucursalId)?.nombre || "Establecimiento Central";
       
-      onLogin(role, { hospital: selectedHospital, sede: selectedSede });
+      onLogin(role, { hospital: selectedHospital, sede: selectedEstablecimiento, establecimiento: selectedEstablecimiento });
     }
   };
 
@@ -93,7 +93,7 @@ export default function Login({ onLogin }) {
         <div className="login-features">
           <div className="login-feature">
             <div className="login-feature-dot" />
-            Acceso institucional por Hospital y Sede
+            Acceso institucional por Hospital y Establecimiento
           </div>
           <div className="login-feature">
             <div className="login-feature-dot" />
@@ -138,11 +138,11 @@ export default function Login({ onLogin }) {
             </div>
           )}
 
-          {/* Sede / Sucursal Selection */}
+          {/* Establecimiento Selection */}
           {sucursalesList.length > 0 && (
             <div className="form-group">
               <label className="form-label" htmlFor="sucursal-select">
-                Sede / Sucursal
+                Establecimiento
               </label>
               <select
                 id="sucursal-select"

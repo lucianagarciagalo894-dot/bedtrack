@@ -1,6 +1,15 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
 import DevLogin from "../pages/DevLogin";
+import * as superAdminService from "../services/superAdminService";
+
+vi.mock("../services/superAdminService", async () => {
+  const actual = await vi.importActual("../services/superAdminService");
+  return {
+    ...actual,
+    loginDev: vi.fn().mockResolvedValue({ success: true, role: "superadmin" }),
+  };
+});
 
 describe("DevLogin Component", () => {
   it("renders developer login form", () => {

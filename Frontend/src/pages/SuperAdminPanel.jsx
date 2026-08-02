@@ -133,12 +133,17 @@ export default function SuperAdminPanel({ onLogout }) {
     }
   };
 
-  // --- Handlers para Nosocomios y Sucursales ---
+  // --- Handlers para Nosocomios y Establecimientos ---
   const handleCreateNosocomio = async (e) => {
     e.preventDefault();
     if (!newNosocomio.nombre) return;
     try {
-      const created = await createNosocomio(newNosocomio);
+      const autoCodigo = "NOS-" + (newNosocomio.nombre.length >= 3 ? newNosocomio.nombre.substring(0, 3).toUpperCase() : "HOSP") + "-" + Math.floor(Math.random() * 900 + 100);
+      const created = await createNosocomio({
+        nombre: newNosocomio.nombre,
+        direccion: newNosocomio.direccion,
+        codigo: autoCodigo,
+      });
       setNosocomios((prev) => [...prev, created]);
       setSelectedNosocomioId(created.id.toString());
       setNewNosocomio({ nombre: "", codigo: "", direccion: "" });
@@ -168,7 +173,7 @@ export default function SuperAdminPanel({ onLogout }) {
       setSelectedSucursalId(created.id.toString());
       setNewSucursal({ nombre: "", direccion: "" });
       setShowSucursalModal(false);
-      showNotification("Sucursal registrada correctamente");
+      showNotification("Establecimiento registrado correctamente");
     } catch (err) {
       showNotification(err.message, "error");
     }
@@ -336,11 +341,13 @@ export default function SuperAdminPanel({ onLogout }) {
         });
       }
 
+      const autoCodigo = "HOSP-" + (fullHospitalForm.nombreNosocomio.length >= 3 ? fullHospitalForm.nombreNosocomio.substring(0, 3).toUpperCase() : "MED") + "-" + Math.floor(Math.random() * 900 + 100);
+
       const payload = {
         nombreNosocomio: fullHospitalForm.nombreNosocomio,
-        codigoNosocomio: fullHospitalForm.codigoNosocomio,
+        codigoNosocomio: autoCodigo,
         direccionNosocomio: fullHospitalForm.direccionNosocomio,
-        nombreSucursal: fullHospitalForm.nombreSucursal || "Sede Central",
+        nombreSucursal: fullHospitalForm.nombreSucursal || "Establecimiento Central",
         direccionSucursal: fullHospitalForm.direccionSucursal || fullHospitalForm.direccionNosocomio,
         pisos: floorsPayload,
       };
@@ -348,7 +355,7 @@ export default function SuperAdminPanel({ onLogout }) {
       const result = await createFullHospitalSetup(payload);
       setShowFullHospitalModal(false);
 
-      showNotification(`¡Hospital "${result.nombre}" generado exitosamente con sus pisos, habitaciones y camas!`);
+      showNotification(`Hospital "${result.nombre}" generado exitosamente con sus pisos, habitaciones y camas.`);
 
       await loadInitialData();
     } catch (err) {
@@ -436,7 +443,7 @@ export default function SuperAdminPanel({ onLogout }) {
           <FaHospital className="superadmin-icon" />
           <div>
             <h1>BedTrack SuperAdmin Panel</h1>
-            <p>Configuración integral de Nosocomios, Sucursales, Habitaciones y Camas</p>
+            <p>Configuración integral de Nosocomios, Establecimientos, Habitaciones y Camas</p>
           </div>
         </div>
 
@@ -446,7 +453,7 @@ export default function SuperAdminPanel({ onLogout }) {
             style={{ background: "linear-gradient(135deg, #10B981 0%, #059669 100%)", boxShadow: "0 4px 12px rgba(16, 185, 129, 0.3)" }}
             onClick={() => setShowFullHospitalModal(true)}
           >
-            <FaPlus /> ＋ Crear Hospital Completo
+            <FaPlus /> Crear Hospital Completo
           </button>
           <span className="superadmin-badge">Modo Desarrollador</span>
           {onLogout && (
@@ -464,11 +471,11 @@ export default function SuperAdminPanel({ onLogout }) {
         </div>
       )}
 
-      {/* Grid Controls: Nosocomio & Sucursal Selection */}
+      {/* Grid Controls: Nosocomio & Establecimiento Selection */}
       <div className="superadmin-grid">
         <section className="superadmin-card">
           <div className="superadmin-card-header">
-            <h3><FaBuilding /> Nosocomio y Sede Activa</h3>
+            <h3><FaBuilding /> Nosocomio y Establecimiento Activo</h3>
           </div>
           <div className="superadmin-selectors">
             <div className="selector-group">
@@ -489,14 +496,14 @@ export default function SuperAdminPanel({ onLogout }) {
             </div>
 
             <div className="selector-group">
-              <label>Sucursal / Sede:</label>
+              <label>Establecimiento:</label>
               <select
                 value={selectedSucursalId}
                 onChange={(e) => setSelectedSucursalId(e.target.value)}
                 disabled={!sucursalesList.length}
               >
                 {sucursalesList.length === 0 ? (
-                  <option value="">Sin sucursales registradas</option>
+                  <option value="">Sin establecimientos registrados</option>
                 ) : (
                   sucursalesList.map((s) => (
                     <option key={s.id} value={s.id}>
@@ -510,7 +517,7 @@ export default function SuperAdminPanel({ onLogout }) {
                 onClick={() => setShowSucursalModal(true)}
                 disabled={!selectedNosocomioId}
               >
-                <FaPlus /> Nueva
+                <FaPlus /> Nuevo
               </button>
             </div>
           </div>
@@ -561,7 +568,7 @@ export default function SuperAdminPanel({ onLogout }) {
 
         <div style={{ background: "var(--card-bg, #FFFFFF)", padding: "16px", borderRadius: "12px", border: "1px solid var(--border, #E2E8F0)" }}>
           {staffUsers.length === 0 ? (
-            <p style={{ fontSize: "0.875rem", color: "#64748B" }}>No hay usuarios de enfermería registrados para esta sede.</p>
+            <p style={{ fontSize: "0.875rem", color: "#64748B" }}>No hay usuarios de enfermería registrados para este establecimiento.</p>
           ) : (
             <div style={{ overflowX: "auto" }}>
               <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.875rem" }}>
@@ -588,7 +595,7 @@ export default function SuperAdminPanel({ onLogout }) {
                       <td style={{ padding: "10px", color: "#64748B" }}>{u.hospitalNombre || "Global"}</td>
                       <td style={{ padding: "10px" }}>
                         <span style={{ color: u.activo !== false ? "#059669" : "#DC2626", fontWeight: "600" }}>
-                          {u.activo !== false ? "✓ Activo" : "✕ Inactivo"}
+                          {u.activo !== false ? "Activo" : "Inactivo"}
                         </span>
                       </td>
                       <td style={{ padding: "10px", textAlign: "right" }}>
@@ -653,7 +660,7 @@ export default function SuperAdminPanel({ onLogout }) {
                       <td style={{ padding: "8px" }}>{log.accion}</td>
                       <td style={{ padding: "8px", whiteSpace: "nowrap" }}>
                         <span style={{ fontSize: "0.7rem", padding: "2px 6px", borderRadius: "4px", background: "#E2E8F0" }}>
-                          {log.estadoAnterior} ➔ <strong>{log.estadoNuevo}</strong>
+                          {log.estadoAnterior} → <strong>{log.estadoNuevo}</strong>
                         </span>
                       </td>
                     </tr>
@@ -760,22 +767,13 @@ export default function SuperAdminPanel({ onLogout }) {
             <h3>Registrar Nuevo Nosocomio</h3>
             <form onSubmit={handleCreateNosocomio}>
               <div className="form-group">
-                <label>Nombre:</label>
+                <label>Nombre del Hospital / Nosocomio:</label>
                 <input
                   type="text"
                   placeholder="Ej: Hospital San Martín"
                   value={newNosocomio.nombre}
                   onChange={(e) => setNewNosocomio({ ...newNosocomio, nombre: e.target.value })}
                   required
-                />
-              </div>
-              <div className="form-group">
-                <label>Código Identificador:</label>
-                <input
-                  type="text"
-                  placeholder="Ej: HSM-01"
-                  value={newNosocomio.codigo}
-                  onChange={(e) => setNewNosocomio({ ...newNosocomio, codigo: e.target.value })}
                 />
               </div>
               <div className="form-group">
@@ -800,17 +798,17 @@ export default function SuperAdminPanel({ onLogout }) {
         </div>
       )}
 
-      {/* --- MODAL SUCURSAL --- */}
+      {/* --- MODAL ESTABLECIMIENTO --- */}
       {showSucursalModal && (
         <div className="modal-backdrop">
           <div className="modal-content">
-            <h3>Registrar Nueva Sede / Sucursal</h3>
+            <h3>Registrar Nuevo Establecimiento</h3>
             <form onSubmit={handleCreateSucursal}>
               <div className="form-group">
-                <label>Nombre de la Sede:</label>
+                <label>Nombre del Establecimiento:</label>
                 <input
                   type="text"
-                  placeholder="Ej: Sede Central / Anexo Norte"
+                  placeholder="Ej: Establecimiento Central / Anexo Norte"
                   value={newSucursal.nombre}
                   onChange={(e) => setNewSucursal({ ...newSucursal, nombre: e.target.value })}
                   required
@@ -830,7 +828,7 @@ export default function SuperAdminPanel({ onLogout }) {
                   Cancelar
                 </button>
                 <button type="submit" className="btn-confirm">
-                  Guardar Sede
+                  Guardar Establecimiento
                 </button>
               </div>
             </form>
@@ -962,7 +960,7 @@ export default function SuperAdminPanel({ onLogout }) {
               <div>
                 <h3 style={{ margin: 0 }}>Crear Hospital Completo (Asistente 1-Clic)</h3>
                 <p style={{ margin: "2px 0 0", fontSize: "0.75rem", color: "#64748B" }}>
-                  Genera la institución, sucursal, pisos, habitaciones y camas totalmente funcionales de forma automática.
+                  Genera la institución, establecimiento, pisos, habitaciones y camas totalmente funcionales de forma automática.
                 </p>
               </div>
             </div>
@@ -979,25 +977,14 @@ export default function SuperAdminPanel({ onLogout }) {
                 />
               </div>
 
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
-                <div className="form-group">
-                  <label>Código Identificador:</label>
-                  <input
-                    type="text"
-                    placeholder="Ej: HPC-01"
-                    value={fullHospitalForm.codigoNosocomio}
-                    onChange={(e) => setFullHospitalForm({ ...fullHospitalForm, codigoNosocomio: e.target.value })}
-                  />
-                </div>
-                <div className="form-group">
-                  <label>Nombre de la Sede Inicial:</label>
-                  <input
-                    type="text"
-                    placeholder="Ej: Sede Central"
-                    value={fullHospitalForm.nombreSucursal}
-                    onChange={(e) => setFullHospitalForm({ ...fullHospitalForm, nombreSucursal: e.target.value })}
-                  />
-                </div>
+              <div className="form-group">
+                <label>Nombre del Establecimiento Inicial:</label>
+                <input
+                  type="text"
+                  placeholder="Ej: Establecimiento Central"
+                  value={fullHospitalForm.nombreSucursal}
+                  onChange={(e) => setFullHospitalForm({ ...fullHospitalForm, nombreSucursal: e.target.value })}
+                />
               </div>
 
               <div className="form-group">
@@ -1047,7 +1034,7 @@ export default function SuperAdminPanel({ onLogout }) {
               </div>
 
               <div style={{ fontSize: "0.75rem", color: "#059669", background: "#ECFDF5", padding: "8px 12px", borderRadius: "6px", fontWeight: "600" }}>
-                ✓ Se generarán {(parseInt(fullHospitalForm.cantidadPisos, 10) || 1) * (parseInt(fullHospitalForm.habitacionesPorPiso, 10) || 1)} habitaciones y {(parseInt(fullHospitalForm.cantidadPisos, 10) || 1) * (parseInt(fullHospitalForm.habitacionesPorPiso, 10) || 1) * (parseInt(fullHospitalForm.camasPorHabitacion, 10) || 1)} camas listas para registrar pacientes inmediatamente.
+                Se generarán {(parseInt(fullHospitalForm.cantidadPisos, 10) || 1) * (parseInt(fullHospitalForm.habitacionesPorPiso, 10) || 1)} habitaciones y {(parseInt(fullHospitalForm.cantidadPisos, 10) || 1) * (parseInt(fullHospitalForm.habitacionesPorPiso, 10) || 1) * (parseInt(fullHospitalForm.camasPorHabitacion, 10) || 1)} camas disponibles inmediatamente.
               </div>
 
               <div className="modal-actions">
@@ -1059,7 +1046,7 @@ export default function SuperAdminPanel({ onLogout }) {
                   className="btn-confirm"
                   style={{ background: "linear-gradient(135deg, #10B981 0%, #059669 100%)" }}
                 >
-                  🚀 Generar Hospital Completo
+                  <FaHospital /> Generar Infraestructura de Hospital
                 </button>
               </div>
             </form>

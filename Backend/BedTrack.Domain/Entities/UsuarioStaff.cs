@@ -14,6 +14,14 @@ public class UsuarioStaff
     public Nosocomio? Nosocomio { get; private set; }
     public Sucursal? Sucursal { get; private set; }
 
+    private UsuarioStaff()
+    {
+        Nombre = string.Empty;
+        Email = string.Empty;
+        Password = string.Empty;
+        Rol = string.Empty;
+    }
+
     public UsuarioStaff(string nombre, string email, string password, string rol, int? nosocomioId = null, int? sucursalId = null)
     {
         Nombre = nombre;

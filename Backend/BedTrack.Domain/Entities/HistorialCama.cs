@@ -14,6 +14,15 @@ public class HistorialCama
     public string EstadoNuevo { get; private set; }
     public DateTime FechaHora { get; private set; }
 
+    private HistorialCama()
+    {
+        UsuarioNombre = string.Empty;
+        UsuarioEmail = string.Empty;
+        Accion = string.Empty;
+        EstadoAnterior = string.Empty;
+        EstadoNuevo = string.Empty;
+    }
+
     public HistorialCama(
         int camaId,
         int camaNumero,
