@@ -192,8 +192,31 @@ public class HospitalService : IHospitalService
 
     public async Task<IEnumerable<NosocomioDto>> GetNosocomiosAsync()
     {
-        var nosocomios = await _repo.ObtenerNosocomiosAsync();
-        return nosocomios.Select(n => new NosocomioDto
+        var list = (await _repo.ObtenerNosocomiosAsync()).ToList();
+
+        if (!list.Any())
+        {
+            var nos1 = new Nosocomio("Hospital Central BedTrack", "HC-01", "Av. Colón 1234");
+            await _repo.AgregarNosocomioAsync(nos1);
+            await _repo.GuardarCambiosAsync();
+
+            var suc1 = new Sucursal("Establecimiento Central", "Av. Colón 1234", nos1.Id);
+            var suc2 = new Sucursal("Establecimiento Norte", "Av. Rafael Nuñez 4567", nos1.Id);
+            await _repo.AgregarSucursalAsync(suc1);
+            await _repo.AgregarSucursalAsync(suc2);
+
+            var nos2 = new Nosocomio("Sanatorio Allende S.A.", "SA-02", "Obispo Oro 345");
+            await _repo.AgregarNosocomioAsync(nos2);
+            await _repo.GuardarCambiosAsync();
+
+            var suc3 = new Sucursal("Establecimiento Nueva Córdoba", "Obispo Oro 345", nos2.Id);
+            await _repo.AgregarSucursalAsync(suc3);
+            await _repo.GuardarCambiosAsync();
+
+            list = (await _repo.ObtenerNosocomiosAsync()).ToList();
+        }
+
+        return list.Select(n => new NosocomioDto
         {
             Id = n.Id,
             Nombre = n.Nombre,

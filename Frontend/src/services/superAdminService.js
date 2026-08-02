@@ -28,31 +28,39 @@ export async function getNosocomios() {
   try {
     const res = await fetch(`${API_BASE}/superadmin/nosocomios`);
     if (!res.ok) throw new Error("Error al obtener los nosocomios");
-    return await res.json();
+    const data = await res.json();
+    if (Array.isArray(data) && data.length > 0) {
+      return data;
+    }
+    return getFallbackNosocomios();
   } catch (err) {
     console.warn("Usando datos locales de nosocomios:", err);
-    return [
-      {
-        id: 1,
-        nombre: "Hospital Central BedTrack",
-        codigo: "HC-01",
-        direccion: "Av. Colón 1234",
-        sucursales: [
-          { id: 1, nombre: "Sede Central", direccion: "Av. Colón 1234", nosocomioId: 1 },
-          { id: 2, nombre: "Sede Norte", direccion: "Av. Rafael Nuñez 4567", nosocomioId: 1 }
-        ]
-      },
-      {
-        id: 2,
-        nombre: "Sanatorio Allende S.A.",
-        codigo: "SA-02",
-        direccion: "Obispo Oro 345",
-        sucursales: [
-          { id: 3, nombre: "Sede Nueva Córdoba", direccion: "Obispo Oro 345", nosocomioId: 2 }
-        ]
-      }
-    ];
+    return getFallbackNosocomios();
   }
+}
+
+function getFallbackNosocomios() {
+  return [
+    {
+      id: 1,
+      nombre: "Hospital Central BedTrack",
+      codigo: "HC-01",
+      direccion: "Av. Colón 1234",
+      sucursales: [
+        { id: 1, nombre: "Establecimiento Central", direccion: "Av. Colón 1234", nosocomioId: 1 },
+        { id: 2, nombre: "Establecimiento Norte", direccion: "Av. Rafael Nuñez 4567", nosocomioId: 1 }
+      ]
+    },
+    {
+      id: 2,
+      nombre: "Sanatorio Allende S.A.",
+      codigo: "SA-02",
+      direccion: "Obispo Oro 345",
+      sucursales: [
+        { id: 3, nombre: "Establecimiento Nueva Córdoba", direccion: "Obispo Oro 345", nosocomioId: 2 }
+      ]
+    }
+  ];
 }
 
 export async function createNosocomio(data) {

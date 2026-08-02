@@ -99,11 +99,25 @@ export default function SuperAdminPanel({ onLogout }) {
         getAuditLogs(),
       ]);
 
-      setNosocomios(nosData || []);
-      if (nosData && nosData.length > 0) {
-        setSelectedNosocomioId(nosData[0].id.toString());
-        if (nosData[0].sucursales && nosData[0].sucursales.length > 0) {
-          setSelectedSucursalId(nosData[0].sucursales[0].id.toString());
+      const defaultNosocomios = [
+        {
+          id: 1,
+          nombre: "Hospital Central BedTrack",
+          codigo: "HC-01",
+          direccion: "Av. Colón 1234",
+          sucursales: [
+            { id: 1, nombre: "Establecimiento Central", direccion: "Av. Colón 1234", nosocomioId: 1 }
+          ]
+        }
+      ];
+
+      const activeNosocomios = (nosData && nosData.length > 0) ? nosData : defaultNosocomios;
+      setNosocomios(activeNosocomios);
+
+      if (activeNosocomios.length > 0) {
+        setSelectedNosocomioId(activeNosocomios[0].id.toString());
+        if (activeNosocomios[0].sucursales && activeNosocomios[0].sucursales.length > 0) {
+          setSelectedSucursalId(activeNosocomios[0].sucursales[0].id.toString());
         }
       }
 
@@ -480,12 +494,20 @@ export default function SuperAdminPanel({ onLogout }) {
           <div className="superadmin-selectors">
             <div className="selector-group">
               <label>Nosocomio:</label>
-              <select value={selectedNosocomioId} onChange={handleNosocomioChange}>
-                {nosocomios.map((n) => (
-                  <option key={n.id} value={n.id}>
-                    {n.nombre} ({n.codigo || `ID: ${n.id}`})
-                  </option>
-                ))}
+              <select
+                value={selectedNosocomioId}
+                onChange={handleNosocomioChange}
+                disabled={!nosocomios.length}
+              >
+                {nosocomios.length === 0 ? (
+                  <option value="">Sin nosocomios registrados</option>
+                ) : (
+                  nosocomios.map((n) => (
+                    <option key={n.id} value={n.id}>
+                      {n.nombre} ({n.codigo || `ID: ${n.id}`})
+                    </option>
+                  ))
+                )}
               </select>
               <button
                 className="btn-secondary-sm"
