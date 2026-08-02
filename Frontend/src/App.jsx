@@ -27,11 +27,12 @@ function AppContent() {
 
   useEffect(() => {
     if (role && role !== "superadmin") {
-      getAllRooms()
-        .then(data => setRooms(data))
-        .catch(err => console.error("Error cargando habitaciones", err));
+      const activeSucursalId = sessionHospital?.sucursalId || sessionHospital?.nosocomioId;
+      getAllRooms(activeSucursalId)
+        .then((data) => setRooms(data))
+        .catch((err) => console.error("Error cargando habitaciones para la institución", err));
     }
-  }, [role]);
+  }, [role, sessionHospital]);
 
   // Fuente única de verdad: beds derivado de rooms
   const beds = useMemo(
@@ -153,7 +154,7 @@ function AppContent() {
 
         <Routes>
           <Route path="/"              element={<Navigate to="/dashboard" replace />} />
-          <Route path="/dashboard"     element={<Dashboard role={role} beds={beds} />} />
+          <Route path="/dashboard"     element={<Dashboard role={role} sessionHospital={sessionHospital} beds={beds} />} />
           <Route
             path="/camas"
             element={<Beds role={role} beds={beds} onChangeStatus={changeStatus} />}

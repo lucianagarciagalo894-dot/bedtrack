@@ -13,22 +13,29 @@ import {
 } from "react-icons/fa";
 import { getGlobalAuditHistory } from "../services/roomService";
 
-export default function Dashboard({ role, beds }) {
+export default function Dashboard({ role, sessionHospital, beds }) {
   const userName = role === "enfermeria" ? "Enfermería" : "Administrador";
   const [recentLogs, setRecentLogs] = useState([]);
 
+  const activeSucursalId = sessionHospital?.sucursalId || sessionHospital?.nosocomioId;
+
   useEffect(() => {
-    getGlobalAuditHistory()
+    getGlobalAuditHistory(activeSucursalId)
       .then((data) => setRecentLogs(data || []))
       .catch((err) => console.warn("Error obteniendo historial reciente:", err));
-  }, []);
+  }, [activeSucursalId]);
 
   const totalBeds = beds.length;
   const totalAvailable = beds.filter((b) => b.status?.toLowerCase() === "disponible").length;
   const totalOccupied = beds.filter((b) => b.status?.toLowerCase() === "ocupada").length;
   const totalCleaning = beds.filter((b) => b.status?.toLowerCase() === "enlimpieza").length;
 
-  const floorStats = FLOORS.map((floor) => {
+  const uniqueFloors = Array.from(new Set(beds.map((b) => b.floor).filter(Boolean)));
+  const floorList = (uniqueFloors.length > 0 && uniqueFloors.every(uf => !FLOORS.includes(uf)))
+    ? uniqueFloors
+    : FLOORS;
+
+  const floorStats = floorList.map((floor) => {
     const fb = beds.filter((b) => b.floor === floor);
     return {
       floor,
@@ -48,7 +55,8 @@ export default function Dashboard({ role, beds }) {
         <div>
           <h1 className="page-title">Bienvenido/a, {userName}</h1>
           <p className="page-subtitle">
-            Resumen general del sistema &middot; Todos los pisos
+            Resumen general &middot; {sessionHospital?.hospital || "Hospital Central"} (
+            {sessionHospital?.sede || sessionHospital?.establecimiento || "Establecimiento Central"})
           </p>
         </div>
         <Link to="/camas" className="btn-go-beds">

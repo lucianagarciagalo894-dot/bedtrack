@@ -32,7 +32,7 @@ describe('Componente Dashboard', () => {
     renderWithRouter(<Dashboard role="enfermeria" beds={mockBeds} />);
 
     expect(screen.getByText('Bienvenido/a, Enfermería')).toBeInTheDocument();
-    expect(screen.getByText('Resumen general del sistema · Todos los pisos')).toBeInTheDocument();
+    expect(screen.getByText(/Resumen general/)).toBeInTheDocument();
     
     const stats = screen.getByRole('region', { name: 'Estadísticas globales' });
     expect(within(stats).getByText('Total de camas')).toBeInTheDocument();

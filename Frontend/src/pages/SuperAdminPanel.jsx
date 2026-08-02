@@ -339,7 +339,8 @@ export default function SuperAdminPanel({ onLogout }) {
     try {
       const floorsPayload = [];
       const numPisos = parseInt(fullHospitalForm.cantidadPisos, 10) || 3;
-      const habsPorPiso = parseInt(fullHospitalForm.habitacionesPorPiso, 10) || 4;
+      const habsPorPiso = parseInt(fullHospitalForm.habitacionesPorPiso, 10);
+      const habCount = isNaN(habsPorPiso) ? 2 : habsPorPiso;
       const camasPorHab = parseInt(fullHospitalForm.camasPorHabitacion, 10) || 2;
 
       for (let i = 1; i <= numPisos; i++) {
@@ -348,13 +349,25 @@ export default function SuperAdminPanel({ onLogout }) {
         if (i === 1) { tipo = "Privada"; tipoKey = "privada"; }
         else if (i === numPisos) { tipo = "Terapia Intensiva"; tipoKey = "intensiva"; }
 
-        floorsPayload.push({
-          nombre: `Piso ${i}`,
-          tipo,
-          tipoKey,
-          cantidadHabitaciones: habsPorPiso,
-          camasPorHabitacion: camasPorHab,
-        });
+        if (habCount === 0) {
+          floorsPayload.push({
+            nombre: `Piso ${i} (Sala de Urgencias Directas)`,
+            tipo: "Guardia",
+            tipoKey: "guardia",
+            cantidadHabitaciones: 1,
+            camasPorHabitacion: camasPorHab,
+            enfermeroAsignadoId: fullHospitalForm.enfermeroAsignadoId || null,
+          });
+        } else {
+          floorsPayload.push({
+            nombre: `Piso ${i}`,
+            tipo,
+            tipoKey,
+            cantidadHabitaciones: habCount,
+            camasPorHabitacion: camasPorHab,
+            enfermeroAsignadoId: fullHospitalForm.enfermeroAsignadoId || null,
+          });
+        }
       }
 
       const autoCodigo = "HOSP-" + (fullHospitalForm.nombreNosocomio.length >= 3 ? fullHospitalForm.nombreNosocomio.substring(0, 3).toUpperCase() : "MED") + "-" + Math.floor(Math.random() * 900 + 100);
@@ -1081,10 +1094,10 @@ export default function SuperAdminPanel({ onLogout }) {
                   />
                 </div>
                 <div className="form-group">
-                  <label style={{ fontSize: "0.75rem" }}>Habs. por Piso:</label>
+                  <label style={{ fontSize: "0.75rem" }}>Habs. por Piso (0 = Camas Directas):</label>
                   <input
                     type="number"
-                    min="1"
+                    min="0"
                     max="30"
                     value={fullHospitalForm.habitacionesPorPiso}
                     onChange={(e) => setFullHospitalForm({ ...fullHospitalForm, habitacionesPorPiso: e.target.value })}
@@ -1092,11 +1105,11 @@ export default function SuperAdminPanel({ onLogout }) {
                   />
                 </div>
                 <div className="form-group">
-                  <label style={{ fontSize: "0.75rem" }}>Camas por Hab.:</label>
+                  <label style={{ fontSize: "0.75rem" }}>Camas por Hab./Piso:</label>
                   <input
                     type="number"
                     min="1"
-                    max="10"
+                    max="15"
                     value={fullHospitalForm.camasPorHabitacion}
                     onChange={(e) => setFullHospitalForm({ ...fullHospitalForm, camasPorHabitacion: e.target.value })}
                     required
@@ -1104,8 +1117,23 @@ export default function SuperAdminPanel({ onLogout }) {
                 </div>
               </div>
 
+              <div className="form-group" style={{ marginTop: "10px" }}>
+                <label>Enfermero/a a cargo inicial (Opcional):</label>
+                <select
+                  value={fullHospitalForm.enfermeroAsignadoId || ""}
+                  onChange={(e) => setFullHospitalForm({ ...fullHospitalForm, enfermeroAsignadoId: e.target.value })}
+                >
+                  <option value="">Sin personal asignado (Opcional por Nosocomio)</option>
+                  {staffUsers.map((u) => (
+                    <option key={u.id} value={u.id}>
+                      {u.nombre} ({u.rol})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
               <div style={{ fontSize: "0.75rem", color: "#059669", background: "#ECFDF5", padding: "8px 12px", borderRadius: "6px", fontWeight: "600" }}>
-                Se generarán {(parseInt(fullHospitalForm.cantidadPisos, 10) || 1) * (parseInt(fullHospitalForm.habitacionesPorPiso, 10) || 1)} habitaciones y {(parseInt(fullHospitalForm.cantidadPisos, 10) || 1) * (parseInt(fullHospitalForm.habitacionesPorPiso, 10) || 1) * (parseInt(fullHospitalForm.camasPorHabitacion, 10) || 1)} camas disponibles inmediatamente.
+                Configuración completamente adaptable: {(parseInt(fullHospitalForm.cantidadPisos, 10) || 1)} pisos y {parseInt(fullHospitalForm.habitacionesPorPiso, 10) === 0 ? "camas colocadas de forma directa por urgencias" : `${(parseInt(fullHospitalForm.cantidadPisos, 10) || 1) * (parseInt(fullHospitalForm.habitacionesPorPiso, 10) || 1)} habitaciones con camas personalizadas`}.
               </div>
 
               <div className="modal-actions">
