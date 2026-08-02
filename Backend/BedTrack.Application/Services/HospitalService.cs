@@ -55,6 +55,7 @@ public class HospitalService : IHospitalService
         if (cama == null) throw new KeyNotFoundException("Cama no encontrada");
 
         var estadoStr = request.Status.ToLower();
+        var estadoAnteriorStr = cama.Estado.ToString().ToLower();
 
         if (estadoStr == "ocupada")
         {
@@ -116,6 +117,29 @@ public class HospitalService : IHospitalService
                 cama.Habilitar();
             }
         }
+
+        // Registrar entrada en el Historial de Auditoría
+        var operatorName = string.IsNullOrWhiteSpace(request.OperatorName) ? "Personal de Enfermería" : request.OperatorName;
+        var operatorEmail = string.IsNullOrWhiteSpace(request.OperatorEmail) ? "enfermeria@bedtrack.com" : request.OperatorEmail;
+        
+        var accionText = estadoStr == "ocupada"
+            ? $"Asignó paciente {request.Patient?.Nombre} {request.Patient?.Apellido} (Diag: {request.Patient?.Diagnostico})"
+            : estadoStr == "enlimpieza"
+                ? "Liberó la cama para desinfección y limpieza"
+                : "Habilitó la cama como Disponible";
+
+        var historial = new HistorialCama(
+            cama.Id,
+            cama.Numero,
+            cama.HabitacionId,
+            cama.Habitacion?.Numero ?? cama.HabitacionId,
+            operatorName,
+            operatorEmail,
+            accionText,
+            estadoAnteriorStr,
+            estadoStr
+        );
+        await _repo.AgregarHistorialCamaAsync(historial);
 
         await _repo.GuardarCambiosAsync();
 
@@ -359,5 +383,164 @@ public class HospitalService : IHospitalService
             Role = "",
             Token = ""
         };
+    }
+
+    public async Task<NosocomioDto> CreateFullHospitalSetupAsync(FullHospitalSetupDto dto)
+    {
+        if (string.IsNullOrWhiteSpace(dto.NombreNosocomio))
+            throw new ArgumentException("El nombre del hospital/nosocomio es requerido.");
+
+        var nosocomio = new Nosocomio(
+            dto.NombreNosocomio,
+            string.IsNullOrWhiteSpace(dto.CodigoNosocomio) ? "HOSP-" + Random.Shared.Next(100, 999) : dto.CodigoNosocomio,
+            string.IsNullOrWhiteSpace(dto.DireccionNosocomio) ? "Dirección Principal" : dto.DireccionNosocomio
+        );
+        await _repo.AgregarNosocomioAsync(nosocomio);
+        await _repo.GuardarCambiosAsync();
+
+        var sucursalNombre = string.IsNullOrWhiteSpace(dto.NombreSucursal) ? "Sede Central" : dto.NombreSucursal;
+        var sucursal = new Sucursal(sucursalNombre, string.IsNullOrWhiteSpace(dto.DireccionSucursal) ? nosocomio.Direccion : dto.DireccionSucursal, nosocomio.Id);
+        await _repo.AgregarSucursalAsync(sucursal);
+        await _repo.GuardarCambiosAsync();
+
+        if (dto.Pisos != null && dto.Pisos.Any())
+        {
+            foreach (var floorConfig in dto.Pisos)
+            {
+                var tipoStr = string.IsNullOrWhiteSpace(floorConfig.Tipo) ? "Privada" : floorConfig.Tipo;
+                var tipoKeyStr = string.IsNullOrWhiteSpace(floorConfig.TipoKey) ? tipoStr.ToLower() : floorConfig.TipoKey;
+
+                var piso = new Piso(floorConfig.Nombre, tipoStr, tipoKeyStr, sucursal.Id);
+                await _repo.AgregarPisoAsync(piso);
+                await _repo.GuardarCambiosAsync();
+
+                int roomCount = Math.Max(1, floorConfig.CantidadHabitaciones);
+                int bedsPerRoom = Math.Max(1, floorConfig.CamasPorHabitacion);
+
+                for (int r = 1; r <= roomCount; r++)
+                {
+                    var hab = new Habitacion(r, piso.Id);
+                    for (int b = 1; b <= bedsPerRoom; b++)
+                    {
+                        var cama = new Cama(b, hab.Id);
+                        hab.Camas.Add(cama);
+                    }
+                    await _repo.AgregarHabitacionAsync(hab);
+                }
+                await _repo.GuardarCambiosAsync();
+            }
+        }
+
+        var createdNosocomio = await _repo.ObtenerNosocomioPorIdAsync(nosocomio.Id);
+        return new NosocomioDto
+        {
+            Id = createdNosocomio!.Id,
+            Nombre = createdNosocomio.Nombre,
+            Codigo = createdNosocomio.Codigo,
+            Direccion = createdNosocomio.Direccion,
+            Sucursales = createdNosocomio.Sucursales.Select(s => new SucursalDto
+            {
+                Id = s.Id,
+                Nombre = s.Nombre,
+                Direccion = s.Direccion,
+                NosocomioId = s.NosocomioId
+            }).ToList()
+        };
+    }
+
+    public async Task<IEnumerable<UsuarioStaffDto>> GetUsuariosStaffAsync()
+    {
+        var usuarios = await _repo.ObtenerUsuariosStaffAsync();
+        return usuarios.Select(u => new UsuarioStaffDto
+        {
+            Id = u.Id,
+            Nombre = u.Nombre,
+            Email = u.Email,
+            Rol = u.Rol,
+            Activo = u.Activo,
+            NosocomioId = u.NosocomioId,
+            SucursalId = u.SucursalId,
+            HospitalNombre = u.Nosocomio?.Nombre ?? "Todos los nosocomios"
+        });
+    }
+
+    public async Task<UsuarioStaffDto> CreateUsuarioStaffAsync(CreateUsuarioStaffDto dto)
+    {
+        if (string.IsNullOrWhiteSpace(dto.Nombre) || string.IsNullOrWhiteSpace(dto.Email))
+            throw new ArgumentException("Nombre y correo electrónico son requeridos.");
+
+        var usuario = new UsuarioStaff(
+            dto.Nombre,
+            dto.Email,
+            string.IsNullOrWhiteSpace(dto.Password) ? "123456" : dto.Password,
+            string.IsNullOrWhiteSpace(dto.Rol) ? "enfermeria" : dto.Rol,
+            dto.NosocomioId,
+            dto.SucursalId
+        );
+
+        await _repo.AgregarUsuarioStaffAsync(usuario);
+        await _repo.GuardarCambiosAsync();
+
+        return new UsuarioStaffDto
+        {
+            Id = usuario.Id,
+            Nombre = usuario.Nombre,
+            Email = usuario.Email,
+            Rol = usuario.Rol,
+            Activo = usuario.Activo,
+            NosocomioId = usuario.NosocomioId,
+            SucursalId = usuario.SucursalId,
+            HospitalNombre = "Asignado"
+        };
+    }
+
+    public async Task<UsuarioStaffDto> UpdateUsuarioStaffAsync(int id, UpdateUsuarioStaffDto dto)
+    {
+        var u = await _repo.ObtenerUsuarioStaffPorIdAsync(id);
+        if (u == null) throw new KeyNotFoundException("Usuario no encontrado");
+
+        u.ActualizarDatos(dto.Nombre, dto.Email, dto.Password, dto.Rol, dto.Activo, dto.NosocomioId, dto.SucursalId);
+        await _repo.GuardarCambiosAsync();
+
+        return new UsuarioStaffDto
+        {
+            Id = u.Id,
+            Nombre = u.Nombre,
+            Email = u.Email,
+            Rol = u.Rol,
+            Activo = u.Activo,
+            NosocomioId = u.NosocomioId,
+            SucursalId = u.SucursalId,
+            HospitalNombre = u.Nosocomio?.Nombre ?? "Asignado"
+        };
+    }
+
+    public async Task<bool> DeleteUsuarioStaffAsync(int id)
+    {
+        var u = await _repo.ObtenerUsuarioStaffPorIdAsync(id);
+        if (u == null) return false;
+
+        _repo.EliminarUsuarioStaff(u);
+        await _repo.GuardarCambiosAsync();
+        return true;
+    }
+
+    public async Task<IEnumerable<HistorialCamaDto>> GetHistorialCamasAsync(int? camaId = null)
+    {
+        var historial = await _repo.ObtenerHistorialCamasAsync(camaId);
+        return historial.Select(h => new HistorialCamaDto
+        {
+            Id = h.Id,
+            CamaId = h.CamaId,
+            CamaNumero = h.CamaNumero,
+            HabitacionId = h.HabitacionId,
+            HabitacionNumero = h.HabitacionNumero,
+            UsuarioNombre = h.UsuarioNombre,
+            UsuarioEmail = h.UsuarioEmail,
+            Accion = h.Accion,
+            EstadoAnterior = h.EstadoAnterior,
+            EstadoNuevo = h.EstadoNuevo,
+            FechaHora = h.FechaHora.ToString("yyyy-MM-dd HH:mm:ss")
+        });
     }
 }

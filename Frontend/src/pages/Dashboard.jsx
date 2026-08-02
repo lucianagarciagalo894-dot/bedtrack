@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { FLOORS } from "../data/beds";
 import {
@@ -7,10 +8,20 @@ import {
   FaBroom,
   FaArrowRight,
   FaExclamationCircle,
+  FaHistory,
+  FaUserNurse,
 } from "react-icons/fa";
+import { getGlobalAuditHistory } from "../services/roomService";
 
 export default function Dashboard({ role, beds }) {
   const userName = role === "enfermeria" ? "Enfermería" : "Administrador";
+  const [recentLogs, setRecentLogs] = useState([]);
+
+  useEffect(() => {
+    getGlobalAuditHistory()
+      .then((data) => setRecentLogs(data || []))
+      .catch((err) => console.warn("Error obteniendo historial reciente:", err));
+  }, []);
 
   const totalBeds = beds.length;
   const totalAvailable = beds.filter((b) => b.status?.toLowerCase() === "disponible").length;
@@ -168,6 +179,56 @@ export default function Dashboard({ role, beds }) {
               </Link>
             </div>
           ))}
+        </div>
+      </div>
+
+      {/* Historial Reciente de Enfermería */}
+      <div className="dashboard-section" style={{ marginTop: "24px" }}>
+        <div className="dashboard-section-header">
+          <h2 className="beds-section-title" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <FaHistory style={{ color: "#2563EB" }} /> Historial de Actividad de Enfermería
+          </h2>
+        </div>
+
+        <div style={{ background: "var(--card-bg, #FFFFFF)", padding: "16px", borderRadius: "12px", border: "1px solid var(--border, #E2E8F0)" }}>
+          {recentLogs.length === 0 ? (
+            <p style={{ fontSize: "0.875rem", color: "var(--text-muted, #64748B)" }}>
+              Aún no hay registros de actividades registradas hoy.
+            </p>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+              {recentLogs.slice(0, 5).map((log) => (
+                <div
+                  key={log.id}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    padding: "10px 14px",
+                    background: "#F8FAFC",
+                    borderRadius: "8px",
+                    border: "1px solid #E2E8F0",
+                    fontSize: "0.85rem",
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                    <FaUserNurse style={{ color: "#2563EB", fontSize: "18px" }} />
+                    <div>
+                      <div style={{ fontWeight: "600", color: "#1E293B" }}>
+                        {log.usuarioNombre}
+                      </div>
+                      <div style={{ fontSize: "0.75rem", color: "#64748B" }}>
+                        Hab #{log.habitacionNumero} - Cama #{log.camaNumero}: {log.accion}
+                      </div>
+                    </div>
+                  </div>
+                  <span style={{ fontSize: "0.75rem", color: "#94A3B8", whiteSpace: "nowrap" }}>
+                    {log.fechaHora}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>

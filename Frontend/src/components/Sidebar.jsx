@@ -13,7 +13,7 @@ import {
 const navLinkClass = ({ isActive }) =>
   `nav-item${isActive ? " active" : ""}`;
 
-export default function Sidebar({ role, onLogout, isOpen, onClose }) {
+export default function Sidebar({ role, hospitalInfo, onLogout, isOpen, onClose }) {
   const isEnfermeria = role === "enfermeria";
   const userName = isEnfermeria ? "Enfermería" : "Administrador";
   const userInitial = isEnfermeria ? "E" : "A";
@@ -93,7 +93,9 @@ export default function Sidebar({ role, onLogout, isOpen, onClose }) {
           </div>
           <div className="sidebar-user-info">
             <div className="sidebar-user-name">{userName}</div>
-            <div className="sidebar-user-role">{role}</div>
+            <div className="sidebar-user-role" style={{ fontSize: "0.7rem" }}>
+              {role} {hospitalInfo ? `• ${hospitalInfo.hospital}` : ""}
+            </div>
           </div>
           <button
             className="sidebar-logout-btn"

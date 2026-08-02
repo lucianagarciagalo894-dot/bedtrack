@@ -19,6 +19,7 @@ public interface IHospitalRepository
     void EliminarCama(Cama cama);
 
     Task<Piso?> ObtenerPisoPorIdAsync(int floorId);
+    Task AgregarPisoAsync(Piso piso);
 
     Task<IEnumerable<Piso>> ObtenerPisosAsync();
     Task<IEnumerable<Habitacion>> ObtenerHabitacionesAsync();
@@ -27,5 +28,14 @@ public interface IHospitalRepository
     Task<Cama?> ObtenerCamaPorIdAsync(int bedId);
     Task AgregarPacienteAsync(Paciente paciente);
     void EliminarPaciente(Paciente paciente);
+
+    Task<IEnumerable<UsuarioStaff>> ObtenerUsuariosStaffAsync();
+    Task<UsuarioStaff?> ObtenerUsuarioStaffPorIdAsync(int id);
+    Task AgregarUsuarioStaffAsync(UsuarioStaff usuario);
+    void EliminarUsuarioStaff(UsuarioStaff usuario);
+
+    Task<IEnumerable<HistorialCama>> ObtenerHistorialCamasAsync(int? camaId = null);
+    Task AgregarHistorialCamaAsync(HistorialCama historial);
+
     Task GuardarCambiosAsync();
 }

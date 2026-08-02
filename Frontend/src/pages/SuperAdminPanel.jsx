@@ -11,6 +11,11 @@ import {
   FaCheckCircle,
   FaExclamationTriangle,
   FaExchangeAlt,
+  FaUserNurse,
+  FaHistory,
+  FaUserPlus,
+  FaToggleOn,
+  FaToggleOff,
 } from "react-icons/fa";
 import {
   getNosocomios,
@@ -22,6 +27,12 @@ import {
   createBed,
   updateBed,
   deleteBed,
+  createFullHospitalSetup,
+  getStaffUsers,
+  createStaffUser,
+  updateStaffUser,
+  deleteStaffUser,
+  getAuditLogs,
 } from "../services/superAdminService";
 import { getAllRooms, getFloors } from "../services/roomService";
 
@@ -34,6 +45,8 @@ export default function SuperAdminPanel({ onLogout }) {
   // State for Rooms, Beds and Floors
   const [floors, setFloors] = useState([]);
   const [rooms, setRooms] = useState([]);
+  const [staffUsers, setStaffUsers] = useState([]);
+  const [auditLogs, setAuditLogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState(null);
 
@@ -42,12 +55,25 @@ export default function SuperAdminPanel({ onLogout }) {
   const [showSucursalModal, setShowSucursalModal] = useState(false);
   const [showRoomModal, setShowRoomModal] = useState(false);
   const [showBedModal, setShowBedModal] = useState(false);
+  const [showFullHospitalModal, setShowFullHospitalModal] = useState(false);
+  const [showUserModal, setShowUserModal] = useState(false);
 
   // Forms data
   const [newNosocomio, setNewNosocomio] = useState({ nombre: "", codigo: "", direccion: "" });
   const [newSucursal, setNewSucursal] = useState({ nombre: "", direccion: "" });
   const [roomForm, setRoomForm] = useState({ id: null, numero: "", pisoId: "", bedsCount: 1 });
   const [bedForm, setBedForm] = useState({ id: null, numero: "", habitacionId: "", status: "disponible" });
+  const [userForm, setUserForm] = useState({ id: null, nombre: "", email: "", password: "", rol: "enfermeria", activo: true, nosocomioId: "" });
+  const [fullHospitalForm, setFullHospitalForm] = useState({
+    nombreNosocomio: "",
+    codigoNosocomio: "",
+    direccionNosocomio: "",
+    nombreSucursal: "Sede Central",
+    direccionSucursal: "",
+    cantidadPisos: 3,
+    habitacionesPorPiso: 4,
+    camasPorHabitacion: 2,
+  });
 
   // System Settings State
   const [autoRefresh, setAutoRefresh] = useState(true);
@@ -65,10 +91,12 @@ export default function SuperAdminPanel({ onLogout }) {
   const loadInitialData = async () => {
     setLoading(true);
     try {
-      const [nosData, roomsData, floorsData] = await Promise.all([
+      const [nosData, roomsData, floorsData, usersData, logsData] = await Promise.all([
         getNosocomios(),
         getAllRooms(),
         getFloors(),
+        getStaffUsers(),
+        getAuditLogs(),
       ]);
 
       setNosocomios(nosData || []);
@@ -81,6 +109,8 @@ export default function SuperAdminPanel({ onLogout }) {
 
       setRooms(roomsData || []);
       setFloors(floorsData || []);
+      setStaffUsers(usersData || []);
+      setAuditLogs(logsData || []);
     } catch (err) {
       console.error("Error al cargar datos iniciales:", err);
       showNotification("Error al cargar la información del servidor", "error");
@@ -281,6 +311,123 @@ export default function SuperAdminPanel({ onLogout }) {
     }
   };
 
+  const handleCreateFullHospital = async (e) => {
+    e.preventDefault();
+    if (!fullHospitalForm.nombreNosocomio) return;
+
+    try {
+      const floorsPayload = [];
+      const numPisos = parseInt(fullHospitalForm.cantidadPisos, 10) || 3;
+      const habsPorPiso = parseInt(fullHospitalForm.habitacionesPorPiso, 10) || 4;
+      const camasPorHab = parseInt(fullHospitalForm.camasPorHabitacion, 10) || 2;
+
+      for (let i = 1; i <= numPisos; i++) {
+        let tipo = "Compartida";
+        let tipoKey = "compartida";
+        if (i === 1) { tipo = "Privada"; tipoKey = "privada"; }
+        else if (i === numPisos) { tipo = "Terapia Intensiva"; tipoKey = "intensiva"; }
+
+        floorsPayload.push({
+          nombre: `Piso ${i}`,
+          tipo,
+          tipoKey,
+          cantidadHabitaciones: habsPorPiso,
+          camasPorHabitacion: camasPorHab,
+        });
+      }
+
+      const payload = {
+        nombreNosocomio: fullHospitalForm.nombreNosocomio,
+        codigoNosocomio: fullHospitalForm.codigoNosocomio,
+        direccionNosocomio: fullHospitalForm.direccionNosocomio,
+        nombreSucursal: fullHospitalForm.nombreSucursal || "Sede Central",
+        direccionSucursal: fullHospitalForm.direccionSucursal || fullHospitalForm.direccionNosocomio,
+        pisos: floorsPayload,
+      };
+
+      const result = await createFullHospitalSetup(payload);
+      setShowFullHospitalModal(false);
+
+      showNotification(`¡Hospital "${result.nombre}" generado exitosamente con sus pisos, habitaciones y camas!`);
+
+      await loadInitialData();
+    } catch (err) {
+      showNotification(err.message, "error");
+    }
+  };
+
+  // --- Handlers para Usuarios Staff de Enfermería ---
+  const handleOpenUserModal = (user = null) => {
+    if (user) {
+      setUserForm({
+        id: user.id,
+        nombre: user.nombre,
+        email: user.email,
+        password: "",
+        rol: user.rol || "enfermeria",
+        activo: user.activo !== false,
+        nosocomioId: user.nosocomioId ? user.nosocomioId.toString() : selectedNosocomioId,
+      });
+    } else {
+      setUserForm({
+        id: null,
+        nombre: "",
+        email: "",
+        password: "",
+        rol: "enfermeria",
+        activo: true,
+        nosocomioId: selectedNosocomioId,
+      });
+    }
+    setShowUserModal(true);
+  };
+
+  const handleSaveUser = async (e) => {
+    e.preventDefault();
+    if (!userForm.nombre || !userForm.email) return;
+
+    try {
+      if (userForm.id) {
+        const updated = await updateStaffUser(userForm.id, {
+          nombre: userForm.nombre,
+          email: userForm.email,
+          password: userForm.password,
+          rol: userForm.rol,
+          activo: userForm.activo,
+          nosocomioId: userForm.nosocomioId ? parseInt(userForm.nosocomioId, 10) : null,
+        });
+        setStaffUsers((prev) => prev.map((u) => (u.id === userForm.id ? { ...u, ...updated } : u)));
+        showNotification("Usuario de enfermería actualizado");
+      } else {
+        const created = await createStaffUser({
+          nombre: userForm.nombre,
+          email: userForm.email,
+          password: userForm.password || "123456",
+          rol: userForm.rol,
+          nosocomioId: userForm.nosocomioId ? parseInt(userForm.nosocomioId, 10) : null,
+        });
+        setStaffUsers((prev) => [...prev, created]);
+        showNotification("Usuario de enfermería creado con éxito");
+      }
+      setShowUserModal(false);
+    } catch (err) {
+      showNotification(err.message, "error");
+    }
+  };
+
+  const handleToggleUserStatus = async (user) => {
+    try {
+      const updated = await updateStaffUser(user.id, {
+        ...user,
+        activo: !user.activo,
+      });
+      setStaffUsers((prev) => prev.map((u) => (u.id === user.id ? { ...u, activo: !u.activo } : u)));
+      showNotification(`Usuario ${!user.activo ? "activado" : "desactivado"}`);
+    } catch (err) {
+      showNotification(err.message, "error");
+    }
+  };
+
   return (
     <div className="superadmin-container">
       {/* Top Banner Notice */}
@@ -294,6 +441,13 @@ export default function SuperAdminPanel({ onLogout }) {
         </div>
 
         <div className="superadmin-actions">
+          <button
+            className="btn-primary-add"
+            style={{ background: "linear-gradient(135deg, #10B981 0%, #059669 100%)", boxShadow: "0 4px 12px rgba(16, 185, 129, 0.3)" }}
+            onClick={() => setShowFullHospitalModal(true)}
+          >
+            <FaPlus /> ＋ Crear Hospital Completo
+          </button>
           <span className="superadmin-badge">Modo Desarrollador</span>
           {onLogout && (
             <button className="superadmin-logout-btn" onClick={onLogout}>
@@ -395,6 +549,121 @@ export default function SuperAdminPanel({ onLogout }) {
           </div>
         </section>
       </div>
+
+      {/* --- SECCIÓN: GESTIÓN DE USUARIOS / PERSONAL DE ENFERMERÍA --- */}
+      <section className="superadmin-main-section" style={{ marginBottom: "24px" }}>
+        <div className="section-toolbar">
+          <h2><FaUserNurse style={{ color: "#2563EB" }} /> Gestión de Perfiles de Enfermería y Personal</h2>
+          <button className="btn-primary-add" onClick={() => handleOpenUserModal()}>
+            <FaUserPlus /> Crear Usuario de Enfermería
+          </button>
+        </div>
+
+        <div style={{ background: "var(--card-bg, #FFFFFF)", padding: "16px", borderRadius: "12px", border: "1px solid var(--border, #E2E8F0)" }}>
+          {staffUsers.length === 0 ? (
+            <p style={{ fontSize: "0.875rem", color: "#64748B" }}>No hay usuarios de enfermería registrados para esta sede.</p>
+          ) : (
+            <div style={{ overflowX: "auto" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.875rem" }}>
+                <thead>
+                  <tr style={{ borderBottom: "2px solid #E2E8F0", textAlign: "left" }}>
+                    <th style={{ padding: "10px" }}>Nombre del Personal</th>
+                    <th style={{ padding: "10px" }}>Correo Electrónico</th>
+                    <th style={{ padding: "10px" }}>Rol</th>
+                    <th style={{ padding: "10px" }}>Hospital Asignado</th>
+                    <th style={{ padding: "10px" }}>Estado</th>
+                    <th style={{ padding: "10px", textAlign: "right" }}>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {staffUsers.map((u) => (
+                    <tr key={u.id} style={{ borderBottom: "1px solid #F1F5F9" }}>
+                      <td style={{ padding: "10px", fontWeight: "600" }}>{u.nombre}</td>
+                      <td style={{ padding: "10px" }}>{u.email}</td>
+                      <td style={{ padding: "10px" }}>
+                        <span style={{ background: u.rol === "admin" ? "#FEF3C7" : "#DBEAFE", color: u.rol === "admin" ? "#D97706" : "#2563EB", padding: "4px 8px", borderRadius: "6px", fontSize: "0.75rem", fontWeight: "600" }}>
+                          {u.rol === "enfermeria" ? "Enfermería" : u.rol}
+                        </span>
+                      </td>
+                      <td style={{ padding: "10px", color: "#64748B" }}>{u.hospitalNombre || "Global"}</td>
+                      <td style={{ padding: "10px" }}>
+                        <span style={{ color: u.activo !== false ? "#059669" : "#DC2626", fontWeight: "600" }}>
+                          {u.activo !== false ? "✓ Activo" : "✕ Inactivo"}
+                        </span>
+                      </td>
+                      <td style={{ padding: "10px", textAlign: "right" }}>
+                        <button
+                          className="icon-btn edit-sm"
+                          style={{ marginRight: "8px" }}
+                          onClick={() => handleOpenUserModal(u)}
+                          title="Editar Perfil"
+                        >
+                          <FaEdit />
+                        </button>
+                        <button
+                          className="icon-btn"
+                          style={{ color: u.activo !== false ? "#DC2626" : "#059669" }}
+                          onClick={() => handleToggleUserStatus(u)}
+                          title={u.activo !== false ? "Desactivar Usuario" : "Activar Usuario"}
+                        >
+                          {u.activo !== false ? <FaToggleOn size={18} /> : <FaToggleOff size={18} />}
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* --- SECCIÓN: HISTORIAL DE AUDITORÍA GLOBAL DE CAMAS --- */}
+      <section className="superadmin-main-section" style={{ marginBottom: "24px" }}>
+        <div className="section-toolbar">
+          <h2><FaHistory style={{ color: "#8B5CF6" }} /> Historial de Auditoría (Registro de Cambios en Camas)</h2>
+        </div>
+
+        <div style={{ background: "var(--card-bg, #FFFFFF)", padding: "16px", borderRadius: "12px", border: "1px solid var(--border, #E2E8F0)" }}>
+          {auditLogs.length === 0 ? (
+            <p style={{ fontSize: "0.875rem", color: "#64748B" }}>No hay registros de modificaciones de camas aún.</p>
+          ) : (
+            <div style={{ overflowX: "auto", maxHeight: "320px", overflowY: "auto" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.825rem" }}>
+                <thead>
+                  <tr style={{ borderBottom: "2px solid #E2E8F0", textAlign: "left", sticky: "top", background: "#F8FAFC" }}>
+                    <th style={{ padding: "8px" }}>Fecha / Hora</th>
+                    <th style={{ padding: "8px" }}>Operador (Enfermería)</th>
+                    <th style={{ padding: "8px" }}>Ubicación</th>
+                    <th style={{ padding: "8px" }}>Acción Realizada</th>
+                    <th style={{ padding: "8px" }}>Transición</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {auditLogs.map((log) => (
+                    <tr key={log.id} style={{ borderBottom: "1px solid #F1F5F9" }}>
+                      <td style={{ padding: "8px", whiteSpace: "nowrap", color: "#64748B" }}>{log.fechaHora}</td>
+                      <td style={{ padding: "8px" }}>
+                        <strong>{log.usuarioNombre}</strong>
+                        <div style={{ fontSize: "0.7rem", color: "#94A3B8" }}>{log.usuarioEmail}</div>
+                      </td>
+                      <td style={{ padding: "8px", whiteSpace: "nowrap" }}>
+                        Hab #{log.habitacionNumero} - Cama #{log.camaNumero}
+                      </td>
+                      <td style={{ padding: "8px" }}>{log.accion}</td>
+                      <td style={{ padding: "8px", whiteSpace: "nowrap" }}>
+                        <span style={{ fontSize: "0.7rem", padding: "2px 6px", borderRadius: "4px", background: "#E2E8F0" }}>
+                          {log.estadoAnterior} ➔ <strong>{log.estadoNuevo}</strong>
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </section>
 
       {/* Section: Infrastructure Management */}
       <section className="superadmin-main-section">
@@ -677,6 +946,197 @@ export default function SuperAdminPanel({ onLogout }) {
                 </button>
                 <button type="submit" className="btn-confirm">
                   {bedForm.id ? "Actualizar Cama" : "Crear Cama"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* --- MODAL ASISTENTE HOSPITAL COMPLETO --- */}
+      {showFullHospitalModal && (
+        <div className="modal-backdrop">
+          <div className="modal-content" style={{ maxWidth: "540px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              <FaHospital style={{ fontSize: "24px", color: "#10B981" }} />
+              <div>
+                <h3 style={{ margin: 0 }}>Crear Hospital Completo (Asistente 1-Clic)</h3>
+                <p style={{ margin: "2px 0 0", fontSize: "0.75rem", color: "#64748B" }}>
+                  Genera la institución, sucursal, pisos, habitaciones y camas totalmente funcionales de forma automática.
+                </p>
+              </div>
+            </div>
+
+            <form onSubmit={handleCreateFullHospital}>
+              <div className="form-group">
+                <label>Nombre del Hospital / Nosocomio:</label>
+                <input
+                  type="text"
+                  placeholder="Ej: Hospital Privado Córdoba"
+                  value={fullHospitalForm.nombreNosocomio}
+                  onChange={(e) => setFullHospitalForm({ ...fullHospitalForm, nombreNosocomio: e.target.value })}
+                  required
+                />
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                <div className="form-group">
+                  <label>Código Identificador:</label>
+                  <input
+                    type="text"
+                    placeholder="Ej: HPC-01"
+                    value={fullHospitalForm.codigoNosocomio}
+                    onChange={(e) => setFullHospitalForm({ ...fullHospitalForm, codigoNosocomio: e.target.value })}
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Nombre de la Sede Inicial:</label>
+                  <input
+                    type="text"
+                    placeholder="Ej: Sede Central"
+                    value={fullHospitalForm.nombreSucursal}
+                    onChange={(e) => setFullHospitalForm({ ...fullHospitalForm, nombreSucursal: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label>Dirección:</label>
+                <input
+                  type="text"
+                  placeholder="Ej: Av. Naciones Unidas 345"
+                  value={fullHospitalForm.direccionNosocomio}
+                  onChange={(e) => setFullHospitalForm({ ...fullHospitalForm, direccionNosocomio: e.target.value, direccionSucursal: e.target.value })}
+                />
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "10px", background: "#F8FAFC", padding: "12px", borderRadius: "10px", border: "1px solid #E2E8F0" }}>
+                <div className="form-group">
+                  <label style={{ fontSize: "0.75rem" }}>Cantidad de Pisos:</label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="20"
+                    value={fullHospitalForm.cantidadPisos}
+                    onChange={(e) => setFullHospitalForm({ ...fullHospitalForm, cantidadPisos: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label style={{ fontSize: "0.75rem" }}>Habs. por Piso:</label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="30"
+                    value={fullHospitalForm.habitacionesPorPiso}
+                    onChange={(e) => setFullHospitalForm({ ...fullHospitalForm, habitacionesPorPiso: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label style={{ fontSize: "0.75rem" }}>Camas por Hab.:</label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="10"
+                    value={fullHospitalForm.camasPorHabitacion}
+                    onChange={(e) => setFullHospitalForm({ ...fullHospitalForm, camasPorHabitacion: e.target.value })}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div style={{ fontSize: "0.75rem", color: "#059669", background: "#ECFDF5", padding: "8px 12px", borderRadius: "6px", fontWeight: "600" }}>
+                ✓ Se generarán {(parseInt(fullHospitalForm.cantidadPisos, 10) || 1) * (parseInt(fullHospitalForm.habitacionesPorPiso, 10) || 1)} habitaciones y {(parseInt(fullHospitalForm.cantidadPisos, 10) || 1) * (parseInt(fullHospitalForm.habitacionesPorPiso, 10) || 1) * (parseInt(fullHospitalForm.camasPorHabitacion, 10) || 1)} camas listas para registrar pacientes inmediatamente.
+              </div>
+
+              <div className="modal-actions">
+                <button type="button" className="btn-cancel" onClick={() => setShowFullHospitalModal(false)}>
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="btn-confirm"
+                  style={{ background: "linear-gradient(135deg, #10B981 0%, #059669 100%)" }}
+                >
+                  🚀 Generar Hospital Completo
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* --- MODAL CREAR / EDITAR USUARIO STAFF ENFERMERÍA --- */}
+      {showUserModal && (
+        <div className="modal-backdrop">
+          <div className="modal-content">
+            <h3>{userForm.id ? "Editar Perfil de Enfermería" : "Registrar Usuario de Enfermería"}</h3>
+            <form onSubmit={handleSaveUser}>
+              <div className="form-group">
+                <label>Nombre Completo:</label>
+                <input
+                  type="text"
+                  placeholder="Ej: Lic. María Elena Fernández"
+                  value={userForm.nombre}
+                  onChange={(e) => setUserForm({ ...userForm, nombre: e.target.value })}
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Correo Electrónico:</label>
+                <input
+                  type="email"
+                  placeholder="ejemplo@hospital.com"
+                  value={userForm.email}
+                  onChange={(e) => setUserForm({ ...userForm, email: e.target.value })}
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Contraseña / Clave de Acceso:</label>
+                <input
+                  type="password"
+                  placeholder={userForm.id ? "Dejar en blanco para mantener la actual" : "Mínimo 4 caracteres"}
+                  value={userForm.password}
+                  onChange={(e) => setUserForm({ ...userForm, password: e.target.value })}
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Hospital Asignado:</label>
+                <select
+                  value={userForm.nosocomioId}
+                  onChange={(e) => setUserForm({ ...userForm, nosocomioId: e.target.value })}
+                >
+                  <option value="">-- Todos los Hospitales --</option>
+                  {nosocomios.map((n) => (
+                    <option key={n.id} value={n.id}>
+                      {n.nombre}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label>Rol de Usuario:</label>
+                <select
+                  value={userForm.rol}
+                  onChange={(e) => setUserForm({ ...userForm, rol: e.target.value })}
+                >
+                  <option value="enfermeria">Enfermería</option>
+                  <option value="admin">Administrador Hospitalario</option>
+                </select>
+              </div>
+
+              <div className="modal-actions">
+                <button type="button" className="btn-cancel" onClick={() => setShowUserModal(false)}>
+                  Cancelar
+                </button>
+                <button type="submit" className="btn-confirm">
+                  {userForm.id ? "Actualizar Usuario" : "Guardar Perfil"}
                 </button>
               </div>
             </form>

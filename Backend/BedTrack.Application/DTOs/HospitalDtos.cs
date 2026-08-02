@@ -45,6 +45,56 @@ public class UpdateBedStatusDto
 {
     public string Status { get; set; } = string.Empty;
     public PacienteDto? Patient { get; set; }
+    public string? OperatorName { get; set; }
+    public string? OperatorEmail { get; set; }
+}
+
+public class UsuarioStaffDto
+{
+    public int Id { get; set; }
+    public string Nombre { get; set; } = string.Empty;
+    public string Email { get; set; } = string.Empty;
+    public string Rol { get; set; } = string.Empty;
+    public int? NosocomioId { get; set; }
+    public int? SucursalId { get; set; }
+    public bool Activo { get; set; } = true;
+    public string HospitalNombre { get; set; } = string.Empty;
+}
+
+public class CreateUsuarioStaffDto
+{
+    public string Nombre { get; set; } = string.Empty;
+    public string Email { get; set; } = string.Empty;
+    public string Password { get; set; } = string.Empty;
+    public string Rol { get; set; } = "enfermeria";
+    public int? NosocomioId { get; set; }
+    public int? SucursalId { get; set; }
+}
+
+public class UpdateUsuarioStaffDto
+{
+    public string Nombre { get; set; } = string.Empty;
+    public string Email { get; set; } = string.Empty;
+    public string Password { get; set; } = string.Empty;
+    public string Rol { get; set; } = "enfermeria";
+    public bool Activo { get; set; } = true;
+    public int? NosocomioId { get; set; }
+    public int? SucursalId { get; set; }
+}
+
+public class HistorialCamaDto
+{
+    public int Id { get; set; }
+    public int CamaId { get; set; }
+    public int CamaNumero { get; set; }
+    public int HabitacionId { get; set; }
+    public int HabitacionNumero { get; set; }
+    public string UsuarioNombre { get; set; } = string.Empty;
+    public string UsuarioEmail { get; set; } = string.Empty;
+    public string Accion { get; set; } = string.Empty;
+    public string EstadoAnterior { get; set; } = string.Empty;
+    public string EstadoNuevo { get; set; } = string.Empty;
+    public string FechaHora { get; set; } = string.Empty;
 }
 
 public class NosocomioDto
@@ -118,4 +168,24 @@ public class DevLoginResponseDto
     public string Role { get; set; } = "superadmin";
     public string Token { get; set; } = string.Empty;
 }
+
+public class FloorConfigDto
+{
+    public string Nombre { get; set; } = string.Empty;
+    public string Tipo { get; set; } = string.Empty;
+    public string TipoKey { get; set; } = string.Empty;
+    public int CantidadHabitaciones { get; set; } = 5;
+    public int CamasPorHabitacion { get; set; } = 2;
+}
+
+public class FullHospitalSetupDto
+{
+    public string NombreNosocomio { get; set; } = string.Empty;
+    public string CodigoNosocomio { get; set; } = string.Empty;
+    public string DireccionNosocomio { get; set; } = string.Empty;
+    public string NombreSucursal { get; set; } = string.Empty;
+    public string DireccionSucursal { get; set; } = string.Empty;
+    public List<FloorConfigDto> Pisos { get; set; } = new();
+}
+
 

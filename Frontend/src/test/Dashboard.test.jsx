@@ -11,7 +11,9 @@ vi.mock('react-icons/fa', () => ({
   FaTimesCircle: () => <span data-testid="fa-times">FaTimesCircle</span>,
   FaBroom: () => <span data-testid="fa-broom">FaBroom</span>,
   FaArrowRight: () => <span data-testid="fa-arrow">FaArrowRight</span>,
-  FaExclamationCircle: () => <span data-testid="fa-exclamation">FaExclamationCircle</span>
+  FaExclamationCircle: () => <span data-testid="fa-exclamation">FaExclamationCircle</span>,
+  FaHistory: () => <span data-testid="fa-history">FaHistory</span>,
+  FaUserNurse: () => <span data-testid="fa-user-nurse">FaUserNurse</span>,
 }));
 
 const renderWithRouter = (component) => {

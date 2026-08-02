@@ -123,7 +123,7 @@ describe('Componente Login', () => {
     expect(screen.queryByText('La contraseña debe tener al menos 4 caracteres')).not.toBeInTheDocument();
     
     
-    expect(mockOnLogin).toHaveBeenCalledWith('admin');
+    expect(mockOnLogin).toHaveBeenCalledWith('admin', expect.anything());
     expect(mockOnLogin).toHaveBeenCalledTimes(1);
   });
 
@@ -142,7 +142,7 @@ describe('Componente Login', () => {
     fireEvent.keyDown(emailInput, { key: 'Enter', code: 'Enter' });
 
     
-    expect(mockOnLogin).toHaveBeenCalledWith('enfermeria');
+    expect(mockOnLogin).toHaveBeenCalledWith('enfermeria', expect.anything());
     expect(mockOnLogin).toHaveBeenCalledTimes(1);
   });
 

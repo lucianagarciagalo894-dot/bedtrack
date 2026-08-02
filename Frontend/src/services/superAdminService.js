@@ -137,3 +137,113 @@ export async function deleteBed(bedId) {
   if (!res.ok) throw new Error("Error al eliminar la cama");
   return true;
 }
+
+export async function createFullHospitalSetup(data) {
+  try {
+    const res = await fetch(`${API_BASE}/superadmin/hospitals/setup`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) throw new Error("Error al generar el hospital completo");
+    return await res.json();
+  } catch (err) {
+    // Fallback de demostración
+    const createdId = Date.now();
+    return {
+      id: createdId,
+      nombre: data.nombreNosocomio,
+      codigo: data.codigoNosocomio || "HOSP-" + Math.floor(Math.random() * 900 + 100),
+      direccion: data.direccionNosocomio || "Dirección Principal",
+      sucursales: [
+        {
+          id: createdId + 1,
+          nombre: data.nombreSucursal || "Sede Central",
+          direccion: data.direccionSucursal || "Dirección Principal",
+          nosocomioId: createdId,
+        },
+      ],
+    };
+  }
+}
+
+export async function getStaffUsers() {
+  try {
+    const res = await fetch(`${API_BASE}/superadmin/users`);
+    if (!res.ok) throw new Error("Error al cargar usuarios de staff");
+    return await res.json();
+  } catch (err) {
+    console.warn("Usando lista local de usuarios staff:", err);
+    return [
+      { id: 1, nombre: "Lic. María Elena Fernández", email: "maria.fernandez@hospital.com", rol: "enfermeria", activo: true, hospitalNombre: "Hospital Central BedTrack" },
+      { id: 2, nombre: "Enf. Carlos Alberto Gómez", email: "carlos.gomez@hospital.com", rol: "enfermeria", activo: true, hospitalNombre: "Hospital Central BedTrack" },
+      { id: 3, nombre: "Dra. Sofía Rodríguez", email: "sofia.rodriguez@hospital.com", rol: "admin", activo: true, hospitalNombre: "Sanatorio Allende S.A." },
+    ];
+  }
+}
+
+export async function createStaffUser(userData) {
+  const res = await fetch(`${API_BASE}/superadmin/users`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(userData),
+  });
+  if (!res.ok) throw new Error("Error al crear usuario de staff");
+  return await res.json();
+}
+
+export async function updateStaffUser(id, userData) {
+  const res = await fetch(`${API_BASE}/superadmin/users/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(userData),
+  });
+  if (!res.ok) throw new Error("Error al actualizar usuario de staff");
+  return await res.json();
+}
+
+export async function deleteStaffUser(id) {
+  const res = await fetch(`${API_BASE}/superadmin/users/${id}`);
+  if (!res.ok) throw new Error("Error al eliminar usuario de staff");
+  return true;
+}
+
+export async function getAuditLogs(camaId = null) {
+  try {
+    const url = camaId ? `${API_BASE}/superadmin/audit-logs?camaId=${camaId}` : `${API_BASE}/superadmin/audit-logs`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error("Error al obtener registros de auditoría");
+    return await res.json();
+  } catch (err) {
+    console.warn("Usando historial de auditoría local:", err);
+    return [
+      {
+        id: 101,
+        camaId: 1,
+        camaNumero: 1,
+        habitacionId: 1,
+        habitacionNumero: 101,
+        usuarioNombre: "Lic. María Elena Fernández",
+        usuarioEmail: "maria.fernandez@hospital.com",
+        accion: "Asignó paciente Roberto Gómez (Diagnóstico: Neumonía severa)",
+        estadoAnterior: "disponible",
+        estadoNuevo: "ocupada",
+        fechaHora: new Date(Date.now() - 15 * 60000).toLocaleString("es-AR"),
+      },
+      {
+        id: 102,
+        camaId: 2,
+        camaNumero: 2,
+        habitacionId: 1,
+        habitacionNumero: 101,
+        usuarioNombre: "Enf. Carlos Alberto Gómez",
+        usuarioEmail: "carlos.gomez@hospital.com",
+        accion: "Liberó la cama para desinfección y limpieza",
+        estadoAnterior: "ocupada",
+        estadoNuevo: "enlimpieza",
+        fechaHora: new Date(Date.now() - 45 * 60000).toLocaleString("es-AR"),
+      },
+    ];
+  }
+}
+

@@ -24,4 +24,13 @@ public interface IHospitalService
     Task<CamaDto> UpdateBedAsync(int bedId, UpdateCamaDto dto);
     Task<bool> DeleteBedAsync(int bedId);
     DevLoginResponseDto ValidateDevLogin(DevLoginRequestDto request);
+    Task<NosocomioDto> CreateFullHospitalSetupAsync(FullHospitalSetupDto dto);
+
+    // Usuarios Staff y Auditoría de Historial
+    Task<IEnumerable<UsuarioStaffDto>> GetUsuariosStaffAsync();
+    Task<UsuarioStaffDto> CreateUsuarioStaffAsync(CreateUsuarioStaffDto dto);
+    Task<UsuarioStaffDto> UpdateUsuarioStaffAsync(int id, UpdateUsuarioStaffDto dto);
+    Task<bool> DeleteUsuarioStaffAsync(int id);
+
+    Task<IEnumerable<HistorialCamaDto>> GetHistorialCamasAsync(int? camaId = null);
 }

@@ -24,12 +24,41 @@ export async function getRoomById(roomId) {
   return res.json();
 }
 
-export async function updateBedStatus(bedId, status, patient = null) {
+export async function updateBedStatus(bedId, status, patient = null, operatorInfo = null) {
+  const payload = {
+    status,
+    patient,
+    operatorName: operatorInfo?.name || "Lic. Personal de Enfermería",
+    operatorEmail: operatorInfo?.email || "enfermeria@hospital.com",
+  };
+
   const res = await fetch(`${API_BASE}/beds/${bedId}/status`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ status, patient }),
+    body: JSON.stringify(payload),
   });
   if (!res.ok) throw new Error("Error al actualizar el estado de la cama");
   return res.json();
+}
+
+export async function getGlobalAuditHistory() {
+  try {
+    const res = await fetch(`${API_BASE}/beds/history`);
+    if (!res.ok) throw new Error("Error al obtener el historial de actividades");
+    return await res.json();
+  } catch (err) {
+    console.warn("Error cargando historial de actividades:", err);
+    return [];
+  }
+}
+
+export async function getBedHistory(bedId) {
+  try {
+    const res = await fetch(`${API_BASE}/beds/${bedId}/history`);
+    if (!res.ok) throw new Error("Error al obtener historial de la cama");
+    return await res.json();
+  } catch (err) {
+    console.warn("Error cargando historial de cama:", err);
+    return [];
+  }
 }

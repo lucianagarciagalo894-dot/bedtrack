@@ -136,4 +136,68 @@ public class SuperAdminController : ControllerBase
         if (!deleted) return NotFound(new { message = "Cama no encontrada" });
         return NoContent();
     }
+
+    [HttpPost("hospitals/setup")]
+    public async Task<ActionResult<NosocomioDto>> CreateFullHospitalSetup([FromBody] FullHospitalSetupDto dto)
+    {
+        try
+        {
+            var result = await _service.CreateFullHospitalSetupAsync(dto);
+            return Ok(result);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [HttpGet("users")]
+    public async Task<ActionResult<IEnumerable<UsuarioStaffDto>>> GetUsers()
+    {
+        var users = await _service.GetUsuariosStaffAsync();
+        return Ok(users);
+    }
+
+    [HttpPost("users")]
+    public async Task<ActionResult<UsuarioStaffDto>> CreateUser([FromBody] CreateUsuarioStaffDto dto)
+    {
+        try
+        {
+            var user = await _service.CreateUsuarioStaffAsync(dto);
+            return Ok(user);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [HttpPut("users/{id}")]
+    public async Task<ActionResult<UsuarioStaffDto>> UpdateUser(int id, [FromBody] UpdateUsuarioStaffDto dto)
+    {
+        try
+        {
+            var user = await _service.UpdateUsuarioStaffAsync(id, dto);
+            return Ok(user);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+    }
+
+    [HttpDelete("users/{id}")]
+    public async Task<ActionResult> DeleteUser(int id)
+    {
+        var deleted = await _service.DeleteUsuarioStaffAsync(id);
+        if (!deleted) return NotFound(new { message = "Usuario no encontrado" });
+        return NoContent();
+    }
+
+    [HttpGet("audit-logs")]
+    public async Task<ActionResult<IEnumerable<HistorialCamaDto>>> GetAuditLogs([FromQuery] int? camaId)
+    {
+        var logs = await _service.GetHistorialCamasAsync(camaId);
+        return Ok(logs);
+    }
 }

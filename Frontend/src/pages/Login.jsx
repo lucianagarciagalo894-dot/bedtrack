@@ -1,11 +1,43 @@
-import { useState } from "react";
-import { FaHospitalAlt } from "react-icons/fa";
+import { useState, useEffect } from "react";
+import { FaHospitalAlt, FaBuilding } from "react-icons/fa";
+import { getNosocomios } from "../services/superAdminService";
 
 export default function Login({ onLogin }) {
   const [role, setRole] = useState("enfermeria");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [nosocomios, setNosocomios] = useState([]);
+  const [selectedNosocomioId, setSelectedNosocomioId] = useState("");
+  const [selectedSucursalId, setSelectedSucursalId] = useState("");
   const [errors, setErrors] = useState({});
+
+  useEffect(() => {
+    getNosocomios()
+      .then((data) => {
+        setNosocomios(data || []);
+        if (data && data.length > 0) {
+          setSelectedNosocomioId(data[0].id.toString());
+          if (data[0].sucursales && data[0].sucursales.length > 0) {
+            setSelectedSucursalId(data[0].sucursales[0].id.toString());
+          }
+        }
+      })
+      .catch((err) => console.warn("Error cargando nosocomios en login", err));
+  }, []);
+
+  const currentNosocomio = nosocomios.find((n) => n.id.toString() === selectedNosocomioId);
+  const sucursalesList = currentNosocomio?.sucursales || [];
+
+  const handleNosocomioChange = (e) => {
+    const id = e.target.value;
+    setSelectedNosocomioId(id);
+    const nos = nosocomios.find((n) => n.id.toString() === id);
+    if (nos && nos.sucursales && nos.sucursales.length > 0) {
+      setSelectedSucursalId(nos.sucursales[0].id.toString());
+    } else {
+      setSelectedSucursalId("");
+    }
+  };
 
   const validate = () => {
     const next = {};
@@ -22,7 +54,10 @@ export default function Login({ onLogin }) {
     const next = validate();
     setErrors(next);
     if (Object.keys(next).length === 0) {
-      onLogin(role);
+      const selectedHospital = currentNosocomio?.nombre || "Hospital Central";
+      const selectedSede = sucursalesList.find((s) => s.id.toString() === selectedSucursalId)?.nombre || "Sede Central";
+      
+      onLogin(role, { hospital: selectedHospital, sede: selectedSede });
     }
   };
 
@@ -58,7 +93,7 @@ export default function Login({ onLogin }) {
         <div className="login-features">
           <div className="login-feature">
             <div className="login-feature-dot" />
-            Estado en tiempo real por piso
+            Acceso institucional por Hospital y Sede
           </div>
           <div className="login-feature">
             <div className="login-feature-dot" />
@@ -81,6 +116,48 @@ export default function Login({ onLogin }) {
             <h2 className="login-title">Bienvenido</h2>
             <p className="login-subtitle">Ingresá con tu cuenta institucional</p>
           </div>
+
+          {/* Hospital / Nosocomio Selection */}
+          {nosocomios.length > 0 && (
+            <div className="form-group">
+              <label className="form-label" htmlFor="hospital-select">
+                Hospital / Institución
+              </label>
+              <select
+                id="hospital-select"
+                className="form-select"
+                value={selectedNosocomioId}
+                onChange={handleNosocomioChange}
+              >
+                {nosocomios.map((n) => (
+                  <option key={n.id} value={n.id}>
+                    {n.nombre} ({n.codigo || `ID: ${n.id}`})
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {/* Sede / Sucursal Selection */}
+          {sucursalesList.length > 0 && (
+            <div className="form-group">
+              <label className="form-label" htmlFor="sucursal-select">
+                Sede / Sucursal
+              </label>
+              <select
+                id="sucursal-select"
+                className="form-select"
+                value={selectedSucursalId}
+                onChange={(e) => setSelectedSucursalId(e.target.value)}
+              >
+                {sucursalesList.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.nombre} - {s.direccion}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
           {/* Role */}
           <div className="form-group">

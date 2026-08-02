@@ -19,9 +19,10 @@ const VALID_TRANSITIONS = {
 };
 
 function AppContent() {
-  const [role, setRole]               = useState(null);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [rooms, setRooms]             = useState([]);
+  const [role, setRole]                       = useState(null);
+  const [sessionHospital, setSessionHospital] = useState(null);
+  const [sidebarOpen, setSidebarOpen]         = useState(false);
+  const [rooms, setRooms]                     = useState([]);
   const location = useLocation();
 
   useEffect(() => {
@@ -49,6 +50,13 @@ function AppContent() {
     [rooms]
   );
 
+  const handleUserLogin = (selectedRole, hospitalData = null) => {
+    setRole(selectedRole);
+    if (hospitalData) {
+      setSessionHospital(hospitalData);
+    }
+  };
+
   const changeStatus = async (bedId, newStatus, patientData = null) => {
     const currentBed = rooms.flatMap((r) => r.beds).find((b) => b.id === bedId);
     const currentStatus = currentBed?.status?.toLowerCase();
@@ -57,7 +65,12 @@ function AppContent() {
     }
 
     try {
-      const updatedBed = await updateBedStatus(bedId, newStatus, patientData);
+      const operatorInfo = {
+        name: role === "enfermeria" ? "Lic. María Elena Fernández" : "Administrador Hospitalario",
+        email: role === "enfermeria" ? "maria.fernandez@hospital.com" : "admin@hospital.com",
+      };
+
+      const updatedBed = await updateBedStatus(bedId, newStatus, patientData, operatorInfo);
 
       setRooms((prev) =>
         prev.map((room) => ({
@@ -94,12 +107,12 @@ function AppContent() {
     location.pathname === "/dev";
 
   if (isDevUrl) {
-    return <DevLogin onLogin={(devRole) => setRole(devRole)} />;
+    return <DevLogin onLogin={(devRole) => handleUserLogin(devRole)} />;
   }
 
   // 3. Usuario no autenticado en ruta regular
   if (!role) {
-    return <Login onLogin={setRole} />;
+    return <Login onLogin={handleUserLogin} />;
   }
 
   return (
@@ -112,6 +125,7 @@ function AppContent() {
 
       <Sidebar
         role={role}
+        hospitalInfo={sessionHospital}
         onLogout={() => setRole(null)}
         isOpen={sidebarOpen}
         onClose={closeSidebar}
@@ -127,7 +141,9 @@ function AppContent() {
           >
             <FaBars />
           </button>
-          <span className="topbar-title">BedTrack</span>
+          <span className="topbar-title">
+            BedTrack {sessionHospital ? `— ${sessionHospital.hospital} (${sessionHospital.sede})` : ""}
+          </span>
         </div>
 
         <Routes>

@@ -35,4 +35,18 @@ public class BedsController : ControllerBase
             return BadRequest(ex.Message);
         }
     }
+
+    [HttpGet("history")]
+    public async Task<IActionResult> GetGlobalHistory()
+    {
+        var logs = await _service.GetHistorialCamasAsync(null);
+        return Ok(logs);
+    }
+
+    [HttpGet("{id}/history")]
+    public async Task<IActionResult> GetBedHistory(int id)
+    {
+        var logs = await _service.GetHistorialCamasAsync(id);
+        return Ok(logs);
+    }
 }

@@ -15,10 +15,28 @@ public class ApplicationDbContext : DbContext
     public DbSet<Habitacion> Habitaciones { get; set; }
     public DbSet<Paciente> Pacientes { get; set; }
     public DbSet<Cama> Camas { get; set; }
+    public DbSet<UsuarioStaff> UsuariosStaff { get; set; }
+    public DbSet<HistorialCama> HistorialCamas { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        modelBuilder.Entity<UsuarioStaff>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Nombre).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.Email).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.Password).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.Rol).IsRequired().HasMaxLength(50);
+        });
+
+        modelBuilder.Entity<HistorialCama>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.UsuarioNombre).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.Accion).IsRequired().HasMaxLength(300);
+        });
 
         modelBuilder.Entity<Nosocomio>(entity =>
         {

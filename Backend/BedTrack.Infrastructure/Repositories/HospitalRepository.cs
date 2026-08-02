@@ -77,6 +77,11 @@ public class HospitalRepository : IHospitalRepository
         return await _context.Pisos.FirstOrDefaultAsync(p => p.Id == floorId);
     }
 
+    public async Task AgregarPisoAsync(Piso piso)
+    {
+        await _context.Pisos.AddAsync(piso);
+    }
+
     public async Task<IEnumerable<Piso>> ObtenerPisosAsync()
     {
         return await _context.Pisos.Include(p => p.Habitaciones).ToListAsync();
@@ -125,6 +130,47 @@ public class HospitalRepository : IHospitalRepository
     public void EliminarPaciente(Paciente paciente)
     {
         _context.Pacientes.Remove(paciente);
+    }
+
+    public async Task<IEnumerable<UsuarioStaff>> ObtenerUsuariosStaffAsync()
+    {
+        return await _context.UsuariosStaff
+            .Include(u => u.Nosocomio)
+            .Include(u => u.Sucursal)
+            .ToListAsync();
+    }
+
+    public async Task<UsuarioStaff?> ObtenerUsuarioStaffPorIdAsync(int id)
+    {
+        return await _context.UsuariosStaff
+            .Include(u => u.Nosocomio)
+            .Include(u => u.Sucursal)
+            .FirstOrDefaultAsync(u => u.Id == id);
+    }
+
+    public async Task AgregarUsuarioStaffAsync(UsuarioStaff usuario)
+    {
+        await _context.UsuariosStaff.AddAsync(usuario);
+    }
+
+    public void EliminarUsuarioStaff(UsuarioStaff usuario)
+    {
+        _context.UsuariosStaff.Remove(usuario);
+    }
+
+    public async Task<IEnumerable<HistorialCama>> ObtenerHistorialCamasAsync(int? camaId = null)
+    {
+        var query = _context.HistorialCamas.AsQueryable();
+        if (camaId.HasValue && camaId.Value > 0)
+        {
+            query = query.Where(h => h.CamaId == camaId.Value);
+        }
+        return await query.OrderByDescending(h => h.FechaHora).Take(100).ToListAsync();
+    }
+
+    public async Task AgregarHistorialCamaAsync(HistorialCama historial)
+    {
+        await _context.HistorialCamas.AddAsync(historial);
     }
 
     public async Task GuardarCambiosAsync()
