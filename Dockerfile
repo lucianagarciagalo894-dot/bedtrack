@@ -8,6 +8,7 @@ COPY ["Backend/BedTrack.API/BedTrack.API.csproj", "Backend/BedTrack.API/"]
 COPY ["Backend/BedTrack.Application/BedTrack.Application.csproj", "Backend/BedTrack.Application/"]
 COPY ["Backend/BedTrack.Domain/BedTrack.Domain.csproj", "Backend/BedTrack.Domain/"]
 COPY ["Backend/BedTrack.Infrastructure/BedTrack.Infrastructure.csproj", "Backend/BedTrack.Infrastructure/"]
+COPY ["Backend/BedTrack.Tests/BedTrack.Tests.csproj", "Backend/BedTrack.Tests/"]
 RUN dotnet restore "BedTrack.sln"
 
 # Copiamos todo el codigo fuente restante (se ignorara Frontend si esta en .dockerignore, pero por las dudas copiamos todo)
