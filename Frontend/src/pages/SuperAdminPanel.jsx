@@ -16,6 +16,8 @@ import {
   FaUserPlus,
   FaToggleOn,
   FaToggleOff,
+  FaCopy,
+  FaLink,
 } from "react-icons/fa";
 import {
   getNosocomios,
@@ -542,6 +544,53 @@ export default function SuperAdminPanel({ onLogout }) {
                 <FaPlus /> Nuevo
               </button>
             </div>
+
+            {currentNosocomio && (
+              <div
+                style={{
+                  marginTop: "12px",
+                  padding: "10px 12px",
+                  background: "#F8FAFC",
+                  border: "1px solid #E2E8F0",
+                  borderRadius: "8px",
+                  fontSize: "0.8rem",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "6px",
+                }}
+              >
+                <div style={{ fontWeight: "600", color: "#334155", display: "flex", alignItems: "center", gap: "6px" }}>
+                  <FaLink style={{ color: "#2563EB" }} /> Enlace de Acceso Dedicado:
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <input
+                    type="text"
+                    readOnly
+                    value={`${window.location.origin}/h/${currentNosocomio.codigo}`}
+                    style={{
+                      flex: 1,
+                      padding: "6px 10px",
+                      fontSize: "0.75rem",
+                      border: "1px solid #CBD5E1",
+                      borderRadius: "6px",
+                      background: "#FFFFFF",
+                      color: "#1E293B",
+                    }}
+                  />
+                  <button
+                    className="btn-secondary-sm"
+                    style={{ margin: 0, padding: "6px 12px", fontSize: "0.75rem", display: "flex", alignItems: "center", gap: "4px" }}
+                    onClick={() => {
+                      const url = `${window.location.origin}/h/${currentNosocomio.codigo}`;
+                      navigator.clipboard.writeText(url);
+                      showNotification(`URL copiada al portapapeles: ${url}`);
+                    }}
+                  >
+                    <FaCopy /> Copiar URL
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </section>
 

@@ -24,13 +24,22 @@ export async function loginDev(email = "", devKey = "") {
   }
 }
 
+let localNosocomiosStore = [];
+
 export async function getNosocomios() {
   try {
     const res = await fetch(`${API_BASE}/superadmin/nosocomios`);
-    if (!res.ok) throw new Error("Error al obtener los nosocomios");
-    const data = await res.json();
-    if (Array.isArray(data) && data.length > 0) {
-      return data;
+    if (res.ok) {
+      const data = await res.json();
+      if (Array.isArray(data) && data.length > 0) {
+        const combined = [...data];
+        for (const localNos of localNosocomiosStore) {
+          if (!combined.some((n) => n.id === localNos.id || n.codigo === localNos.codigo)) {
+            combined.push(localNos);
+          }
+        }
+        return combined;
+      }
     }
     return getFallbackNosocomios();
   } catch (err) {
@@ -40,7 +49,7 @@ export async function getNosocomios() {
 }
 
 function getFallbackNosocomios() {
-  return [
+  const base = [
     {
       id: 1,
       nombre: "Hospital Central BedTrack",
@@ -61,9 +70,18 @@ function getFallbackNosocomios() {
       ]
     }
   ];
+
+  const combined = [...base];
+  for (const localNos of localNosocomiosStore) {
+    if (!combined.some((n) => n.id === localNos.id || n.codigo === localNos.codigo)) {
+      combined.push(localNos);
+    }
+  }
+  return combined;
 }
 
 export async function createNosocomio(data) {
+  let createdNos = null;
   try {
     const res = await fetch(`${API_BASE}/superadmin/nosocomios`, {
       method: "POST",
@@ -71,34 +89,44 @@ export async function createNosocomio(data) {
       body: JSON.stringify(data),
     });
 
-    if (!res.ok) {
-      const errText = await res.text();
-      let errorJson;
-      try { errorJson = JSON.parse(errText); } catch {}
-      throw new Error(errorJson?.message || "Error al crear el nosocomio en el servidor");
+    if (res.ok) {
+      createdNos = await res.json();
     }
-
-    return await res.json();
   } catch (err) {
-    if (data.nombre) {
-      const createdId = Date.now();
-      return {
-        id: createdId,
-        nombre: data.nombre,
-        codigo: data.codigo || `NOS-${Math.floor(Math.random() * 9000 + 1000)}`,
-        direccion: data.direccion || "Dirección Principal",
-        sucursales: [
-          {
-            id: createdId + 1,
-            nombre: "Sede Central",
-            direccion: data.direccion || "Dirección Principal",
-            nosocomioId: createdId,
-          },
-        ],
-      };
-    }
-    throw err;
+    console.warn("Creación local de nosocomio por fallback:", err);
   }
+
+  if (!createdNos) {
+    const createdId = Date.now();
+    createdNos = {
+      id: createdId,
+      nombre: data.nombre,
+      codigo: data.codigo || `NOS-${Math.floor(Math.random() * 9000 + 1000)}`,
+      direccion: data.direccion || "Dirección Principal",
+      sucursales: [
+        {
+          id: createdId + 1,
+          nombre: "Establecimiento Central",
+          direccion: data.direccion || "Dirección Principal",
+          nosocomioId: createdId,
+        },
+      ],
+    };
+  }
+
+  if (!createdNos.sucursales || createdNos.sucursales.length === 0) {
+    createdNos.sucursales = [
+      {
+        id: createdNos.id + 100,
+        nombre: "Establecimiento Central",
+        direccion: createdNos.direccion || "Dirección Principal",
+        nosocomioId: createdNos.id,
+      },
+    ];
+  }
+
+  localNosocomiosStore.push(createdNos);
+  return createdNos;
 }
 
 export async function getSucursales(nosocomioId) {
@@ -252,17 +280,23 @@ export async function deleteBed(bedId) {
 }
 
 export async function createFullHospitalSetup(data) {
+  let createdNos = null;
   try {
     const res = await fetch(`${API_BASE}/superadmin/hospitals/setup`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
-    if (!res.ok) throw new Error("Error al generar el hospital completo");
-    return await res.json();
+    if (res.ok) {
+      createdNos = await res.json();
+    }
   } catch (err) {
+    console.warn("Creación local de hospital completo por fallback:", err);
+  }
+
+  if (!createdNos) {
     const createdId = Date.now();
-    return {
+    createdNos = {
       id: createdId,
       nombre: data.nombreNosocomio,
       codigo: data.codigoNosocomio || "HOSP-" + Math.floor(Math.random() * 900 + 100),
@@ -270,13 +304,27 @@ export async function createFullHospitalSetup(data) {
       sucursales: [
         {
           id: createdId + 1,
-          nombre: data.nombreSucursal || "Sede Central",
+          nombre: data.nombreSucursal || "Establecimiento Central",
           direccion: data.direccionSucursal || "Dirección Principal",
           nosocomioId: createdId,
         },
       ],
     };
   }
+
+  if (!createdNos.sucursales || createdNos.sucursales.length === 0) {
+    createdNos.sucursales = [
+      {
+        id: createdNos.id + 100,
+        nombre: data.nombreSucursal || "Establecimiento Central",
+        direccion: data.direccionSucursal || createdNos.direccion || "Dirección Principal",
+        nosocomioId: createdNos.id,
+      },
+    ];
+  }
+
+  localNosocomiosStore.push(createdNos);
+  return createdNos;
 }
 
 export async function getStaffUsers() {

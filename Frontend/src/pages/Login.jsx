@@ -1,29 +1,54 @@
 import { useState, useEffect } from "react";
-import { FaHospitalAlt, FaBuilding } from "react-icons/fa";
+import { useParams, useLocation } from "react-router-dom";
+import { FaHospitalAlt, FaBuilding, FaCheckCircle } from "react-icons/fa";
 import { getNosocomios } from "../services/superAdminService";
 
 export default function Login({ onLogin }) {
+  const params = useParams();
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+
+  const targetCode = params.hospitalCode || queryParams.get("hospital") || queryParams.get("nosocomio") || "";
+
   const [role, setRole] = useState("enfermeria");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [nosocomios, setNosocomios] = useState([]);
   const [selectedNosocomioId, setSelectedNosocomioId] = useState("");
   const [selectedSucursalId, setSelectedSucursalId] = useState("");
+  const [isDedicatedUrl, setIsDedicatedUrl] = useState(false);
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
     getNosocomios()
       .then((data) => {
-        setNosocomios(data || []);
-        if (data && data.length > 0) {
-          setSelectedNosocomioId(data[0].id.toString());
-          if (data[0].sucursales && data[0].sucursales.length > 0) {
-            setSelectedSucursalId(data[0].sucursales[0].id.toString());
+        const list = data || [];
+        setNosocomios(list);
+
+        if (list.length > 0) {
+          let matched = null;
+          if (targetCode) {
+            matched = list.find(
+              (n) => n.codigo?.toLowerCase() === targetCode.toLowerCase() || n.id.toString() === targetCode
+            );
+          }
+
+          if (matched) {
+            setSelectedNosocomioId(matched.id.toString());
+            setIsDedicatedUrl(true);
+            if (matched.sucursales && matched.sucursales.length > 0) {
+              setSelectedSucursalId(matched.sucursales[0].id.toString());
+            }
+          } else {
+            setSelectedNosocomioId(list[0].id.toString());
+            if (list[0].sucursales && list[0].sucursales.length > 0) {
+              setSelectedSucursalId(list[0].sucursales[0].id.toString());
+            }
           }
         }
       })
       .catch((err) => console.warn("Error cargando nosocomios en login", err));
-  }, []);
+  }, [targetCode]);
 
   const currentNosocomio = nosocomios.find((n) => n.id.toString() === selectedNosocomioId);
   const sucursalesList = currentNosocomio?.sucursales || [];
@@ -55,9 +80,16 @@ export default function Login({ onLogin }) {
     setErrors(next);
     if (Object.keys(next).length === 0) {
       const selectedHospital = currentNosocomio?.nombre || "Hospital Central";
-      const selectedEstablecimiento = sucursalesList.find((s) => s.id.toString() === selectedSucursalId)?.nombre || "Establecimiento Central";
-      
-      onLogin(role, { hospital: selectedHospital, sede: selectedEstablecimiento, establecimiento: selectedEstablecimiento });
+      const selectedEstablecimiento =
+        sucursalesList.find((s) => s.id.toString() === selectedSucursalId)?.nombre || "Establecimiento Central";
+
+      onLogin(role, {
+        hospital: selectedHospital,
+        sede: selectedEstablecimiento,
+        establecimiento: selectedEstablecimiento,
+        nosocomioId: selectedNosocomioId,
+        sucursalId: selectedSucursalId,
+      });
     }
   };
 
@@ -117,49 +149,77 @@ export default function Login({ onLogin }) {
             <p className="login-subtitle">Ingresá con tu cuenta institucional</p>
           </div>
 
-          {/* Hospital / Nosocomio Selection */}
-          {nosocomios.length > 0 && (
-            <div className="form-group">
-              <label className="form-label" htmlFor="hospital-select">
-                Hospital / Institución
-              </label>
-              <select
-                id="hospital-select"
-                className="form-select"
-                value={selectedNosocomioId}
-                onChange={handleNosocomioChange}
-              >
-                {nosocomios.map((n) => (
-                  <option key={n.id} value={n.id}>
-                    {n.nombre} ({n.codigo || `ID: ${n.id}`})
-                  </option>
-                ))}
-              </select>
+          {/* Insignia de bienvenida si se ingresa vía URL dedicada */}
+          {isDedicatedUrl && currentNosocomio ? (
+            <div
+              style={{
+                background: "#EFF6FF",
+                border: "1px solid #BFDBFE",
+                padding: "12px 14px",
+                borderRadius: "10px",
+                marginBottom: "18px",
+                display: "flex",
+                alignItems: "center",
+                gap: "10px",
+              }}
+            >
+              <FaCheckCircle style={{ color: "#2563EB", fontSize: "18px" }} />
+              <div>
+                <div style={{ fontWeight: "700", color: "#1E40AF", fontSize: "0.875rem" }}>
+                  {currentNosocomio.nombre}
+                </div>
+                <div style={{ fontSize: "0.75rem", color: "#3B82F6" }}>
+                  Establecimiento: {sucursalesList[0]?.nombre || "Establecimiento Central"}
+                </div>
+              </div>
             </div>
+          ) : (
+            <>
+              {/* Hospital / Nosocomio Selection */}
+              {nosocomios.length > 0 && (
+                <div className="form-group">
+                  <label className="form-label" htmlFor="hospital-select">
+                    Hospital / Institución
+                  </label>
+                  <select
+                    id="hospital-select"
+                    className="form-select"
+                    value={selectedNosocomioId}
+                    onChange={handleNosocomioChange}
+                  >
+                    {nosocomios.map((n) => (
+                      <option key={n.id} value={n.id}>
+                        {n.nombre} ({n.codigo || `ID: ${n.id}`})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {/* Establecimiento Selection */}
+              {sucursalesList.length > 0 && (
+                <div className="form-group">
+                  <label className="form-label" htmlFor="sucursal-select">
+                    Establecimiento
+                  </label>
+                  <select
+                    id="sucursal-select"
+                    className="form-select"
+                    value={selectedSucursalId}
+                    onChange={(e) => setSelectedSucursalId(e.target.value)}
+                  >
+                    {sucursalesList.map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.nombre} - {s.direccion}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+            </>
           )}
 
-          {/* Establecimiento Selection */}
-          {sucursalesList.length > 0 && (
-            <div className="form-group">
-              <label className="form-label" htmlFor="sucursal-select">
-                Establecimiento
-              </label>
-              <select
-                id="sucursal-select"
-                className="form-select"
-                value={selectedSucursalId}
-                onChange={(e) => setSelectedSucursalId(e.target.value)}
-              >
-                {sucursalesList.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.nombre} - {s.direccion}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
-
-          {/* Role */}
+          {/* Role (Solo Enfermería y Administrador, sin SuperAdmin público) */}
           <div className="form-group">
             <label className="form-label" htmlFor="role">
               Tipo de Usuario
@@ -172,7 +232,6 @@ export default function Login({ onLogin }) {
             >
               <option value="enfermeria">Enfermería</option>
               <option value="admin">Administrador</option>
-              <option value="superadmin">Desarrollador / SuperAdmin</option>
             </select>
           </div>
 
@@ -235,12 +294,6 @@ export default function Login({ onLogin }) {
           <button className="btn-primary" onClick={handleLogin}>
             Ingresar
           </button>
-
-          <div style={{ marginTop: "16px", textAlign: "center" }}>
-            <a href="/dev-login" style={{ fontSize: "0.75rem", color: "var(--text-muted)", textDecoration: "none" }}>
-              Acceso Desarrollador (/dev-login)
-            </a>
-          </div>
         </main>
       </div>
     </div>

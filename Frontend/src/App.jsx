@@ -110,9 +110,14 @@ function AppContent() {
     return <DevLogin onLogin={(devRole) => handleUserLogin(devRole)} />;
   }
 
-  // 3. Usuario no autenticado en ruta regular
+  // 3. Usuario no autenticado en ruta regular (soporta /h/:hospitalCode y /)
   if (!role) {
-    return <Login onLogin={handleUserLogin} />;
+    return (
+      <Routes>
+        <Route path="/h/:hospitalCode" element={<Login onLogin={handleUserLogin} />} />
+        <Route path="*" element={<Login onLogin={handleUserLogin} />} />
+      </Routes>
+    );
   }
 
   return (

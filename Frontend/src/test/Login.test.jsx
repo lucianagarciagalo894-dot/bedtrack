@@ -1,17 +1,21 @@
 import { render, screen, fireEvent, within } from '@testing-library/react';
 import { describe, test, expect, vi } from 'vitest';
+import { MemoryRouter } from 'react-router-dom';
 import Login from '../pages/Login';
 
-
 vi.mock('react-icons/fa', () => ({
-  FaHospitalAlt: () => <span data-testid="fa-hospital">FaHospitalAlt</span>
+  FaHospitalAlt: () => <span data-testid="fa-hospital">FaHospitalAlt</span>,
+  FaBuilding: () => <span>FaBuilding</span>,
+  FaCheckCircle: () => <span>FaCheckCircle</span>
 }));
+
+const renderWithRouter = (ui) => render(<MemoryRouter>{ui}</MemoryRouter>);
 
 describe('Componente Login', () => {
 
   test('Caso 1: el componente se renderiza con todos los elementos del formulario', () => {
     const mockOnLogin = vi.fn();
-    render(<Login onLogin={mockOnLogin} />);
+    renderWithRouter(<Login onLogin={mockOnLogin} />);
 
     
     expect(screen.getByText('Bienvenido')).toBeInTheDocument();
@@ -32,7 +36,7 @@ describe('Componente Login', () => {
   });
   test('Caso 2: el rol por defecto es "enfermeria" y el select lo muestra correctamente', () => {
     const mockOnLogin = vi.fn();
-    render(<Login onLogin={mockOnLogin} />);
+    renderWithRouter(<Login onLogin={mockOnLogin} />);
 
     const select = screen.getByLabelText('Tipo de Usuario');
     expect(select).toHaveValue('enfermeria');
@@ -40,7 +44,7 @@ describe('Componente Login', () => {
 
   test('Caso 3: muestra errores de validación al enviar con campos vacíos o inválidos', () => {
     const mockOnLogin = vi.fn();
-    render(<Login onLogin={mockOnLogin} />);
+    renderWithRouter(<Login onLogin={mockOnLogin} />);
 
     
     const button = screen.getByRole('button', { name: 'Ingresar' });
@@ -60,7 +64,7 @@ describe('Componente Login', () => {
 
   test('Caso 4: valida que el email debe contener "@gmail.com"', () => {
     const mockOnLogin = vi.fn();
-    render(<Login onLogin={mockOnLogin} />);
+    renderWithRouter(<Login onLogin={mockOnLogin} />);
 
    
     const emailInput = screen.getByLabelText('Correo Electrónico');
@@ -82,7 +86,7 @@ describe('Componente Login', () => {
 
   test('Caso 5: valida que la contraseña tenga al menos 4 caracteres', () => {
     const mockOnLogin = vi.fn();
-    render(<Login onLogin={mockOnLogin} />);
+    renderWithRouter(<Login onLogin={mockOnLogin} />);
 
     
     const emailInput = screen.getByLabelText('Correo Electrónico');
@@ -104,7 +108,7 @@ describe('Componente Login', () => {
 
   test('Caso 6: envía el formulario correctamente cuando todos los campos son válidos', () => {
     const mockOnLogin = vi.fn();
-    render(<Login onLogin={mockOnLogin} />);
+    renderWithRouter(<Login onLogin={mockOnLogin} />);
 
    
     const emailInput = screen.getByLabelText('Correo Electrónico');
@@ -129,7 +133,7 @@ describe('Componente Login', () => {
 
   test('Caso 7: al presionar Enter en un campo, se dispara el login', () => {
     const mockOnLogin = vi.fn();
-    render(<Login onLogin={mockOnLogin} />);
+    renderWithRouter(<Login onLogin={mockOnLogin} />);
 
     
     const emailInput = screen.getByLabelText('Correo Electrónico');
@@ -148,7 +152,7 @@ describe('Componente Login', () => {
 
   test('Caso 8: los errores se limpian al modificar el campo correspondiente', () => {
     const mockOnLogin = vi.fn();
-    render(<Login onLogin={mockOnLogin} />);
+    renderWithRouter(<Login onLogin={mockOnLogin} />);
 
     
     const button = screen.getByRole('button', { name: 'Ingresar' });
