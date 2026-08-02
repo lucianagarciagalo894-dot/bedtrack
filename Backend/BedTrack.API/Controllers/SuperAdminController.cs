@@ -36,7 +36,7 @@ public class SuperAdminController : ControllerBase
         try
         {
             var result = await _service.CreateNosocomioAsync(dto);
-            return CreatedAtAction(nameof(GetNosocomios), new { id = result.Id }, result);
+            return Ok(result);
         }
         catch (ArgumentException ex)
         {

@@ -212,7 +212,11 @@ public class HospitalService : IHospitalService
     public async Task<NosocomioDto> CreateNosocomioAsync(CreateNosocomioDto dto)
     {
         if (string.IsNullOrWhiteSpace(dto.Nombre)) throw new ArgumentException("El nombre del nosocomio es requerido.");
-        var nosocomio = new Nosocomio(dto.Nombre, dto.Codigo, dto.Direccion);
+
+        var codigo = string.IsNullOrWhiteSpace(dto.Codigo) ? "NOS-" + Random.Shared.Next(1000, 9999) : dto.Codigo;
+        var direccion = string.IsNullOrWhiteSpace(dto.Direccion) ? "Dirección Principal" : dto.Direccion;
+
+        var nosocomio = new Nosocomio(dto.Nombre, codigo, direccion);
         await _repo.AgregarNosocomioAsync(nosocomio);
         await _repo.GuardarCambiosAsync();
 
