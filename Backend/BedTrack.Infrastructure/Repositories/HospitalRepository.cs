@@ -82,6 +82,11 @@ public class HospitalRepository : IHospitalRepository
         await _context.Pisos.AddAsync(piso);
     }
 
+    public void EliminarPiso(Piso piso)
+    {
+        _context.Pisos.Remove(piso);
+    }
+
     public async Task<IEnumerable<Piso>> ObtenerPisosAsync(int? sucursalId = null)
     {
         var query = _context.Pisos.Include(p => p.Habitaciones).AsQueryable();

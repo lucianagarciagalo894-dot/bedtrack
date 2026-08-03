@@ -121,11 +121,39 @@ public class CreateNosocomioDto
     public string Direccion { get; set; } = string.Empty;
 }
 
+public class UpdateNosocomioDto
+{
+    public string Nombre { get; set; } = string.Empty;
+    public string Codigo { get; set; } = string.Empty;
+    public string Direccion { get; set; } = string.Empty;
+}
+
 public class CreateSucursalDto
 {
     public string Nombre { get; set; } = string.Empty;
     public string Direccion { get; set; } = string.Empty;
     public int NosocomioId { get; set; }
+}
+
+public class UpdateSucursalDto
+{
+    public string Nombre { get; set; } = string.Empty;
+    public string Direccion { get; set; } = string.Empty;
+}
+
+public class CreatePisoDto
+{
+    public string Nombre { get; set; } = string.Empty;
+    public string Tipo { get; set; } = "General";
+    public string TipoKey { get; set; } = "general";
+    public int SucursalId { get; set; }
+}
+
+public class UpdatePisoDto
+{
+    public string Nombre { get; set; } = string.Empty;
+    public string Tipo { get; set; } = "General";
+    public string TipoKey { get; set; } = "general";
 }
 
 public class CreateHabitacionDto

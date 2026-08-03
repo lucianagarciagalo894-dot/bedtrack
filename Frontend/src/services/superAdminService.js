@@ -327,6 +327,74 @@ export async function createFullHospitalSetup(data) {
   return createdNos;
 }
 
+export async function updateNosocomio(id, data) {
+  try {
+    const res = await fetch(`${API_BASE}/superadmin/nosocomios/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    if (res.ok) return await res.json();
+  } catch (err) {
+    console.warn("Actualización local de nosocomio por fallback:", err);
+  }
+  return { id, ...data };
+}
+
+export async function updateSucursal(id, data) {
+  try {
+    const res = await fetch(`${API_BASE}/superadmin/sucursales/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    if (res.ok) return await res.json();
+  } catch (err) {
+    console.warn("Actualización local de sucursal por fallback:", err);
+  }
+  return { id, ...data };
+}
+
+export async function createFloor(data) {
+  try {
+    const res = await fetch(`${API_BASE}/floors`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    if (res.ok) return await res.json();
+  } catch (err) {
+    console.warn("Creación local de piso por fallback:", err);
+  }
+  return { id: Date.now(), ...data, roomCount: 0 };
+}
+
+export async function updateFloor(id, data) {
+  try {
+    const res = await fetch(`${API_BASE}/floors/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    if (res.ok) return await res.json();
+  } catch (err) {
+    console.warn("Actualización local de piso por fallback:", err);
+  }
+  return { id, ...data };
+}
+
+export async function deleteFloor(id) {
+  try {
+    const res = await fetch(`${API_BASE}/floors/${id}`, {
+      method: "DELETE",
+    });
+    if (res.ok) return true;
+  } catch (err) {
+    console.warn("Eliminación local de piso por fallback:", err);
+  }
+  return true;
+}
+
 let localStaffUsersStore = [];
 
 export async function getStaffUsers(nosocomioId = null, sucursalId = null) {

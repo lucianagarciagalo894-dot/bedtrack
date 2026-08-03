@@ -13,8 +13,14 @@ public interface IHospitalService
     // Métodos para Superadmin / Desarrollador
     Task<IEnumerable<NosocomioDto>> GetNosocomiosAsync();
     Task<NosocomioDto> CreateNosocomioAsync(CreateNosocomioDto dto);
+    Task<NosocomioDto> UpdateNosocomioAsync(int id, UpdateNosocomioDto dto);
     Task<IEnumerable<SucursalDto>> GetSucursalesAsync(int nosocomioId);
     Task<SucursalDto> CreateSucursalAsync(CreateSucursalDto dto);
+    Task<SucursalDto> UpdateSucursalAsync(int id, UpdateSucursalDto dto);
+
+    Task<PisoDto> CreateFloorAsync(CreatePisoDto dto);
+    Task<PisoDto> UpdateFloorAsync(int id, UpdatePisoDto dto);
+    Task<bool> DeleteFloorAsync(int id);
 
     Task<HabitacionDto> CreateRoomAsync(CreateHabitacionDto dto);
     Task<HabitacionDto> UpdateRoomAsync(int roomId, UpdateHabitacionDto dto);

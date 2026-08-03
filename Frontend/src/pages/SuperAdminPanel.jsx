@@ -18,11 +18,17 @@ import {
   FaToggleOff,
   FaCopy,
   FaLink,
+  FaLayerGroup,
 } from "react-icons/fa";
 import {
   getNosocomios,
   createNosocomio,
+  updateNosocomio,
   createSucursal,
+  updateSucursal,
+  createFloor,
+  updateFloor,
+  deleteFloor,
   createRoom,
   updateRoom,
   deleteRoom,
@@ -54,7 +60,10 @@ export default function SuperAdminPanel({ onLogout }) {
 
   // Modals state
   const [showNosocomioModal, setShowNosocomioModal] = useState(false);
+  const [showEditNosocomioModal, setShowEditNosocomioModal] = useState(false);
   const [showSucursalModal, setShowSucursalModal] = useState(false);
+  const [showEditSucursalModal, setShowEditSucursalModal] = useState(false);
+  const [showFloorModal, setShowFloorModal] = useState(false);
   const [showRoomModal, setShowRoomModal] = useState(false);
   const [showBedModal, setShowBedModal] = useState(false);
   const [showFullHospitalModal, setShowFullHospitalModal] = useState(false);
@@ -62,10 +71,13 @@ export default function SuperAdminPanel({ onLogout }) {
 
   // Forms data
   const [newNosocomio, setNewNosocomio] = useState({ nombre: "", codigo: "", direccion: "" });
+  const [editNosocomioForm, setEditNosocomioForm] = useState({ id: null, nombre: "", codigo: "", direccion: "", activo: true });
   const [newSucursal, setNewSucursal] = useState({ nombre: "", direccion: "" });
+  const [editSucursalForm, setEditSucursalForm] = useState({ id: null, nombre: "", direccion: "", activo: true });
+  const [floorForm, setFloorForm] = useState({ id: null, nombre: "", tipo: "General", tipoKey: "general", sucursalId: "" });
   const [roomForm, setRoomForm] = useState({ id: null, numero: "", pisoId: "", bedsCount: 1 });
   const [bedForm, setBedForm] = useState({ id: null, numero: "", habitacionId: "", status: "disponible" });
-  const [userForm, setUserForm] = useState({ id: null, nombre: "", email: "", password: "", rol: "enfermeria", activo: true, nosocomioId: "" });
+  const [userForm, setUserForm] = useState({ id: null, nombre: "", email: "", password: "", rol: "enfermeria", activo: true, nosocomioId: "", sucursalId: "" });
   const [fullHospitalForm, setFullHospitalForm] = useState({
     nombreNosocomio: "",
     codigoNosocomio: "",
@@ -198,6 +210,140 @@ export default function SuperAdminPanel({ onLogout }) {
       setNewSucursal({ nombre: "", direccion: "" });
       setShowSucursalModal(false);
       showNotification("Establecimiento registrado correctamente");
+    } catch (err) {
+      showNotification(err.message, "error");
+    }
+  };
+
+  const handleOpenEditNosocomioModal = () => {
+    if (!currentNosocomio) return;
+    setEditNosocomioForm({
+      id: currentNosocomio.id,
+      nombre: currentNosocomio.nombre || "",
+      codigo: currentNosocomio.codigo || "",
+      direccion: currentNosocomio.direccion || "",
+      activo: currentNosocomio.activo !== false,
+    });
+    setShowEditNosocomioModal(true);
+  };
+
+  const handleSaveEditNosocomio = async (e) => {
+    e.preventDefault();
+    if (!editNosocomioForm.nombre) return;
+    try {
+      const updated = await updateNosocomio(editNosocomioForm.id, editNosocomioForm);
+      setNosocomios((prev) =>
+        prev.map((n) => (n.id === editNosocomioForm.id ? { ...n, ...updated } : n))
+      );
+      setShowEditNosocomioModal(false);
+      showNotification("Nosocomio actualizado correctamente");
+    } catch (err) {
+      showNotification(err.message, "error");
+    }
+  };
+
+  const handleToggleNosocomioStatus = () => {
+    if (!currentNosocomio) return;
+    const nextStatus = currentNosocomio.activo === false ? true : false;
+    setNosocomios((prev) =>
+      prev.map((n) => (n.id === currentNosocomio.id ? { ...n, activo: nextStatus } : n))
+    );
+    showNotification(`Nosocomio ${nextStatus ? "activado" : "desactivado (Borrado Lógico)"}`);
+  };
+
+  const handleOpenEditSucursalModal = () => {
+    const currentSucursal = sucursalesList.find((s) => s.id.toString() === selectedSucursalId);
+    if (!currentSucursal) return;
+    setEditSucursalForm({
+      id: currentSucursal.id,
+      nombre: currentSucursal.nombre || "",
+      direccion: currentSucursal.direccion || "",
+      activo: currentSucursal.activo !== false,
+    });
+    setShowEditSucursalModal(true);
+  };
+
+  const handleSaveEditSucursal = async (e) => {
+    e.preventDefault();
+    if (!editSucursalForm.nombre) return;
+    try {
+      const updated = await updateSucursal(editSucursalForm.id, editSucursalForm);
+      setNosocomios((prev) =>
+        prev.map((n) =>
+          n.id.toString() === selectedNosocomioId
+            ? {
+                ...n,
+                sucursales: n.sucursales.map((s) =>
+                  s.id === editSucursalForm.id ? { ...s, ...updated } : s
+                ),
+              }
+            : n
+        )
+      );
+      setShowEditSucursalModal(false);
+      showNotification("Establecimiento actualizado correctamente");
+    } catch (err) {
+      showNotification(err.message, "error");
+    }
+  };
+
+  // --- Handlers para Pisos Hospitalarios ---
+  const handleOpenFloorModal = (floor = null) => {
+    if (floor) {
+      setFloorForm({
+        id: floor.id,
+        nombre: floor.nombre || "",
+        tipo: floor.tipo || "General",
+        tipoKey: floor.tipoKey || "general",
+        sucursalId: selectedSucursalId,
+      });
+    } else {
+      setFloorForm({
+        id: null,
+        nombre: "",
+        tipo: "General",
+        tipoKey: "general",
+        sucursalId: selectedSucursalId,
+      });
+    }
+    setShowFloorModal(true);
+  };
+
+  const handleSaveFloor = async (e) => {
+    e.preventDefault();
+    if (!floorForm.nombre) return;
+    try {
+      if (floorForm.id) {
+        const updated = await updateFloor(floorForm.id, {
+          nombre: floorForm.nombre,
+          tipo: floorForm.tipo,
+          tipoKey: floorForm.tipoKey,
+        });
+        setFloors((prev) => prev.map((f) => (f.id === floorForm.id ? { ...f, ...updated } : f)));
+        showNotification("Piso hospitalario actualizado");
+      } else {
+        const created = await createFloor({
+          nombre: floorForm.nombre,
+          tipo: floorForm.tipo,
+          tipoKey: floorForm.tipoKey,
+          sucursalId: parseInt(selectedSucursalId, 10),
+        });
+        setFloors((prev) => [...prev, created]);
+        showNotification("Piso hospitalario creado exitosamente");
+      }
+      setShowFloorModal(false);
+    } catch (err) {
+      showNotification(err.message, "error");
+    }
+  };
+
+  const handleDeleteFloor = async (floorId) => {
+    if (!window.confirm("¿Está seguro de eliminar este piso y todas sus habitaciones/camas asociadas?")) return;
+    try {
+      await deleteFloor(floorId);
+      setFloors((prev) => prev.filter((f) => f.id !== floorId));
+      setRooms((prev) => prev.filter((r) => r.floorId !== floorId));
+      showNotification("Piso eliminado correctamente");
     } catch (err) {
       showNotification(err.message, "error");
     }
@@ -539,8 +685,26 @@ export default function SuperAdminPanel({ onLogout }) {
               <button
                 className="btn-secondary-sm"
                 onClick={() => setShowNosocomioModal(true)}
+                title="Registrar Nuevo Nosocomio"
               >
                 <FaPlus /> Nuevo
+              </button>
+              <button
+                className="btn-secondary-sm"
+                onClick={handleOpenEditNosocomioModal}
+                disabled={!selectedNosocomioId}
+                title="Editar Nosocomio Activo"
+              >
+                <FaEdit /> Editar
+              </button>
+              <button
+                className="btn-secondary-sm"
+                style={{ color: currentNosocomio?.activo !== false ? "#059669" : "#DC2626" }}
+                onClick={handleToggleNosocomioStatus}
+                disabled={!selectedNosocomioId}
+                title={currentNosocomio?.activo !== false ? "Desactivar Nosocomio (Borrado Lógico)" : "Activar Nosocomio"}
+              >
+                {currentNosocomio?.activo !== false ? <FaToggleOn size={16} /> : <FaToggleOff size={16} />}
               </button>
             </div>
 
@@ -565,8 +729,17 @@ export default function SuperAdminPanel({ onLogout }) {
                 className="btn-secondary-sm"
                 onClick={() => setShowSucursalModal(true)}
                 disabled={!selectedNosocomioId}
+                title="Registrar Nuevo Establecimiento"
               >
                 <FaPlus /> Nuevo
+              </button>
+              <button
+                className="btn-secondary-sm"
+                onClick={handleOpenEditSucursalModal}
+                disabled={!selectedSucursalId}
+                title="Editar Establecimiento Activo"
+              >
+                <FaEdit /> Editar
               </button>
             </div>
 
@@ -780,8 +953,11 @@ export default function SuperAdminPanel({ onLogout }) {
       {/* Section: Infrastructure Management */}
       <section className="superadmin-main-section">
         <div className="section-toolbar">
-          <h2>Gestión de Habitaciones y Camas</h2>
+          <h2>Gestión de Pisos, Habitaciones y Camas</h2>
           <div className="toolbar-btns">
+            <button className="btn-primary-add" style={{ background: "#8B5CF6" }} onClick={() => handleOpenFloorModal()}>
+              <FaLayerGroup /> Agregar Piso
+            </button>
             <button className="btn-primary-add" onClick={() => handleOpenRoomModal()}>
               <FaDoorOpen /> Agregar Habitación
             </button>
@@ -794,73 +970,225 @@ export default function SuperAdminPanel({ onLogout }) {
         {loading ? (
           <div className="superadmin-loading">Cargando infraestructura...</div>
         ) : (
-          <div className="rooms-matrix-grid">
-            {rooms.map((room) => (
-              <div key={room.id} className="room-admin-card">
-                <div className="room-admin-header">
-                  <div>
-                    <h4>Habitación #{room.number}</h4>
-                    <span className="room-floor-tag">
-                      {room.floor || `Piso ID: ${room.floorId}`}
-                    </span>
-                  </div>
-                  <div className="room-actions">
-                    <button
-                      className="icon-btn edit"
-                      title="Editar Habitación"
-                      onClick={() => handleOpenRoomModal(room)}
-                    >
-                      <FaEdit />
-                    </button>
-                    <button
-                      className="icon-btn delete"
-                      title="Eliminar Habitación"
-                      onClick={() => handleDeleteRoom(room.id)}
-                    >
-                      <FaTrash />
-                    </button>
-                  </div>
-                </div>
-
-                <div className="beds-list-admin">
-                  <div className="beds-header-sub">
-                    <span>Camas ({room.beds?.length || 0})</span>
-                    <button
-                      className="btn-xs-add"
-                      onClick={() => handleOpenBedModal(null, room.id)}
-                    >
-                      + Cama
-                    </button>
-                  </div>
-
-                  {room.beds?.map((bed) => (
-                    <div key={bed.id} className="bed-admin-item">
-                      <div className="bed-info">
-                        <FaBed className={`bed-status-icon ${bed.status}`} />
-                        <span>Cama #{bed.number}</span>
-                        <span className={`status-badge ${bed.status}`}>
-                          {bed.status}
+          <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+            {floors.length === 0 ? (
+              <div className="rooms-matrix-grid">
+                {rooms.map((room) => (
+                  <div key={room.id} className="room-admin-card">
+                    <div className="room-admin-header">
+                      <div>
+                        <h4>Habitación #{room.number}</h4>
+                        <span className="room-floor-tag">
+                          {room.floor || `Piso ID: ${room.floorId}`}
                         </span>
                       </div>
-                      <div className="bed-actions">
+                      <div className="room-actions">
                         <button
-                          className="icon-btn edit-sm"
-                          onClick={() => handleOpenBedModal(bed, room.id)}
+                          className="icon-btn edit"
+                          title="Editar Habitación"
+                          onClick={() => handleOpenRoomModal(room)}
                         >
                           <FaEdit />
                         </button>
                         <button
-                          className="icon-btn delete-sm"
-                          onClick={() => handleDeleteBed(bed.id)}
+                          className="icon-btn delete"
+                          title="Eliminar Habitación"
+                          onClick={() => handleDeleteRoom(room.id)}
                         >
                           <FaTrash />
                         </button>
                       </div>
                     </div>
-                  ))}
-                </div>
+
+                    <div className="beds-list-admin">
+                      <div className="beds-header-sub">
+                        <span>Camas ({room.beds?.length || 0})</span>
+                        <button
+                          className="btn-xs-add"
+                          onClick={() => handleOpenBedModal(null, room.id)}
+                        >
+                          + Cama
+                        </button>
+                      </div>
+
+                      {room.beds?.map((bed) => (
+                        <div key={bed.id} className="bed-admin-item">
+                          <div className="bed-info">
+                            <FaBed className={`bed-status-icon ${bed.status}`} />
+                            <span>Cama #{bed.number}</span>
+                            <span className={`status-badge ${bed.status}`}>
+                              {bed.status}
+                            </span>
+                          </div>
+                          <div className="bed-actions">
+                            <button
+                              className="icon-btn edit-sm"
+                              onClick={() => handleOpenBedModal(bed, room.id)}
+                            >
+                              <FaEdit />
+                            </button>
+                            <button
+                              className="icon-btn delete-sm"
+                              onClick={() => handleDeleteBed(bed.id)}
+                            >
+                              <FaTrash />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
               </div>
-            ))}
+            ) : (
+              floors.map((floor) => {
+                const floorRooms = rooms.filter(
+                  (r) => r.floorId === floor.id || r.floor === floor.nombre
+                );
+                return (
+                  <div
+                    key={floor.id}
+                    style={{
+                      background: "var(--card-bg, #FFFFFF)",
+                      borderRadius: "12px",
+                      border: "1px solid var(--border, #E2E8F0)",
+                      padding: "16px",
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        borderBottom: "2px solid #F1F5F9",
+                        paddingBottom: "12px",
+                        marginBottom: "16px",
+                      }}
+                    >
+                      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                        <FaLayerGroup style={{ color: "#8B5CF6", fontSize: "1.2rem" }} />
+                        <div>
+                          <h3 style={{ margin: 0, fontSize: "1.05rem" }}>{floor.nombre}</h3>
+                          <span
+                            style={{
+                              fontSize: "0.75rem",
+                              background: "#F3E8FF",
+                              color: "#7C3AED",
+                              padding: "2px 8px",
+                              borderRadius: "4px",
+                              fontWeight: "600",
+                            }}
+                          >
+                            {floor.tipo || "General"} ({floorRooms.length} habitaciones/salas)
+                          </span>
+                        </div>
+                      </div>
+
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                        <button
+                          className="btn-xs-add"
+                          onClick={() => {
+                            setRoomForm({ id: null, numero: "", pisoId: floor.id, bedsCount: 1 });
+                            setShowRoomModal(true);
+                          }}
+                        >
+                          + Habitación en este Piso
+                        </button>
+                        <button
+                          className="icon-btn edit"
+                          title="Editar Piso"
+                          onClick={() => handleOpenFloorModal(floor)}
+                        >
+                          <FaEdit />
+                        </button>
+                        <button
+                          className="icon-btn delete"
+                          title="Eliminar Piso"
+                          onClick={() => handleDeleteFloor(floor.id)}
+                        >
+                          <FaTrash />
+                        </button>
+                      </div>
+                    </div>
+
+                    {floorRooms.length === 0 ? (
+                      <p style={{ fontSize: "0.85rem", color: "#94A3B8", margin: 0 }}>
+                        No hay habitaciones ni salas agregadas en este piso todavía.
+                      </p>
+                    ) : (
+                      <div className="rooms-matrix-grid">
+                        {floorRooms.map((room) => (
+                          <div key={room.id} className="room-admin-card">
+                            <div className="room-admin-header">
+                              <div>
+                                <h4>Habitación #{room.number}</h4>
+                                <span className="room-floor-tag">
+                                  {room.floor || `Piso ID: ${room.floorId}`}
+                                </span>
+                              </div>
+                              <div className="room-actions">
+                                <button
+                                  className="icon-btn edit"
+                                  title="Editar Habitación"
+                                  onClick={() => handleOpenRoomModal(room)}
+                                >
+                                  <FaEdit />
+                                </button>
+                                <button
+                                  className="icon-btn delete"
+                                  title="Eliminar Habitación"
+                                  onClick={() => handleDeleteRoom(room.id)}
+                                >
+                                  <FaTrash />
+                                </button>
+                              </div>
+                            </div>
+
+                            <div className="beds-list-admin">
+                              <div className="beds-header-sub">
+                                <span>Camas ({room.beds?.length || 0})</span>
+                                <button
+                                  className="btn-xs-add"
+                                  onClick={() => handleOpenBedModal(null, room.id)}
+                                >
+                                  + Cama
+                                </button>
+                              </div>
+
+                              {room.beds?.map((bed) => (
+                                <div key={bed.id} className="bed-admin-item">
+                                  <div className="bed-info">
+                                    <FaBed className={`bed-status-icon ${bed.status}`} />
+                                    <span>Cama #{bed.number}</span>
+                                    <span className={`status-badge ${bed.status}`}>
+                                      {bed.status}
+                                    </span>
+                                  </div>
+                                  <div className="bed-actions">
+                                    <button
+                                      className="icon-btn edit-sm"
+                                      onClick={() => handleOpenBedModal(bed, room.id)}
+                                    >
+                                      <FaEdit />
+                                    </button>
+                                    <button
+                                      className="icon-btn delete-sm"
+                                      onClick={() => handleDeleteBed(bed.id)}
+                                    >
+                                      <FaTrash />
+                                    </button>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })
+            )}
           </div>
         )}
       </section>
@@ -1259,6 +1587,132 @@ export default function SuperAdminPanel({ onLogout }) {
                 </button>
                 <button type="submit" className="btn-confirm">
                   {userForm.id ? "Actualizar Usuario" : "Guardar Perfil"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* --- MODAL EDITAR NOSOCOMIO --- */}
+      {showEditNosocomioModal && (
+        <div className="modal-backdrop">
+          <div className="modal-content">
+            <h3>Editar Datos del Nosocomio</h3>
+            <form onSubmit={handleSaveEditNosocomio}>
+              <div className="form-group">
+                <label>Nombre del Hospital / Nosocomio:</label>
+                <input
+                  type="text"
+                  value={editNosocomioForm.nombre}
+                  onChange={(e) => setEditNosocomioForm({ ...editNosocomioForm, nombre: e.target.value })}
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label>Código Institucional:</label>
+                <input
+                  type="text"
+                  value={editNosocomioForm.codigo}
+                  onChange={(e) => setEditNosocomioForm({ ...editNosocomioForm, codigo: e.target.value })}
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label>Dirección Principal:</label>
+                <input
+                  type="text"
+                  value={editNosocomioForm.direccion}
+                  onChange={(e) => setEditNosocomioForm({ ...editNosocomioForm, direccion: e.target.value })}
+                />
+              </div>
+              <div className="modal-actions">
+                <button type="button" className="btn-cancel" onClick={() => setShowEditNosocomioModal(false)}>
+                  Cancelar
+                </button>
+                <button type="submit" className="btn-confirm">
+                  Actualizar Nosocomio
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* --- MODAL EDITAR SUCURSAL / ESTABLECIMIENTO --- */}
+      {showEditSucursalModal && (
+        <div className="modal-backdrop">
+          <div className="modal-content">
+            <h3>Editar Establecimiento / Sede</h3>
+            <form onSubmit={handleSaveEditSucursal}>
+              <div className="form-group">
+                <label>Nombre de la Sede / Establecimiento:</label>
+                <input
+                  type="text"
+                  value={editSucursalForm.nombre}
+                  onChange={(e) => setEditSucursalForm({ ...editSucursalForm, nombre: e.target.value })}
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label>Dirección:</label>
+                <input
+                  type="text"
+                  value={editSucursalForm.direccion}
+                  onChange={(e) => setEditSucursalForm({ ...editSucursalForm, direccion: e.target.value })}
+                />
+              </div>
+              <div className="modal-actions">
+                <button type="button" className="btn-cancel" onClick={() => setShowEditSucursalModal(false)}>
+                  Cancelar
+                </button>
+                <button type="submit" className="btn-confirm">
+                  Actualizar Establecimiento
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* --- MODAL CREAR / EDITAR PISO --- */}
+      {showFloorModal && (
+        <div className="modal-backdrop">
+          <div className="modal-content">
+            <h3>{floorForm.id ? "Editar Piso Hospitalario" : "Registrar Nuevo Piso Hospitalario"}</h3>
+            <form onSubmit={handleSaveFloor}>
+              <div className="form-group">
+                <label>Nombre del Piso:</label>
+                <input
+                  type="text"
+                  placeholder="Ej: Piso 1 - Cuidados Intensivos"
+                  value={floorForm.nombre}
+                  onChange={(e) => setFloorForm({ ...floorForm, nombre: e.target.value })}
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label>Tipo de Piso:</label>
+                <select
+                  value={floorForm.tipo}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    const key = val.toLowerCase().replace(/ /g, "");
+                    setFloorForm({ ...floorForm, tipo: val, tipoKey: key });
+                  }}
+                >
+                  <option value="General">Internación General</option>
+                  <option value="Intensiva">Cuidados Intensivos (UTI)</option>
+                  <option value="Guardia">Guardia & Urgencias Directas</option>
+                  <option value="Privada">Sector Privado / Suite</option>
+                </select>
+              </div>
+              <div className="modal-actions">
+                <button type="button" className="btn-cancel" onClick={() => setShowFloorModal(false)}>
+                  Cancelar
+                </button>
+                <button type="submit" className="btn-confirm">
+                  {floorForm.id ? "Actualizar Piso" : "Crear Piso"}
                 </button>
               </div>
             </form>

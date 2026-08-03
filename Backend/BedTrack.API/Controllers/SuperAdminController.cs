@@ -44,6 +44,20 @@ public class SuperAdminController : ControllerBase
         }
     }
 
+    [HttpPut("nosocomios/{id}")]
+    public async Task<ActionResult<NosocomioDto>> UpdateNosocomio(int id, [FromBody] UpdateNosocomioDto dto)
+    {
+        try
+        {
+            var result = await _service.UpdateNosocomioAsync(id, dto);
+            return Ok(result);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+    }
+
     [HttpGet("nosocomios/{nosocomioId}/sucursales")]
     public async Task<ActionResult<IEnumerable<SucursalDto>>> GetSucursales(int nosocomioId)
     {
@@ -62,6 +76,20 @@ public class SuperAdminController : ControllerBase
         catch (ArgumentException ex)
         {
             return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [HttpPut("sucursales/{id}")]
+    public async Task<ActionResult<SucursalDto>> UpdateSucursal(int id, [FromBody] UpdateSucursalDto dto)
+    {
+        try
+        {
+            var result = await _service.UpdateSucursalAsync(id, dto);
+            return Ok(result);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
         }
     }
 

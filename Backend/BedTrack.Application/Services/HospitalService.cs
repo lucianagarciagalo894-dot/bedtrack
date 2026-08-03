@@ -253,6 +253,35 @@ public class HospitalService : IHospitalService
         };
     }
 
+    public async Task<NosocomioDto> UpdateNosocomioAsync(int id, UpdateNosocomioDto dto)
+    {
+        var nosocomio = await _repo.ObtenerNosocomioPorIdAsync(id);
+        if (nosocomio == null) throw new KeyNotFoundException("Nosocomio no encontrado");
+
+        nosocomio.ActualizarDatos(
+            string.IsNullOrWhiteSpace(dto.Nombre) ? nosocomio.Nombre : dto.Nombre,
+            string.IsNullOrWhiteSpace(dto.Codigo) ? nosocomio.Codigo : dto.Codigo,
+            string.IsNullOrWhiteSpace(dto.Direccion) ? nosocomio.Direccion : dto.Direccion
+        );
+
+        await _repo.GuardarCambiosAsync();
+
+        return new NosocomioDto
+        {
+            Id = nosocomio.Id,
+            Nombre = nosocomio.Nombre,
+            Codigo = nosocomio.Codigo,
+            Direccion = nosocomio.Direccion,
+            Sucursales = nosocomio.Sucursales.Select(s => new SucursalDto
+            {
+                Id = s.Id,
+                Nombre = s.Nombre,
+                Direccion = s.Direccion,
+                NosocomioId = s.NosocomioId
+            }).ToList()
+        };
+    }
+
     public async Task<IEnumerable<SucursalDto>> GetSucursalesAsync(int nosocomioId)
     {
         var sucursales = await _repo.ObtenerSucursalesPorNosocomioAsync(nosocomioId);
@@ -279,6 +308,78 @@ public class HospitalService : IHospitalService
             Direccion = sucursal.Direccion,
             NosocomioId = sucursal.NosocomioId
         };
+    }
+
+    public async Task<SucursalDto> UpdateSucursalAsync(int id, UpdateSucursalDto dto)
+    {
+        var sucursal = await _repo.ObtenerSucursalPorIdAsync(id);
+        if (sucursal == null) throw new KeyNotFoundException("Sucursal no encontrada");
+
+        sucursal.ActualizarDatos(
+            string.IsNullOrWhiteSpace(dto.Nombre) ? sucursal.Nombre : dto.Nombre,
+            string.IsNullOrWhiteSpace(dto.Direccion) ? sucursal.Direccion : dto.Direccion
+        );
+
+        await _repo.GuardarCambiosAsync();
+
+        return new SucursalDto
+        {
+            Id = sucursal.Id,
+            Nombre = sucursal.Nombre,
+            Direccion = sucursal.Direccion,
+            NosocomioId = sucursal.NosocomioId
+        };
+    }
+
+    public async Task<PisoDto> CreateFloorAsync(CreatePisoDto dto)
+    {
+        if (string.IsNullOrWhiteSpace(dto.Nombre)) throw new ArgumentException("El nombre del piso es requerido.");
+
+        var piso = new Piso(dto.Nombre, dto.Tipo, dto.TipoKey, dto.SucursalId);
+        await _repo.AgregarPisoAsync(piso);
+        await _repo.GuardarCambiosAsync();
+
+        return new PisoDto
+        {
+            Id = piso.Id,
+            Nombre = piso.Nombre,
+            Tipo = piso.Tipo,
+            TipoKey = piso.TipoKey,
+            RoomCount = 0
+        };
+    }
+
+    public async Task<PisoDto> UpdateFloorAsync(int id, UpdatePisoDto dto)
+    {
+        var piso = await _repo.ObtenerPisoPorIdAsync(id);
+        if (piso == null) throw new KeyNotFoundException("Piso no encontrado");
+
+        piso.ActualizarDatos(
+            string.IsNullOrWhiteSpace(dto.Nombre) ? piso.Nombre : dto.Nombre,
+            string.IsNullOrWhiteSpace(dto.Tipo) ? piso.Tipo : dto.Tipo,
+            string.IsNullOrWhiteSpace(dto.TipoKey) ? piso.TipoKey : dto.TipoKey
+        );
+
+        await _repo.GuardarCambiosAsync();
+
+        return new PisoDto
+        {
+            Id = piso.Id,
+            Nombre = piso.Nombre,
+            Tipo = piso.Tipo,
+            TipoKey = piso.TipoKey,
+            RoomCount = piso.Habitaciones.Count
+        };
+    }
+
+    public async Task<bool> DeleteFloorAsync(int id)
+    {
+        var piso = await _repo.ObtenerPisoPorIdAsync(id);
+        if (piso == null) return false;
+
+        _repo.EliminarPiso(piso);
+        await _repo.GuardarCambiosAsync();
+        return true;
     }
 
     public async Task<HabitacionDto> CreateRoomAsync(CreateHabitacionDto dto)

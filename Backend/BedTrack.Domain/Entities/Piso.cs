@@ -24,4 +24,11 @@ public class Piso
     {
         SucursalId = sucursalId;
     }
+
+    public void ActualizarDatos(string nombre, string tipo, string tipoKey)
+    {
+        Nombre = nombre;
+        Tipo = tipo;
+        TipoKey = tipoKey;
+    }
 }

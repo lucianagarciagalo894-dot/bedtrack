@@ -20,6 +20,7 @@ public interface IHospitalRepository
 
     Task<Piso?> ObtenerPisoPorIdAsync(int floorId);
     Task AgregarPisoAsync(Piso piso);
+    void EliminarPiso(Piso piso);
 
     Task<IEnumerable<Piso>> ObtenerPisosAsync(int? sucursalId = null);
     Task<IEnumerable<Habitacion>> ObtenerHabitacionesAsync(int? sucursalId = null);
