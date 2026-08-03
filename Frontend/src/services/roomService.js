@@ -248,31 +248,11 @@ export async function getGlobalAuditHistory(sucursalId = null) {
     const res = await fetch(url);
     if (!res.ok) throw new Error("Error al obtener el historial de actividades");
     const data = await res.json();
-    return Array.isArray(data) && data.length > 0 ? data : getFallbackHistory(sucursalId);
+    return Array.isArray(data) ? data : [];
   } catch (err) {
     console.warn("Error cargando historial de actividades:", err);
-    return getFallbackHistory(sucursalId);
+    return [];
   }
-}
-
-function getFallbackHistory(sucursalId) {
-  const sId = sucursalId ? sucursalId.toString() : "1";
-  if (sId === "3") {
-    return [
-      { id: 101, habitacionNumero: 105, camaNumero: 1, usuarioNombre: "Dra. Sofía Rodríguez", accion: "Asignó paciente Roberto Rossi (Ocupada)", fechaHora: "2026-08-02 14:30" },
-      { id: 102, habitacionNumero: 205, camaNumero: 3, usuarioNombre: "Lic. Joaquín Peralta", accion: "Marcó cama en mantenimiento (En limpieza)", fechaHora: "2026-08-02 11:15" },
-    ];
-  }
-  if (sId === "2") {
-    return [
-      { id: 201, habitacionNumero: 103, camaNumero: 1, usuarioNombre: "Enf. Carlos Alberto Gómez", accion: "Asignó paciente Carlos Benítez (Ocupada)", fechaHora: "2026-08-02 12:45" },
-      { id: 202, habitacionNumero: 202, camaNumero: 1, usuarioNombre: "Lic. María Elena Fernández", accion: "Envió cama a desinfección (En limpieza)", fechaHora: "2026-08-02 09:10" },
-    ];
-  }
-  return [
-    { id: 1, habitacionNumero: 101, camaNumero: 2, usuarioNombre: "Lic. María Elena Fernández", accion: "Asignó paciente Juan Pérez (Ocupada)", fechaHora: "2026-08-02 10:15" },
-    { id: 2, habitacionNumero: 102, camaNumero: 1, usuarioNombre: "Enf. Carlos Alberto Gómez", accion: "Marcó cama para desinfección (En limpieza)", fechaHora: "2026-08-02 08:30" },
-  ];
 }
 
 export async function getBedHistory(bedId) {
