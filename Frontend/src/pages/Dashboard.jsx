@@ -16,6 +16,8 @@ import { getGlobalAuditHistory } from "../services/roomService";
 export default function Dashboard({ role, sessionHospital, beds }) {
   const userName = role === "enfermeria" ? "Enfermería" : "Administrador";
   const [recentLogs, setRecentLogs] = useState([]);
+  const [userFilter, setUserFilter] = useState("");
+  const [roleFilter, setRoleFilter] = useState("todos");
 
   const activeSucursalId = sessionHospital?.sucursalId || sessionHospital?.nosocomioId;
 
@@ -190,53 +192,89 @@ export default function Dashboard({ role, sessionHospital, beds }) {
         </div>
       </div>
 
-      {/* Historial Reciente de Enfermería */}
+      {/* Historial Reciente de Actividad Asistencial y Administrativa */}
       <div className="dashboard-section" style={{ marginTop: "24px" }}>
         <div className="dashboard-section-header">
           <h2 className="beds-section-title" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <FaHistory style={{ color: "#2563EB" }} /> Historial de Actividad de Enfermería
+            <FaHistory style={{ color: "#2563EB" }} /> Historial General de Actividad Hospitalaria
           </h2>
         </div>
 
         <div style={{ background: "var(--card-bg, #FFFFFF)", padding: "16px", borderRadius: "12px", border: "1px solid var(--border, #E2E8F0)" }}>
-          {recentLogs.length === 0 ? (
-            <p style={{ fontSize: "0.875rem", color: "var(--text-muted, #64748B)" }}>
-              Aún no hay registros de actividades registradas hoy.
-            </p>
-          ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-              {recentLogs.slice(0, 5).map((log) => (
-                <div
-                  key={log.id}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    padding: "10px 14px",
-                    background: "#F8FAFC",
-                    borderRadius: "8px",
-                    border: "1px solid #E2E8F0",
-                    fontSize: "0.85rem",
-                  }}
-                >
-                  <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                    <FaUserNurse style={{ color: "#2563EB", fontSize: "18px" }} />
-                    <div>
-                      <div style={{ fontWeight: "600", color: "#1E293B" }}>
-                        {log.usuarioNombre}
-                      </div>
-                      <div style={{ fontSize: "0.75rem", color: "#64748B" }}>
-                        Hab #{log.habitacionNumero} - Cama #{log.camaNumero}: {log.accion}
+          <div style={{ display: "flex", gap: "12px", marginBottom: "16px", flexWrap: "wrap" }}>
+            <input
+              type="text"
+              placeholder="🔍 Filtrar por nombre del usuario..."
+              value={userFilter}
+              onChange={(e) => setUserFilter(e.target.value)}
+              style={{ padding: "8px 12px", borderRadius: "8px", border: "1px solid #CBD5E1", fontSize: "0.85rem", flex: 1, minWidth: "200px" }}
+            />
+            <select
+              value={roleFilter}
+              onChange={(e) => setRoleFilter(e.target.value)}
+              style={{ padding: "8px 12px", borderRadius: "8px", border: "1px solid #CBD5E1", fontSize: "0.85rem" }}
+            >
+              <option value="todos">Todos los Roles</option>
+              <option value="enfermeria">Enfermería</option>
+              <option value="admin">Administrador</option>
+              <option value="medico">Médico</option>
+              <option value="tecnico">Técnico</option>
+            </select>
+          </div>
+
+          {(() => {
+            const filtered = recentLogs.filter((log) => {
+              const matchesUser = !userFilter || (log.usuarioNombre && log.usuarioNombre.toLowerCase().includes(userFilter.toLowerCase()));
+              const matchesRole = roleFilter === "todos" || (log.usuarioRol && log.usuarioRol.toLowerCase() === roleFilter.toLowerCase());
+              return matchesUser && matchesRole;
+            });
+
+            if (filtered.length === 0) {
+              return (
+                <p style={{ fontSize: "0.875rem", color: "var(--text-muted, #64748B)" }}>
+                  No se encontraron actividades registradas con los filtros seleccionados.
+                </p>
+              );
+            }
+
+            return (
+              <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                {filtered.slice(0, 10).map((log) => (
+                  <div
+                    key={log.id}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      padding: "10px 14px",
+                      background: "#F8FAFC",
+                      borderRadius: "8px",
+                      border: "1px solid #E2E8F0",
+                      fontSize: "0.85rem",
+                    }}
+                  >
+                    <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                      <FaUserNurse style={{ color: "#2563EB", fontSize: "18px" }} />
+                      <div>
+                        <div style={{ fontWeight: "600", color: "#1E293B", display: "flex", alignItems: "center", gap: "8px" }}>
+                          <span>{log.usuarioNombre}</span>
+                          <span style={{ fontSize: "0.7rem", background: "#DBEAFE", color: "#1D4ED8", padding: "2px 6px", borderRadius: "4px", fontWeight: "600" }}>
+                            {log.usuarioRol || "enfermeria"}
+                          </span>
+                        </div>
+                        <div style={{ fontSize: "0.75rem", color: "#64748B" }}>
+                          Hab #{log.habitacionNumero} - Cama #{log.camaNumero}: {log.accion}
+                        </div>
                       </div>
                     </div>
+                    <span style={{ fontSize: "0.75rem", color: "#94A3B8", whiteSpace: "nowrap" }}>
+                      {log.fechaHora}
+                    </span>
                   </div>
-                  <span style={{ fontSize: "0.75rem", color: "#94A3B8", whiteSpace: "nowrap" }}>
-                    {log.fechaHora}
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
+                ))}
+              </div>
+            );
+          })()}
         </div>
       </div>
     </div>

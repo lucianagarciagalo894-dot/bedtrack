@@ -9,6 +9,7 @@ public class HistorialCama
     public int HabitacionNumero { get; private set; }
     public string UsuarioNombre { get; private set; }
     public string UsuarioEmail { get; private set; }
+    public string UsuarioRol { get; private set; }
     public string Accion { get; private set; }
     public string EstadoAnterior { get; private set; }
     public string EstadoNuevo { get; private set; }
@@ -18,6 +19,7 @@ public class HistorialCama
     {
         UsuarioNombre = string.Empty;
         UsuarioEmail = string.Empty;
+        UsuarioRol = string.Empty;
         Accion = string.Empty;
         EstadoAnterior = string.Empty;
         EstadoNuevo = string.Empty;
@@ -33,7 +35,8 @@ public class HistorialCama
         string accion,
         string estadoAnterior,
         string estadoNuevo,
-        DateTime? fechaHora = null)
+        DateTime? fechaHora = null,
+        string? usuarioRol = null)
     {
         CamaId = camaId;
         CamaNumero = camaNumero;
@@ -41,6 +44,7 @@ public class HistorialCama
         HabitacionNumero = habitacionNumero;
         UsuarioNombre = usuarioNombre;
         UsuarioEmail = usuarioEmail;
+        UsuarioRol = usuarioRol ?? "enfermeria";
         Accion = accion;
         EstadoAnterior = estadoAnterior;
         EstadoNuevo = estadoNuevo;

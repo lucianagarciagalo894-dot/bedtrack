@@ -67,8 +67,9 @@ function AppContent() {
 
     try {
       const operatorInfo = {
-        name: role === "enfermeria" ? "Lic. María Elena Fernández" : "Administrador Hospitalario",
+        name: role === "enfermeria" ? "Lic. María Elena Fernández" : role === "admin" ? "Administrador Hospitalario" : "Personal de Salud",
         email: role === "enfermeria" ? "maria.fernandez@hospital.com" : "admin@hospital.com",
+        role: role || "enfermeria",
       };
 
       const updatedBed = await updateBedStatus(bedId, newStatus, patientData, operatorInfo);

@@ -56,6 +56,7 @@ export async function updateBedStatus(bedId, status, patient = null, operatorInf
     patient,
     operatorName: operatorInfo?.name || "Lic. Personal de Enfermería",
     operatorEmail: operatorInfo?.email || "enfermeria@hospital.com",
+    operatorRole: operatorInfo?.role || "enfermeria",
   };
 
   try {

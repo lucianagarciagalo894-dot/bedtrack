@@ -47,6 +47,7 @@ public class UpdateBedStatusDto
     public PacienteDto? Patient { get; set; }
     public string? OperatorName { get; set; }
     public string? OperatorEmail { get; set; }
+    public string? OperatorRole { get; set; }
 }
 
 public class UsuarioStaffDto
@@ -91,6 +92,7 @@ public class HistorialCamaDto
     public int HabitacionNumero { get; set; }
     public string UsuarioNombre { get; set; } = string.Empty;
     public string UsuarioEmail { get; set; } = string.Empty;
+    public string UsuarioRol { get; set; } = string.Empty;
     public string Accion { get; set; } = string.Empty;
     public string EstadoAnterior { get; set; } = string.Empty;
     public string EstadoNuevo { get; set; } = string.Empty;

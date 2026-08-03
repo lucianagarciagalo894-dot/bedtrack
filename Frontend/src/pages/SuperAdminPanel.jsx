@@ -55,6 +55,8 @@ export default function SuperAdminPanel({ onLogout }) {
   const [rooms, setRooms] = useState([]);
   const [staffUsers, setStaffUsers] = useState([]);
   const [auditLogs, setAuditLogs] = useState([]);
+  const [auditUserFilter, setAuditUserFilter] = useState("");
+  const [auditRoleFilter, setAuditRoleFilter] = useState("todos");
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState(null);
 
@@ -622,6 +624,17 @@ export default function SuperAdminPanel({ onLogout }) {
     }
   };
 
+  const handleDeleteUser = async (userId) => {
+    if (!window.confirm("¿Está seguro de eliminar este usuario del personal hospitalario?")) return;
+    try {
+      await deleteStaffUser(userId);
+      setStaffUsers((prev) => prev.filter((u) => u.id !== userId));
+      showNotification("Usuario del personal eliminado correctamente");
+    } catch (err) {
+      showNotification(err.message, "error");
+    }
+  };
+
   return (
     <div className="superadmin-container">
       {/* Top Banner Notice */}
@@ -886,11 +899,18 @@ export default function SuperAdminPanel({ onLogout }) {
                         </button>
                         <button
                           className="icon-btn"
-                          style={{ color: u.activo !== false ? "#DC2626" : "#059669" }}
+                          style={{ color: u.activo !== false ? "#DC2626" : "#059669", marginRight: "8px" }}
                           onClick={() => handleToggleUserStatus(u)}
                           title={u.activo !== false ? "Desactivar Usuario" : "Activar Usuario"}
                         >
                           {u.activo !== false ? <FaToggleOn size={18} /> : <FaToggleOff size={18} />}
+                        </button>
+                        <button
+                          className="icon-btn delete-sm"
+                          onClick={() => handleDeleteUser(u.id)}
+                          title="Eliminar Perfil de Usuario"
+                        >
+                          <FaTrash />
                         </button>
                       </td>
                     </tr>
@@ -910,43 +930,83 @@ export default function SuperAdminPanel({ onLogout }) {
         </div>
 
         <div style={{ background: "var(--card-bg, #FFFFFF)", padding: "16px", borderRadius: "12px", border: "1px solid var(--border, #E2E8F0)" }}>
-          {auditLogs.length === 0 ? (
-            <p style={{ fontSize: "0.875rem", color: "#64748B" }}>No hay registros de modificaciones de camas aún.</p>
-          ) : (
-            <div style={{ overflowX: "auto", maxHeight: "320px", overflowY: "auto" }}>
-              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.825rem" }}>
-                <thead>
-                  <tr style={{ borderBottom: "2px solid #E2E8F0", textAlign: "left", sticky: "top", background: "#F8FAFC" }}>
-                    <th style={{ padding: "8px" }}>Fecha / Hora</th>
-                    <th style={{ padding: "8px" }}>Operador (Enfermería)</th>
-                    <th style={{ padding: "8px" }}>Ubicación</th>
-                    <th style={{ padding: "8px" }}>Acción Realizada</th>
-                    <th style={{ padding: "8px" }}>Transición</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {auditLogs.map((log) => (
-                    <tr key={log.id} style={{ borderBottom: "1px solid #F1F5F9" }}>
-                      <td style={{ padding: "8px", whiteSpace: "nowrap", color: "#64748B" }}>{log.fechaHora}</td>
-                      <td style={{ padding: "8px" }}>
-                        <strong>{log.usuarioNombre}</strong>
-                        <div style={{ fontSize: "0.7rem", color: "#94A3B8" }}>{log.usuarioEmail}</div>
-                      </td>
-                      <td style={{ padding: "8px", whiteSpace: "nowrap" }}>
-                        Hab #{log.habitacionNumero} - Cama #{log.camaNumero}
-                      </td>
-                      <td style={{ padding: "8px" }}>{log.accion}</td>
-                      <td style={{ padding: "8px", whiteSpace: "nowrap" }}>
-                        <span style={{ fontSize: "0.7rem", padding: "2px 6px", borderRadius: "4px", background: "#E2E8F0" }}>
-                          {log.estadoAnterior} → <strong>{log.estadoNuevo}</strong>
-                        </span>
-                      </td>
+          <div style={{ display: "flex", gap: "12px", marginBottom: "16px", flexWrap: "wrap", alignItems: "center" }}>
+            <input
+              type="text"
+              placeholder="🔍 Buscar por nombre o email del operador..."
+              value={auditUserFilter}
+              onChange={(e) => setAuditUserFilter(e.target.value)}
+              style={{ padding: "8px 12px", borderRadius: "8px", border: "1px solid #CBD5E1", fontSize: "0.85rem", minWidth: "260px" }}
+            />
+            <select
+              value={auditRoleFilter}
+              onChange={(e) => setAuditRoleFilter(e.target.value)}
+              style={{ padding: "8px 12px", borderRadius: "8px", border: "1px solid #CBD5E1", fontSize: "0.85rem" }}
+            >
+              <option value="todos">Todos los Roles</option>
+              <option value="enfermeria">Enfermería</option>
+              <option value="admin">Administrador Hospitalario</option>
+              <option value="medico">Médico</option>
+              <option value="tecnico">Técnico</option>
+            </select>
+          </div>
+
+          {(() => {
+            const filteredLogs = auditLogs.filter((log) => {
+              const matchesUser = !auditUserFilter ||
+                (log.usuarioNombre && log.usuarioNombre.toLowerCase().includes(auditUserFilter.toLowerCase())) ||
+                (log.usuarioEmail && log.usuarioEmail.toLowerCase().includes(auditUserFilter.toLowerCase()));
+              const matchesRole = auditRoleFilter === "todos" ||
+                (log.usuarioRol && log.usuarioRol.toLowerCase() === auditRoleFilter.toLowerCase());
+              return matchesUser && matchesRole;
+            });
+
+            if (filteredLogs.length === 0) {
+              return <p style={{ fontSize: "0.875rem", color: "#64748B" }}>No se encontraron registros de auditoría para los filtros aplicados.</p>;
+            }
+
+            return (
+              <div style={{ overflowX: "auto", maxHeight: "360px", overflowY: "auto" }}>
+                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.825rem" }}>
+                  <thead>
+                    <tr style={{ borderBottom: "2px solid #E2E8F0", textAlign: "left", sticky: "top", background: "#F8FAFC" }}>
+                      <th style={{ padding: "8px" }}>Fecha / Hora</th>
+                      <th style={{ padding: "8px" }}>Operador / Usuario</th>
+                      <th style={{ padding: "8px" }}>Rol</th>
+                      <th style={{ padding: "8px" }}>Ubicación</th>
+                      <th style={{ padding: "8px" }}>Acción Realizada</th>
+                      <th style={{ padding: "8px" }}>Transición</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+                  </thead>
+                  <tbody>
+                    {filteredLogs.map((log) => (
+                      <tr key={log.id} style={{ borderBottom: "1px solid #F1F5F9" }}>
+                        <td style={{ padding: "8px", whiteSpace: "nowrap", color: "#64748B" }}>{log.fechaHora}</td>
+                        <td style={{ padding: "8px" }}>
+                          <strong>{log.usuarioNombre}</strong>
+                          <div style={{ fontSize: "0.7rem", color: "#94A3B8" }}>{log.usuarioEmail}</div>
+                        </td>
+                        <td style={{ padding: "8px" }}>
+                          <span style={{ background: "#F1F5F9", color: "#475569", padding: "2px 6px", borderRadius: "4px", fontSize: "0.7rem", fontWeight: "600" }}>
+                            {log.usuarioRol || "enfermeria"}
+                          </span>
+                        </td>
+                        <td style={{ padding: "8px", whiteSpace: "nowrap" }}>
+                          Hab #{log.habitacionNumero} - Cama #{log.camaNumero}
+                        </td>
+                        <td style={{ padding: "8px" }}>{log.accion}</td>
+                        <td style={{ padding: "8px", whiteSpace: "nowrap" }}>
+                          <span style={{ fontSize: "0.7rem", padding: "2px 6px", borderRadius: "4px", background: "#E2E8F0" }}>
+                            {log.estadoAnterior} → <strong>{log.estadoNuevo}</strong>
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            );
+          })()}
         </div>
       </section>
 
@@ -1578,6 +1638,8 @@ export default function SuperAdminPanel({ onLogout }) {
                 >
                   <option value="enfermeria">Enfermería</option>
                   <option value="admin">Administrador Hospitalario</option>
+                  <option value="medico">Médico / Profesional Asistencial</option>
+                  <option value="tecnico">Técnico / Mantenimiento y Limpieza</option>
                 </select>
               </div>
 

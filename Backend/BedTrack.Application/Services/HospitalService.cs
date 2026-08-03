@@ -128,6 +128,8 @@ public class HospitalService : IHospitalService
                 ? "Liberó la cama para desinfección y limpieza"
                 : "Habilitó la cama como Disponible";
 
+        var operatorRole = string.IsNullOrWhiteSpace(request.OperatorRole) ? "enfermeria" : request.OperatorRole;
+
         var historial = new HistorialCama(
             cama.Id,
             cama.Numero,
@@ -137,7 +139,9 @@ public class HospitalService : IHospitalService
             operatorEmail,
             accionText,
             estadoAnteriorStr,
-            estadoStr
+            estadoStr,
+            null,
+            operatorRole
         );
         await _repo.AgregarHistorialCamaAsync(historial);
 
@@ -665,6 +669,7 @@ public class HospitalService : IHospitalService
             HabitacionNumero = h.HabitacionNumero,
             UsuarioNombre = h.UsuarioNombre,
             UsuarioEmail = h.UsuarioEmail,
+            UsuarioRol = h.UsuarioRol ?? "enfermeria",
             Accion = h.Accion,
             EstadoAnterior = h.EstadoAnterior,
             EstadoNuevo = h.EstadoNuevo,
