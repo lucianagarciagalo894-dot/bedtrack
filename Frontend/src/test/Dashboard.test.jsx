@@ -142,7 +142,7 @@ describe('Componente Dashboard', () => {
     const links = screen.getAllByLabelText(/Ver camas del/);
     expect(links).toHaveLength(FLOORS.length);
     links.forEach(link => {
-      expect(link).toHaveAttribute('href', '/camas');
+      expect(link.getAttribute('href')).toContain('/camas');
     });
   });
 

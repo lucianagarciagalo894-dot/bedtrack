@@ -182,7 +182,7 @@ export default function Dashboard({ role, sessionHospital, beds }) {
                 <span className="floor-chip floor-chip-cleaning">{cleaning}</span>
               </div>
 
-              <Link to="/camas" className="floor-row-link" aria-label={`Ver camas del ${floor}`}>
+              <Link to={`/camas?floor=${encodeURIComponent(floor)}`} className="floor-row-link" aria-label={`Ver camas del ${floor}`}>
                 Ver →
               </Link>
             </div>

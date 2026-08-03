@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo, useEffect } from "react";
 import BedCard from "../components/BedCard";
 import PatientFormModal from "../components/PatientFormModal";
 import { FLOORS } from "../data/beds";
@@ -10,8 +10,59 @@ import {
 } from "react-icons/fa";
 
 export default function Beds({ role, beds, onChangeStatus }) {
-  const [floor, setFloor]           = useState("Piso 1");
+  // Extraer lista única de pisos presentes en las camas del hospital activo
+  const floorList = useMemo(() => {
+    const uniqueFloors = Array.from(new Set(beds.map((b) => b.floor).filter(Boolean)));
+    return uniqueFloors.length > 0 ? uniqueFloors : FLOORS;
+  }, [beds]);
+
+  const getUrlFloor = () => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const paramFloor = params.get("floor");
+      if (paramFloor && floorList.includes(paramFloor)) {
+        return paramFloor;
+      }
+    } catch {
+      // Ignorar error fuera de contexto de ventana
+    }
+    return null;
+  };
+
+  const [floor, setFloor] = useState(() => getUrlFloor() || floorList[0] || "Piso 1");
   const [pendingBed, setPendingBed] = useState(null);
+
+  useEffect(() => {
+    const urlFloor = getUrlFloor();
+    if (urlFloor) {
+      setFloor(urlFloor);
+    } else if (!floorList.includes(floor) && floorList.length > 0) {
+      setFloor(floorList[0]);
+    }
+  }, [beds, floorList]);
+
+  useEffect(() => {
+    return () => {
+      try {
+        if (typeof window !== "undefined" && window.history && window.location) {
+          window.history.replaceState({}, "", window.location.pathname);
+        }
+      } catch {
+        // Ignorar
+      }
+    };
+  }, []);
+
+  const handleFloorChange = (newFloor) => {
+    setFloor(newFloor);
+    try {
+      const url = new URL(window.location.href);
+      url.searchParams.set("floor", newFloor);
+      window.history.replaceState({}, "", url.toString());
+    } catch {
+      // Ignorar error si no hay objeto window.location navegable
+    }
+  };
 
   const filtered  = beds.filter((b) => b.floor === floor);
   const available = filtered.filter((b) => b.status?.toLowerCase() === "disponible").length;
@@ -49,11 +100,11 @@ export default function Beds({ role, beds, onChangeStatus }) {
       {/* ── Selector de piso ───────────────────────────────────── */}
       <div className="floor-selector-wrap">
         <div className="floor-selector" role="group" aria-label="Selector de piso">
-          {FLOORS.map((f) => (
+          {floorList.map((f) => (
             <button
               key={f}
               className={`floor-btn${floor === f ? " active" : ""}`}
-              onClick={() => setFloor(f)}
+              onClick={() => handleFloorChange(f)}
               aria-pressed={floor === f}
             >
               {f}
