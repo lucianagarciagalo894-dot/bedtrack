@@ -142,14 +142,18 @@ public class HospitalRepository : IHospitalRepository
         _context.Pacientes.Remove(paciente);
     }
 
-    public async Task<IEnumerable<UsuarioStaff>> ObtenerUsuariosStaffAsync(int? nosocomioId = null)
+    public async Task<IEnumerable<UsuarioStaff>> ObtenerUsuariosStaffAsync(int? nosocomioId = null, int? sucursalId = null)
     {
         var query = _context.UsuariosStaff
             .Include(u => u.Nosocomio)
             .Include(u => u.Sucursal)
             .AsQueryable();
 
-        if (nosocomioId.HasValue)
+        if (sucursalId.HasValue)
+        {
+            query = query.Where(u => u.SucursalId == sucursalId.Value || (u.NosocomioId == nosocomioId && u.SucursalId == null));
+        }
+        else if (nosocomioId.HasValue)
         {
             query = query.Where(u => u.NosocomioId == nosocomioId.Value);
         }

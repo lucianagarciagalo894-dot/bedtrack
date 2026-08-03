@@ -475,9 +475,9 @@ public class HospitalService : IHospitalService
         };
     }
 
-    public async Task<IEnumerable<UsuarioStaffDto>> GetUsuariosStaffAsync(int? nosocomioId = null)
+    public async Task<IEnumerable<UsuarioStaffDto>> GetUsuariosStaffAsync(int? nosocomioId = null, int? sucursalId = null)
     {
-        var usuarios = await _repo.ObtenerUsuariosStaffAsync(nosocomioId);
+        var usuarios = await _repo.ObtenerUsuariosStaffAsync(nosocomioId, sucursalId);
         return usuarios.Select(u => new UsuarioStaffDto
         {
             Id = u.Id,

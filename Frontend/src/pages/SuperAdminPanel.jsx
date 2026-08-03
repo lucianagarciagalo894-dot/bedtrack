@@ -136,12 +136,12 @@ export default function SuperAdminPanel({ onLogout }) {
   };
 
   useEffect(() => {
-    if (selectedNosocomioId) {
-      getStaffUsers(selectedNosocomioId)
+    if (selectedNosocomioId || selectedSucursalId) {
+      getStaffUsers(selectedNosocomioId, selectedSucursalId)
         .then((users) => setStaffUsers(users || []))
-        .catch((err) => console.warn("Error al filtrar usuarios de enfermería por nosocomio:", err));
+        .catch((err) => console.warn("Error al filtrar usuarios de enfermería por sucursal:", err));
     }
-  }, [selectedNosocomioId]);
+  }, [selectedNosocomioId, selectedSucursalId]);
 
   const currentNosocomio = nosocomios.find((n) => n.id.toString() === selectedNosocomioId);
   const sucursalesList = currentNosocomio?.sucursales || [];
@@ -411,6 +411,7 @@ export default function SuperAdminPanel({ onLogout }) {
         rol: user.rol || "enfermeria",
         activo: user.activo !== false,
         nosocomioId: user.nosocomioId ? user.nosocomioId.toString() : selectedNosocomioId,
+        sucursalId: user.sucursalId ? user.sucursalId.toString() : selectedSucursalId,
       });
     } else {
       setUserForm({
@@ -421,6 +422,7 @@ export default function SuperAdminPanel({ onLogout }) {
         rol: "enfermeria",
         activo: true,
         nosocomioId: selectedNosocomioId,
+        sucursalId: selectedSucursalId,
       });
     }
     setShowUserModal(true);
@@ -439,6 +441,7 @@ export default function SuperAdminPanel({ onLogout }) {
           rol: userForm.rol,
           activo: userForm.activo,
           nosocomioId: userForm.nosocomioId ? parseInt(userForm.nosocomioId, 10) : null,
+          sucursalId: userForm.sucursalId ? parseInt(userForm.sucursalId, 10) : null,
         });
         setStaffUsers((prev) => prev.map((u) => (u.id === userForm.id ? { ...u, ...updated } : u)));
         showNotification("Usuario de enfermería actualizado");
@@ -449,6 +452,7 @@ export default function SuperAdminPanel({ onLogout }) {
           password: userForm.password || "123456",
           rol: userForm.rol,
           nosocomioId: userForm.nosocomioId ? parseInt(userForm.nosocomioId, 10) : null,
+          sucursalId: userForm.sucursalId ? parseInt(userForm.sucursalId, 10) : null,
         });
         setStaffUsers((prev) => [...prev, created]);
         showNotification("Usuario de enfermería creado con éxito");
@@ -1218,6 +1222,21 @@ export default function SuperAdminPanel({ onLogout }) {
                   {nosocomios.map((n) => (
                     <option key={n.id} value={n.id}>
                       {n.nombre}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label>Establecimiento / Sede Asignada:</label>
+                <select
+                  value={userForm.sucursalId || ""}
+                  onChange={(e) => setUserForm({ ...userForm, sucursalId: e.target.value })}
+                >
+                  <option value="">Todas las sucursales del hospital (Global)</option>
+                  {sucursalesList.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.nombre}
                     </option>
                   ))}
                 </select>

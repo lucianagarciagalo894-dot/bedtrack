@@ -329,9 +329,14 @@ export async function createFullHospitalSetup(data) {
 
 let localStaffUsersStore = [];
 
-export async function getStaffUsers(nosocomioId = null) {
+export async function getStaffUsers(nosocomioId = null, sucursalId = null) {
   try {
-    const url = nosocomioId ? `${API_BASE}/superadmin/users?nosocomioId=${nosocomioId}` : `${API_BASE}/superadmin/users`;
+    let url = `${API_BASE}/superadmin/users`;
+    const params = new URLSearchParams();
+    if (nosocomioId) params.append("nosocomioId", nosocomioId);
+    if (sucursalId) params.append("sucursalId", sucursalId);
+    if (params.toString()) url += `?${params.toString()}`;
+
     const res = await fetch(url);
     if (res.ok) {
       const data = await res.json();
@@ -342,21 +347,21 @@ export async function getStaffUsers(nosocomioId = null) {
             combined.push(localUser);
           }
         }
-        return filterUsersByNosocomio(combined, nosocomioId);
+        return filterUsersBySucursal(combined, nosocomioId, sucursalId);
       }
     }
-    return getFallbackStaffUsers(nosocomioId);
+    return getFallbackStaffUsers(nosocomioId, sucursalId);
   } catch (err) {
     console.warn("Usando lista local de usuarios staff:", err);
-    return getFallbackStaffUsers(nosocomioId);
+    return getFallbackStaffUsers(nosocomioId, sucursalId);
   }
 }
 
-function getFallbackStaffUsers(nosocomioId = null) {
+function getFallbackStaffUsers(nosocomioId = null, sucursalId = null) {
   const base = [
-    { id: 1, nosocomioId: 1, nombre: "Lic. María Elena Fernández", email: "maria.fernandez@hospital.com", rol: "enfermeria", activo: true, hospitalNombre: "Hospital Central BedTrack" },
-    { id: 2, nosocomioId: 1, nombre: "Enf. Carlos Alberto Gómez", email: "carlos.gomez@hospital.com", rol: "enfermeria", activo: true, hospitalNombre: "Hospital Central BedTrack" },
-    { id: 3, nosocomioId: 2, nombre: "Dra. Sofía Rodríguez", email: "sofia.rodriguez@hospital.com", rol: "admin", activo: true, hospitalNombre: "Sanatorio Allende S.A." },
+    { id: 1, nosocomioId: 1, sucursalId: 1, nombre: "Lic. María Elena Fernández", email: "maria.fernandez@hospital.com", rol: "enfermeria", activo: true, hospitalNombre: "Hospital Central BedTrack", sucursalNombre: "Establecimiento Central" },
+    { id: 2, nosocomioId: 1, sucursalId: 2, nombre: "Enf. Carlos Alberto Gómez", email: "carlos.gomez@hospital.com", rol: "enfermeria", activo: true, hospitalNombre: "Hospital Central BedTrack", sucursalNombre: "Establecimiento Norte" },
+    { id: 3, nosocomioId: 2, sucursalId: 3, nombre: "Dra. Sofía Rodríguez", email: "sofia.rodriguez@hospital.com", rol: "admin", activo: true, hospitalNombre: "Sanatorio Allende S.A.", sucursalNombre: "Nueva Córdoba" },
   ];
   const combined = [...base];
   for (const localUser of localStaffUsersStore) {
@@ -364,13 +369,19 @@ function getFallbackStaffUsers(nosocomioId = null) {
       combined.push(localUser);
     }
   }
-  return filterUsersByNosocomio(combined, nosocomioId);
+  return filterUsersBySucursal(combined, nosocomioId, sucursalId);
 }
 
-function filterUsersByNosocomio(users, nosocomioId) {
-  if (!nosocomioId) return users;
-  const targetId = parseInt(nosocomioId, 10);
-  return users.filter((u) => !u.nosocomioId || parseInt(u.nosocomioId, 10) === targetId);
+function filterUsersBySucursal(users, nosocomioId, sucursalId) {
+  return users.filter((u) => {
+    if (nosocomioId && u.nosocomioId && parseInt(u.nosocomioId, 10) !== parseInt(nosocomioId, 10)) {
+      return false;
+    }
+    if (sucursalId && u.sucursalId && parseInt(u.sucursalId, 10) !== parseInt(sucursalId, 10)) {
+      return false;
+    }
+    return true;
+  });
 }
 
 export async function createStaffUser(userData) {
@@ -397,6 +408,7 @@ export async function createStaffUser(userData) {
       rol: userData.rol || "enfermeria",
       activo: true,
       nosocomioId: userData.nosocomioId ? parseInt(userData.nosocomioId, 10) : null,
+      sucursalId: userData.sucursalId ? parseInt(userData.sucursalId, 10) : null,
       hospitalNombre: "Hospital Asignado",
     };
   }
