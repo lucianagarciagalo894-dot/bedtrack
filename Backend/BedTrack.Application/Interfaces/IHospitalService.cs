@@ -27,7 +27,7 @@ public interface IHospitalService
     Task<NosocomioDto> CreateFullHospitalSetupAsync(FullHospitalSetupDto dto);
 
     // Usuarios Staff y Auditoría de Historial
-    Task<IEnumerable<UsuarioStaffDto>> GetUsuariosStaffAsync();
+    Task<IEnumerable<UsuarioStaffDto>> GetUsuariosStaffAsync(int? nosocomioId = null);
     Task<UsuarioStaffDto> CreateUsuarioStaffAsync(CreateUsuarioStaffDto dto);
     Task<UsuarioStaffDto> UpdateUsuarioStaffAsync(int id, UpdateUsuarioStaffDto dto);
     Task<bool> DeleteUsuarioStaffAsync(int id);

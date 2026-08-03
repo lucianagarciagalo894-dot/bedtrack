@@ -327,40 +327,82 @@ export async function createFullHospitalSetup(data) {
   return createdNos;
 }
 
-export async function getStaffUsers() {
+let localStaffUsersStore = [];
+
+export async function getStaffUsers(nosocomioId = null) {
   try {
-    const res = await fetch(`${API_BASE}/superadmin/users`);
-    if (!res.ok) throw new Error("Error al cargar usuarios de staff");
-    return await res.json();
+    const url = nosocomioId ? `${API_BASE}/superadmin/users?nosocomioId=${nosocomioId}` : `${API_BASE}/superadmin/users`;
+    const res = await fetch(url);
+    if (res.ok) {
+      const data = await res.json();
+      if (Array.isArray(data) && data.length > 0) {
+        const combined = [...data];
+        for (const localUser of localStaffUsersStore) {
+          if (!combined.some((u) => u.id === localUser.id)) {
+            combined.push(localUser);
+          }
+        }
+        return filterUsersByNosocomio(combined, nosocomioId);
+      }
+    }
+    return getFallbackStaffUsers(nosocomioId);
   } catch (err) {
     console.warn("Usando lista local de usuarios staff:", err);
-    return [
-      { id: 1, nombre: "Lic. María Elena Fernández", email: "maria.fernandez@hospital.com", rol: "enfermeria", activo: true, hospitalNombre: "Hospital Central BedTrack" },
-      { id: 2, nombre: "Enf. Carlos Alberto Gómez", email: "carlos.gomez@hospital.com", rol: "enfermeria", activo: true, hospitalNombre: "Hospital Central BedTrack" },
-      { id: 3, nombre: "Dra. Sofía Rodríguez", email: "sofia.rodriguez@hospital.com", rol: "admin", activo: true, hospitalNombre: "Sanatorio Allende S.A." },
-    ];
+    return getFallbackStaffUsers(nosocomioId);
   }
 }
 
+function getFallbackStaffUsers(nosocomioId = null) {
+  const base = [
+    { id: 1, nosocomioId: 1, nombre: "Lic. María Elena Fernández", email: "maria.fernandez@hospital.com", rol: "enfermeria", activo: true, hospitalNombre: "Hospital Central BedTrack" },
+    { id: 2, nosocomioId: 1, nombre: "Enf. Carlos Alberto Gómez", email: "carlos.gomez@hospital.com", rol: "enfermeria", activo: true, hospitalNombre: "Hospital Central BedTrack" },
+    { id: 3, nosocomioId: 2, nombre: "Dra. Sofía Rodríguez", email: "sofia.rodriguez@hospital.com", rol: "admin", activo: true, hospitalNombre: "Sanatorio Allende S.A." },
+  ];
+  const combined = [...base];
+  for (const localUser of localStaffUsersStore) {
+    if (!combined.some((u) => u.id === localUser.id)) {
+      combined.push(localUser);
+    }
+  }
+  return filterUsersByNosocomio(combined, nosocomioId);
+}
+
+function filterUsersByNosocomio(users, nosocomioId) {
+  if (!nosocomioId) return users;
+  const targetId = parseInt(nosocomioId, 10);
+  return users.filter((u) => !u.nosocomioId || parseInt(u.nosocomioId, 10) === targetId);
+}
+
 export async function createStaffUser(userData) {
+  let created = null;
   try {
     const res = await fetch(`${API_BASE}/superadmin/users`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(userData),
     });
-    if (!res.ok) throw new Error("Error al crear usuario de staff");
-    return await res.json();
+    if (res.ok) {
+      created = await res.json();
+    }
   } catch (err) {
-    return {
-      id: Date.now(),
+    console.warn("Creación local de usuario por fallback:", err);
+  }
+
+  if (!created) {
+    const createdId = Date.now();
+    created = {
+      id: createdId,
       nombre: userData.nombre,
       email: userData.email,
       rol: userData.rol || "enfermeria",
       activo: true,
+      nosocomioId: userData.nosocomioId ? parseInt(userData.nosocomioId, 10) : null,
       hospitalNombre: "Hospital Asignado",
     };
   }
+
+  localStaffUsersStore.push(created);
+  return created;
 }
 
 export async function updateStaffUser(id, userData) {

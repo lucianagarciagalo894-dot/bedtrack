@@ -29,7 +29,7 @@ public interface IHospitalRepository
     Task AgregarPacienteAsync(Paciente paciente);
     void EliminarPaciente(Paciente paciente);
 
-    Task<IEnumerable<UsuarioStaff>> ObtenerUsuariosStaffAsync();
+    Task<IEnumerable<UsuarioStaff>> ObtenerUsuariosStaffAsync(int? nosocomioId = null);
     Task<UsuarioStaff?> ObtenerUsuarioStaffPorIdAsync(int id);
     Task AgregarUsuarioStaffAsync(UsuarioStaff usuario);
     void EliminarUsuarioStaff(UsuarioStaff usuario);

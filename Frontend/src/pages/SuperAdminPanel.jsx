@@ -135,6 +135,14 @@ export default function SuperAdminPanel({ onLogout }) {
     }
   };
 
+  useEffect(() => {
+    if (selectedNosocomioId) {
+      getStaffUsers(selectedNosocomioId)
+        .then((users) => setStaffUsers(users || []))
+        .catch((err) => console.warn("Error al filtrar usuarios de enfermería por nosocomio:", err));
+    }
+  }, [selectedNosocomioId]);
+
   const currentNosocomio = nosocomios.find((n) => n.id.toString() === selectedNosocomioId);
   const sucursalesList = currentNosocomio?.sucursales || [];
 
@@ -651,23 +659,31 @@ export default function SuperAdminPanel({ onLogout }) {
         </div>
 
         <div style={{ background: "var(--card-bg, #FFFFFF)", padding: "16px", borderRadius: "12px", border: "1px solid var(--border, #E2E8F0)" }}>
-          {staffUsers.length === 0 ? (
-            <p style={{ fontSize: "0.875rem", color: "#64748B" }}>No hay usuarios de enfermería registrados para este establecimiento.</p>
-          ) : (
-            <div style={{ overflowX: "auto" }}>
-              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.875rem" }}>
-                <thead>
-                  <tr style={{ borderBottom: "2px solid #E2E8F0", textAlign: "left" }}>
-                    <th style={{ padding: "10px" }}>Nombre del Personal</th>
-                    <th style={{ padding: "10px" }}>Correo Electrónico</th>
-                    <th style={{ padding: "10px" }}>Rol</th>
-                    <th style={{ padding: "10px" }}>Hospital Asignado</th>
-                    <th style={{ padding: "10px" }}>Estado</th>
-                    <th style={{ padding: "10px", textAlign: "right" }}>Acciones</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {staffUsers.map((u) => (
+          {(() => {
+            const filteredStaffUsers = staffUsers.filter((u) => {
+              if (!selectedNosocomioId) return true;
+              return !u.nosocomioId || u.nosocomioId.toString() === selectedNosocomioId.toString();
+            });
+
+            if (filteredStaffUsers.length === 0) {
+              return <p style={{ fontSize: "0.875rem", color: "#64748B" }}>No hay usuarios de enfermería registrados para este establecimiento.</p>;
+            }
+
+            return (
+              <div style={{ overflowX: "auto" }}>
+                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.875rem" }}>
+                  <thead>
+                    <tr style={{ borderBottom: "2px solid #E2E8F0", textAlign: "left" }}>
+                      <th style={{ padding: "10px" }}>Nombre del Personal</th>
+                      <th style={{ padding: "10px" }}>Correo Electrónico</th>
+                      <th style={{ padding: "10px" }}>Rol</th>
+                      <th style={{ padding: "10px" }}>Hospital Asignado</th>
+                      <th style={{ padding: "10px" }}>Estado</th>
+                      <th style={{ padding: "10px", textAlign: "right" }}>Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredStaffUsers.map((u) => (
                     <tr key={u.id} style={{ borderBottom: "1px solid #F1F5F9" }}>
                       <td style={{ padding: "10px", fontWeight: "600" }}>{u.nombre}</td>
                       <td style={{ padding: "10px" }}>{u.email}</td>
@@ -705,7 +721,8 @@ export default function SuperAdminPanel({ onLogout }) {
                 </tbody>
               </table>
             </div>
-          )}
+          );
+        })()}
         </div>
       </section>
 

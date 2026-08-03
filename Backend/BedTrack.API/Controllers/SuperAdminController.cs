@@ -152,9 +152,9 @@ public class SuperAdminController : ControllerBase
     }
 
     [HttpGet("users")]
-    public async Task<ActionResult<IEnumerable<UsuarioStaffDto>>> GetUsers()
+    public async Task<ActionResult<IEnumerable<UsuarioStaffDto>>> GetUsers([FromQuery] int? nosocomioId = null)
     {
-        var users = await _service.GetUsuariosStaffAsync();
+        var users = await _service.GetUsuariosStaffAsync(nosocomioId);
         return Ok(users);
     }
 
