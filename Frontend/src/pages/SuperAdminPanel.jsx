@@ -291,6 +291,10 @@ export default function SuperAdminPanel({ onLogout }) {
 
   // --- Handlers para Pisos Hospitalarios ---
   const handleOpenFloorModal = (floor = null) => {
+    if (maintenanceMode) {
+      showNotification("El Bloqueo de Seguridad de Infraestructura está activo. Desactívelo para aplicar modificaciones.", "error");
+      return;
+    }
     if (floor) {
       setFloorForm({
         id: floor.id,
@@ -671,6 +675,15 @@ export default function SuperAdminPanel({ onLogout }) {
         </div>
       )}
 
+      {maintenanceMode && (
+        <div style={{ background: "#FEF2F2", border: "1px solid #FCA5A5", borderRadius: "10px", padding: "12px 16px", marginBottom: "16px", display: "flex", alignItems: "center", gap: "12px", color: "#991B1B" }}>
+          <FaExclamationTriangle style={{ fontSize: "1.3rem", flexShrink: 0 }} />
+          <div>
+            <strong>Bloqueo de Seguridad de Infraestructura ACTIVO:</strong> Las acciones de agregar, editar y eliminar pisos, habitaciones y camas se encuentran bloqueadas temporalmente para evitar modificaciones accidentales.
+          </div>
+        </div>
+      )}
+
       {/* Grid Controls: Nosocomio & Establecimiento Selection */}
       <div className="superadmin-grid">
         <section className="superadmin-card">
@@ -826,7 +839,7 @@ export default function SuperAdminPanel({ onLogout }) {
                 checked={maintenanceMode}
                 onChange={(e) => setMaintenanceMode(e.target.checked)}
               />
-              Modo Mantenimiento de Infraestructura
+              Bloqueo de Seguridad de Edición (Evitar Cambios Accidentales)
             </label>
 
             <button
@@ -1015,13 +1028,31 @@ export default function SuperAdminPanel({ onLogout }) {
         <div className="section-toolbar">
           <h2>Gestión de Pisos, Habitaciones y Camas</h2>
           <div className="toolbar-btns">
-            <button className="btn-primary-add" style={{ background: "#8B5CF6" }} onClick={() => handleOpenFloorModal()}>
+            <button
+              className="btn-primary-add"
+              style={{ background: "#8B5CF6", opacity: maintenanceMode ? 0.5 : 1, cursor: maintenanceMode ? "not-allowed" : "pointer" }}
+              onClick={() => handleOpenFloorModal()}
+              disabled={maintenanceMode}
+              title={maintenanceMode ? "Bloqueado por Modo Mantenimiento" : "Agregar Piso"}
+            >
               <FaLayerGroup /> Agregar Piso
             </button>
-            <button className="btn-primary-add" onClick={() => handleOpenRoomModal()}>
+            <button
+              className="btn-primary-add"
+              style={{ opacity: maintenanceMode ? 0.5 : 1, cursor: maintenanceMode ? "not-allowed" : "pointer" }}
+              onClick={() => handleOpenRoomModal()}
+              disabled={maintenanceMode}
+              title={maintenanceMode ? "Bloqueado por Modo Mantenimiento" : "Agregar Habitación"}
+            >
               <FaDoorOpen /> Agregar Habitación
             </button>
-            <button className="btn-primary-add" onClick={() => handleOpenBedModal()}>
+            <button
+              className="btn-primary-add"
+              style={{ opacity: maintenanceMode ? 0.5 : 1, cursor: maintenanceMode ? "not-allowed" : "pointer" }}
+              onClick={() => handleOpenBedModal()}
+              disabled={maintenanceMode}
+              title={maintenanceMode ? "Bloqueado por Modo Mantenimiento" : "Agregar Cama"}
+            >
               <FaBed /> Agregar Cama
             </button>
           </div>
