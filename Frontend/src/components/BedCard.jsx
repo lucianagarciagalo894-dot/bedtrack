@@ -27,7 +27,7 @@ export default function BedCard({ bed, onChangeStatus, role }) {
   return (
     <article
       className={`bed-card ${cfg.cardClass}`}
-      aria-label={`Cama ${bed.id}, ${bed.floor}, estado: ${cfg.label}`}
+      aria-label={`Cama ${bed.number ?? bed.numero ?? bed.id}, ${bed.floor}, estado: ${cfg.label}`}
     >
       {/* Header */}
       <div className="bed-card-header">
@@ -41,7 +41,7 @@ export default function BedCard({ bed, onChangeStatus, role }) {
       </div>
 
       {/* Info */}
-      <div className="bed-name">Cama {bed.id}</div>
+      <div className="bed-name">Cama {bed.number ?? bed.numero ?? bed.id}</div>
 
       {/* Paciente (si está ocupada) */}
       {bed.patient && (

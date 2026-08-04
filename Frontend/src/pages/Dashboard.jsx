@@ -14,7 +14,7 @@ import {
 import { getGlobalAuditHistory } from "../services/roomService";
 
 export default function Dashboard({ role, sessionHospital, beds }) {
-  const userName = role === "enfermeria" ? "Enfermería" : "Administrador";
+  const userName = role === "enfermeria" ? "Enfermero/a" : "Encargado";
   const [recentLogs, setRecentLogs] = useState([]);
   const [userFilter, setUserFilter] = useState("");
   const [roleFilter, setRoleFilter] = useState("todos");
@@ -60,7 +60,7 @@ export default function Dashboard({ role, sessionHospital, beds }) {
           </p>
         </div>
         <Link to="/camas" className="btn-go-beds">
-          {role === "admin" ? "Ver camas" : "Gestionar camas"}
+          {role === "encargado" ? "Ver camas" : "Gestionar camas"}
           <FaArrowRight size={13} />
         </Link>
       </div>
@@ -214,9 +214,7 @@ export default function Dashboard({ role, sessionHospital, beds }) {
             >
               <option value="todos">Todos los Roles</option>
               <option value="enfermeria">Enfermería</option>
-              <option value="admin">Administrador</option>
-              <option value="medico">Médico</option>
-              <option value="tecnico">Técnico</option>
+              <option value="encargado">Encargado</option>
             </select>
           </div>
 

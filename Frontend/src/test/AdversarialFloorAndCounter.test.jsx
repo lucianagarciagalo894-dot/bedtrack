@@ -132,7 +132,7 @@ describe('Adversarial Challenge: Ground Floor (floorId: 0), Zero-Bed Edge Cases 
         { id: 1, floor: 'Piso 1', status: 'disponible' }
       ];
 
-      renderWithRouter(<Dashboard role="admin" beds={mockBeds} />);
+      renderWithRouter(<Dashboard role="encargado" beds={mockBeds} />);
 
       // Find floor row for Piso 2 (which has 0 beds)
       const piso2Row = screen.getByText('Piso 2').closest('.floor-row');
@@ -155,7 +155,7 @@ describe('Adversarial Challenge: Ground Floor (floorId: 0), Zero-Bed Edge Cases 
         // Piso 2, 3, 4, 5 have 0 beds total
       ];
 
-      renderWithRouter(<Dashboard role="admin" beds={mockBeds} />);
+      renderWithRouter(<Dashboard role="encargado" beds={mockBeds} />);
 
       // Alert should NOT be present because no floor with >0 beds has <3 available beds
       expect(screen.queryByRole('alert')).toBeNull();
@@ -168,7 +168,7 @@ describe('Adversarial Challenge: Ground Floor (floorId: 0), Zero-Bed Edge Cases 
         { id: 3, floor: 'Piso 1', status: 'ocupada' },
       ];
 
-      renderWithRouter(<Dashboard role="admin" beds={mockBeds} />);
+      renderWithRouter(<Dashboard role="encargado" beds={mockBeds} />);
 
       const alert = screen.getByRole('alert');
       expect(alert).toBeInTheDocument();
@@ -182,7 +182,7 @@ describe('Adversarial Challenge: Ground Floor (floorId: 0), Zero-Bed Edge Cases 
         { id: 3, floor: 'Planta Baja', status: 'disponible' }
       ];
 
-      renderWithRouter(<Dashboard role="admin" beds={mockBeds} />);
+      renderWithRouter(<Dashboard role="encargado" beds={mockBeds} />);
 
       // Should render "Planta Baja" in breakdown
       const plantaBajaRow = screen.getByText('Planta Baja').closest('.floor-row');
@@ -191,7 +191,7 @@ describe('Adversarial Challenge: Ground Floor (floorId: 0), Zero-Bed Edge Cases 
     });
 
     test('5. Handles completely empty beds array [] without error', () => {
-      renderWithRouter(<Dashboard role="admin" beds={[]} />);
+      renderWithRouter(<Dashboard role="encargado" beds={[]} />);
 
       const stats = screen.getByRole('region', { name: 'Estadísticas globales' });
       expect(within(stats).getByText('Total de camas')).toBeInTheDocument();

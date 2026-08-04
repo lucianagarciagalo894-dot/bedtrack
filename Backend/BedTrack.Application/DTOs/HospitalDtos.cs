@@ -83,6 +83,23 @@ public class UpdateUsuarioStaffDto
     public int? SucursalId { get; set; }
 }
 
+public class StaffLoginRequestDto
+{
+    public string Email { get; set; } = string.Empty;
+    public string Password { get; set; } = string.Empty;
+    public int? NosocomioId { get; set; }
+    public int? SucursalId { get; set; }
+    public string Rol { get; set; } = string.Empty;
+}
+
+public class StaffLoginResponseDto
+{
+    public bool Success { get; set; }
+    public string Message { get; set; } = string.Empty;
+    public UsuarioStaffDto? User { get; set; }
+    public string Token { get; set; } = string.Empty;
+}
+
 public class HistorialCamaDto
 {
     public int Id { get; set; }

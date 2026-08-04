@@ -69,8 +69,9 @@ export default function Beds({ role, beds, onChangeStatus }) {
   const occupied  = filtered.filter((b) => b.status?.toLowerCase() === "ocupada").length;
   const cleaning  = filtered.filter((b) => b.status?.toLowerCase() === "enlimpieza").length;
 
-  // Intercepta "ocupada": muestra formulario de paciente primero
+  // Intercepta "ocupada": muestra formulario de paciente primero (solo para enfermería)
   const handleChangeStatus = (bedId, newStatus) => {
+    if (role !== "enfermeria") return;
     if (newStatus === "ocupada") {
       const bed = beds.find((b) => b.id === bedId);
       setPendingBed(bed ?? { id: bedId, number: bedId });

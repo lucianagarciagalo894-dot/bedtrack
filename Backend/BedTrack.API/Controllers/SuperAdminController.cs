@@ -186,6 +186,14 @@ public class SuperAdminController : ControllerBase
         return Ok(users);
     }
 
+    [HttpPost("users/login")]
+    public async Task<ActionResult<StaffLoginResponseDto>> StaffLogin([FromBody] StaffLoginRequestDto request)
+    {
+        var response = await _service.ValidateStaffLoginAsync(request);
+        if (!response.Success) return BadRequest(response);
+        return Ok(response);
+    }
+
     [HttpPost("users")]
     public async Task<ActionResult<UsuarioStaffDto>> CreateUser([FromBody] CreateUsuarioStaffDto dto)
     {

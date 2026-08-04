@@ -15,8 +15,8 @@ const navLinkClass = ({ isActive }) =>
 
 export default function Sidebar({ role, hospitalInfo, onLogout, isOpen, onClose }) {
   const isEnfermeria = role === "enfermeria";
-  const userName = isEnfermeria ? "Enfermería" : "Administrador";
-  const userInitial = isEnfermeria ? "E" : "A";
+  const userName = isEnfermeria ? "Enfermero/a" : "Encargado";
+  const userInitial = isEnfermeria ? "E" : "E";
 
   return (
     <aside

@@ -31,7 +31,7 @@ describe('Componente Dashboard', () => {
 
     renderWithRouter(<Dashboard role="enfermeria" beds={mockBeds} />);
 
-    expect(screen.getByText('Bienvenido/a, Enfermería')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Bienvenido/a, Enfermero/a');
     expect(screen.getByText(/Resumen general/)).toBeInTheDocument();
     
     const stats = screen.getByRole('region', { name: 'Estadísticas globales' });
@@ -53,7 +53,7 @@ describe('Componente Dashboard', () => {
       { id: 6, floor: 'Piso 3', status: 'enlimpieza' }
     ];
 
-    renderWithRouter(<Dashboard role="admin" beds={mockBeds} />);
+    renderWithRouter(<Dashboard role="encargado" beds={mockBeds} />);
 
     const stats = screen.getByRole('region', { name: 'Estadísticas globales' });
     
@@ -75,19 +75,19 @@ describe('Componente Dashboard', () => {
     expect(limpiezaValue.textContent).toBe('2');
   });
 
-  test('Caso 3: muestra el título correcto según el rol (enfermeria vs admin)', () => {
+  test('Caso 3: muestra el título correcto según el rol (enfermeria vs encargado)', () => {
     const mockBeds = [
       { id: 1, floor: 'Piso 1', status: 'disponible' }
     ];
 
     
     const { rerender } = renderWithRouter(<Dashboard role="enfermeria" beds={mockBeds} />);
-    expect(screen.getByText('Bienvenido/a, Enfermería')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Bienvenido/a, Enfermero/a');
     expect(screen.getByText('Gestionar camas')).toBeInTheDocument();
 
     
-    rerender(<BrowserRouter><Dashboard role="admin" beds={mockBeds} /></BrowserRouter>);
-    expect(screen.getByText('Bienvenido/a, Administrador')).toBeInTheDocument();
+    rerender(<BrowserRouter><Dashboard role="encargado" beds={mockBeds} /></BrowserRouter>);
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Bienvenido/a, Encargado');
     expect(screen.getByText('Ver camas')).toBeInTheDocument();
   });
 

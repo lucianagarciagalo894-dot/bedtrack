@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useLocation } from "react-router-dom";
-import { FaHospitalAlt, FaBuilding, FaCheckCircle } from "react-icons/fa";
-import { getNosocomios } from "../services/superAdminService";
+import { FaHospitalAlt, FaBuilding, FaCheckCircle, FaExclamationCircle } from "react-icons/fa";
+import { getNosocomios, validateStaffLogin } from "../services/superAdminService";
 
 export default function Login({ onLogin }) {
   const params = useParams();
@@ -75,21 +75,27 @@ export default function Login({ onLogin }) {
     return next;
   };
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     const next = validate();
     setErrors(next);
     if (Object.keys(next).length === 0) {
-      const selectedHospital = currentNosocomio?.nombre || "Hospital Central";
-      const selectedEstablecimiento =
-        sucursalesList.find((s) => s.id.toString() === selectedSucursalId)?.nombre || "Establecimiento Central";
+      try {
+        await validateStaffLogin(email, password, role, selectedNosocomioId, selectedSucursalId);
+        const selectedHospital = currentNosocomio?.nombre || "Hospital Central";
+        const selectedEstablecimiento =
+          sucursalesList.find((s) => s.id.toString() === selectedSucursalId)?.nombre || "Establecimiento Central";
 
-      onLogin(role, {
-        hospital: selectedHospital,
-        sede: selectedEstablecimiento,
-        establecimiento: selectedEstablecimiento,
-        nosocomioId: selectedNosocomioId,
-        sucursalId: selectedSucursalId,
-      });
+        onLogin(role, {
+          hospital: selectedHospital,
+          sede: selectedEstablecimiento,
+          establecimiento: selectedEstablecimiento,
+          nosocomioId: selectedNosocomioId,
+          sucursalId: selectedSucursalId,
+          email: email,
+        });
+      } catch (err) {
+        setErrors({ api: err.message || "Error al autenticar usuario del personal" });
+      }
     }
   };
 
@@ -148,6 +154,28 @@ export default function Login({ onLogin }) {
             <h2 className="login-title">Bienvenido</h2>
             <p className="login-subtitle">Ingresá con tu cuenta institucional</p>
           </div>
+
+          {errors.api && (
+            <div
+              className="login-error-banner"
+              role="alert"
+              style={{
+                background: "#FEF2F2",
+                border: "1px solid #FCA5A5",
+                color: "#991B1B",
+                padding: "10px 14px",
+                borderRadius: "8px",
+                marginBottom: "16px",
+                fontSize: "0.875rem",
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+              }}
+            >
+              <FaExclamationCircle />
+              {errors.api}
+            </div>
+          )}
 
           {/* Insignia de bienvenida si se ingresa vía URL dedicada */}
           {isDedicatedUrl && currentNosocomio ? (
@@ -219,7 +247,7 @@ export default function Login({ onLogin }) {
             </>
           )}
 
-          {/* Role (Solo Enfermería y Administrador, sin SuperAdmin público) */}
+          {/* Role (Solo Enfermero y Encargado) */}
           <div className="form-group">
             <label className="form-label" htmlFor="role">
               Tipo de Usuario
@@ -230,8 +258,8 @@ export default function Login({ onLogin }) {
               value={role}
               onChange={(e) => setRole(e.target.value)}
             >
-              <option value="enfermeria">Enfermería</option>
-              <option value="admin">Administrador</option>
+              <option value="enfermeria">Enfermería / Enfermero</option>
+              <option value="encargado">Encargado de Hospital</option>
             </select>
           </div>
 

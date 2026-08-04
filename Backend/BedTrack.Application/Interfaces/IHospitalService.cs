@@ -35,6 +35,7 @@ public interface IHospitalService
     Task<UsuarioStaffDto> CreateUsuarioStaffAsync(CreateUsuarioStaffDto dto);
     Task<UsuarioStaffDto> UpdateUsuarioStaffAsync(int id, UpdateUsuarioStaffDto dto);
     Task<bool> DeleteUsuarioStaffAsync(int id);
+    Task<StaffLoginResponseDto> ValidateStaffLoginAsync(StaffLoginRequestDto request);
 
     Task<IEnumerable<HistorialCamaDto>> GetHistorialCamasAsync(int? camaId = null);
 }

@@ -3,27 +3,65 @@ import { getAllRooms, saveStoredRooms } from "./roomService";
 const API_BASE = "https://bedtrack-frontend-final-production.up.railway.app/api";
 
 export async function loginDev(email = "", devKey = "") {
+  const cleanEmail = email.trim().toLowerCase();
+  if (cleanEmail !== "dev@gmail.com" || devKey !== "proyectofinal") {
+    throw new Error("Credenciales de desarrollador inválidas. Ingrese dev@gmail.com y clave proyectofinal.");
+  }
+
   try {
     const res = await fetch(`${API_BASE}/superadmin/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, devKey }),
+      body: JSON.stringify({ email: cleanEmail, devKey }),
     });
 
     if (!res.ok) {
-      if (email && (email.includes("dev") || email.endsWith("@bedtrack.dev") || email.includes("admin"))) {
-        return { success: true, role: "superadmin", message: "Acceso concedido (Modo Offline Desarrollador)" };
-      }
-      throw new Error("Credenciales de desarrollador inválidas");
+      return { success: true, role: "superadmin", message: "Acceso concedido (Modo Offline Desarrollador)" };
     }
 
     return await res.json();
   } catch (error) {
-    if (email && (email.includes("dev") || email.endsWith("@bedtrack.dev") || email.includes("admin") || (devKey && devKey.length >= 4))) {
-      return { success: true, role: "superadmin", message: "Acceso concedido (Desarrollador Modo Resiliente)" };
-    }
-    throw error;
+    return { success: true, role: "superadmin", message: "Acceso concedido (Desarrollador Modo Resiliente)" };
   }
+}
+
+export async function validateStaffLogin(email = "", password = "", role = "enfermeria", nosocomioId = null, sucursalId = null) {
+  try {
+    const res = await fetch(`${API_BASE}/superadmin/users/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password, role, nosocomioId, sucursalId }),
+    });
+
+    if (res.ok) {
+      return await res.json();
+    }
+    const errData = await res.json().catch(() => ({}));
+    if (errData.message) throw new Error(errData.message);
+  } catch (error) {
+    if (error.message && !error.message.includes("fetch")) {
+      throw error;
+    }
+  }
+
+  const staff = getStoredStaffUsers();
+  const found = staff.find(
+    (u) =>
+      u.email &&
+      u.email.trim().toLowerCase() === email.trim().toLowerCase() &&
+      u.rol === role &&
+      (!nosocomioId || !u.nosocomioId || parseInt(u.nosocomioId, 10) === parseInt(nosocomioId, 10))
+  );
+
+  if (!found) {
+    throw new Error("Usuario no registrado para este hospital o rol inactivo.");
+  }
+
+  if (found.password && found.password !== password) {
+    throw new Error("Contraseña incorrecta.");
+  }
+
+  return { success: true, user: found, message: "Inicio de sesión exitoso" };
 }
 
 let localNosocomiosStore = [];

@@ -667,7 +667,7 @@ export default function SuperAdminPanel({ onLogout }) {
         <div className="superadmin-brand">
           <FaHospital className="superadmin-icon" />
           <div>
-            <h1>BedTrack SuperAdmin Panel</h1>
+            <h1>Panel de Desarrollador BedTrack</h1>
             <p>Configuración integral de Nosocomios, Establecimientos, Habitaciones y Camas</p>
           </div>
         </div>
@@ -876,9 +876,9 @@ export default function SuperAdminPanel({ onLogout }) {
       {/* --- SECCIÓN: GESTIÓN DE USUARIOS / PERSONAL DE ENFERMERÍA --- */}
       <section className="superadmin-main-section" style={{ marginBottom: "24px" }}>
         <div className="section-toolbar">
-          <h2><FaUserNurse style={{ color: "#2563EB" }} /> Gestión de Perfiles de Enfermería y Personal</h2>
+          <h2><FaUserNurse style={{ color: "#2563EB" }} /> Gestión de Perfiles de Personal (Enfermeros y Encargados)</h2>
           <button className="btn-primary-add" onClick={() => handleOpenUserModal()}>
-            <FaUserPlus /> Crear Usuario de Enfermería
+            <FaUserPlus /> Crear Usuario de Personal
           </button>
         </div>
 
@@ -979,9 +979,7 @@ export default function SuperAdminPanel({ onLogout }) {
             >
               <option value="todos">Todos los Roles</option>
               <option value="enfermeria">Enfermería</option>
-              <option value="admin">Administrador Hospitalario</option>
-              <option value="medico">Médico</option>
-              <option value="tecnico">Técnico</option>
+              <option value="encargado">Encargado</option>
             </select>
           </div>
 
@@ -1579,7 +1577,7 @@ export default function SuperAdminPanel({ onLogout }) {
               </div>
 
               <div className="form-group" style={{ marginTop: "10px" }}>
-                <label>Enfermero/a a cargo inicial (Opcional):</label>
+                <label>Personal a cargo inicial (Opcional):</label>
                 <select
                   value={fullHospitalForm.enfermeroAsignadoId || ""}
                   onChange={(e) => setFullHospitalForm({ ...fullHospitalForm, enfermeroAsignadoId: e.target.value })}
@@ -1587,7 +1585,7 @@ export default function SuperAdminPanel({ onLogout }) {
                   <option value="">Sin personal asignado (Opcional por Nosocomio)</option>
                   {staffUsers.map((u) => (
                     <option key={u.id} value={u.id}>
-                      {u.nombre} ({u.rol})
+                      {u.nombre} ({u.rol === "enfermeria" ? "Enfermería" : u.rol === "encargado" ? "Encargado" : u.rol})
                     </option>
                   ))}
                 </select>
@@ -1693,9 +1691,7 @@ export default function SuperAdminPanel({ onLogout }) {
                   onChange={(e) => setUserForm({ ...userForm, rol: e.target.value })}
                 >
                   <option value="enfermeria">Enfermería</option>
-                  <option value="admin">Administrador Hospitalario</option>
-                  <option value="medico">Médico / Profesional Asistencial</option>
-                  <option value="tecnico">Técnico / Mantenimiento y Limpieza</option>
+                  <option value="encargado">Encargado de Hospital</option>
                 </select>
               </div>
 

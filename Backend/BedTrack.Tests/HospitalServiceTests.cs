@@ -215,7 +215,7 @@ public class HospitalServiceTests
     [Fact]
     public void ValidateDevLogin_ValidCredentials_ShouldSucceed()
     {
-        var request = new DevLoginRequestDto { Email = "developer@bedtrack.dev", DevKey = "bedtrack2026" };
+        var request = new DevLoginRequestDto { Email = "dev@gmail.com", DevKey = "proyectofinal" };
         var response = _service.ValidateDevLogin(request);
 
         Assert.True(response.Success);

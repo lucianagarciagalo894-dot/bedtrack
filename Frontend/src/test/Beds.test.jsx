@@ -64,10 +64,23 @@ describe('Componente Beds', () => {
     expect(screen.getByText(/quedan/i)).toBeInTheDocument();
   });
 
-  test('Caso 6: el rol admin no ve los grupos de acciones de cambio de estado en las camas', () => {
-    render(<Beds role="admin" beds={mockBeds} onChangeStatus={noop} />);
+  test('Caso 6: el rol encargado no ve los grupos de acciones de cambio de estado en las camas', () => {
+    render(<Beds role="encargado" beds={mockBeds} onChangeStatus={noop} />);
 
     expect(screen.queryAllByRole('group', { name: /Cambiar estado/i })).toHaveLength(0);
+  });
+
+  test('Caso 7: BedCard muestra el número de cama (bed.number) en vez del ID de timestamp (bed.id)', () => {
+    const bedsConTimestampId = [
+      { id: 1785878970017, number: 1, floor: 'Piso 1', status: 'disponible', patient: null },
+      { id: 1785878970018, number: 2, floor: 'Piso 1', status: 'disponible', patient: null }
+    ];
+
+    render(<Beds role="enfermeria" beds={bedsConTimestampId} onChangeStatus={noop} />);
+
+    expect(screen.getByText('Cama 1')).toBeInTheDocument();
+    expect(screen.getByText('Cama 2')).toBeInTheDocument();
+    expect(screen.queryByText('Cama 1785878970017')).not.toBeInTheDocument();
   });
 
 });

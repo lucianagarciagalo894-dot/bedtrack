@@ -74,6 +74,11 @@ function AppContent() {
   };
 
   const changeStatus = async (bedId, newStatus, patientData = null) => {
+    if (role !== "enfermeria") {
+      alert("El rol de Encargado es de solo lectura. Solo el personal de Enfermería puede modificar estados de camas.");
+      return;
+    }
+
     const currentBed = rooms.flatMap((r) => r.beds || []).find((b) => b.id === bedId);
     const currentStatus = currentBed?.status?.toLowerCase();
     if (!currentBed || !VALID_TRANSITIONS[currentStatus]?.includes(newStatus)) {
@@ -82,8 +87,8 @@ function AppContent() {
 
     try {
       const operatorInfo = {
-        name: role === "enfermeria" ? "Lic. María Elena Fernández" : role === "admin" ? "Administrador Hospitalario" : "Personal de Salud",
-        email: role === "enfermeria" ? "maria.fernandez@hospital.com" : "admin@hospital.com",
+        name: role === "enfermeria" ? "Lic. María Elena Fernández" : "Encargado de Hospital",
+        email: role === "enfermeria" ? "maria.fernandez@hospital.com" : "encargado@hospital.com",
         role: role || "enfermeria",
       };
 

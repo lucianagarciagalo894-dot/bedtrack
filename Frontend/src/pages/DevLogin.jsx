@@ -43,7 +43,7 @@ export default function DevLogin({ onLogin }) {
           <div className="dev-badge">
             <FaCode /> Portal de Desarrollador
           </div>
-          <h2>Acceso SuperAdmin / Dev</h2>
+          <h2>Acceso al Panel de Desarrollador</h2>
           <p>
             Plataforma reservada exclusivamente para el equipo de desarrollo de BedTrack.
           </p>

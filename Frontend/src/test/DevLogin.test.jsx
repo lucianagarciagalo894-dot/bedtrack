@@ -15,7 +15,7 @@ describe("DevLogin Component", () => {
   it("renders developer login form", () => {
     render(<DevLogin onLogin={() => {}} />);
     expect(screen.getByText("Portal de Desarrollador")).toBeInTheDocument();
-    expect(screen.getByText("Acceso SuperAdmin / Dev")).toBeInTheDocument();
+    expect(screen.getByText("Acceso al Panel de Desarrollador")).toBeInTheDocument();
     expect(screen.getByLabelText(/Correo de Desarrollador/i)).toBeInTheDocument();
   });
 
@@ -26,7 +26,7 @@ describe("DevLogin Component", () => {
     const emailInput = screen.getByLabelText(/Correo de Desarrollador/i);
     const submitBtn = screen.getByRole("button", { name: /Ingresar como Desarrollador/i });
 
-    fireEvent.change(emailInput, { target: { value: "dev@bedtrack.dev" } });
+    fireEvent.change(emailInput, { target: { value: "dev@gmail.com" } });
     fireEvent.click(submitBtn);
 
     await waitFor(() => {

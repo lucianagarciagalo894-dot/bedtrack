@@ -503,15 +503,15 @@ public class HospitalService : IHospitalService
 
     public DevLoginResponseDto ValidateDevLogin(DevLoginRequestDto request)
     {
-        bool isValidEmail = !string.IsNullOrWhiteSpace(request.Email) && (request.Email.EndsWith("@bedtrack.dev") || request.Email.Contains("dev") || request.Email.Contains("admin"));
-        bool isValidKey = string.IsNullOrWhiteSpace(request.DevKey) || request.DevKey == "bedtrack2026" || request.DevKey == "superadmin123" || request.DevKey.Length >= 4;
+        bool isValidEmail = !string.IsNullOrWhiteSpace(request.Email) && request.Email.Trim().ToLower() == "dev@gmail.com";
+        bool isValidKey = !string.IsNullOrWhiteSpace(request.DevKey) && request.DevKey == "proyectofinal";
 
         if (isValidEmail && isValidKey)
         {
             return new DevLoginResponseDto
             {
                 Success = true,
-                Message = "Acceso concedido como Desarrollador / SuperAdmin",
+                Message = "Acceso concedido como Desarrollador",
                 Role = "superadmin",
                 Token = "dev-token-" + Guid.NewGuid().ToString("N")
             };
@@ -520,9 +520,54 @@ public class HospitalService : IHospitalService
         return new DevLoginResponseDto
         {
             Success = false,
-            Message = "Credenciales de desarrollador inválidas",
+            Message = "Credenciales de desarrollador inválidas. Correo: dev@gmail.com - Clave: proyectofinal",
             Role = "",
             Token = ""
+        };
+    }
+
+    public async Task<StaffLoginResponseDto> ValidateStaffLoginAsync(StaffLoginRequestDto request)
+    {
+        var users = await _repo.ObtenerUsuariosStaffAsync(request.NosocomioId, request.SucursalId);
+        var user = users.FirstOrDefault(u => 
+            u.Email.Equals(request.Email.Trim(), StringComparison.OrdinalIgnoreCase) && 
+            u.Rol.Equals(request.Rol.Trim(), StringComparison.OrdinalIgnoreCase) &&
+            u.Activo);
+
+        if (user == null)
+        {
+            return new StaffLoginResponseDto
+            {
+                Success = false,
+                Message = "Usuario no registrado para este hospital o inactivo."
+            };
+        }
+
+        if (!string.IsNullOrEmpty(user.Password) && user.Password != request.Password)
+        {
+            return new StaffLoginResponseDto
+            {
+                Success = false,
+                Message = "Contraseña incorrecta."
+            };
+        }
+
+        return new StaffLoginResponseDto
+        {
+            Success = true,
+            Message = "Inicio de sesión exitoso",
+            User = new UsuarioStaffDto
+            {
+                Id = user.Id,
+                Nombre = user.Nombre,
+                Email = user.Email,
+                Rol = user.Rol,
+                Activo = user.Activo,
+                NosocomioId = user.NosocomioId,
+                SucursalId = user.SucursalId,
+                HospitalNombre = user.Nosocomio?.Nombre ?? "Hospital Asignado"
+            },
+            Token = "staff-token-" + Guid.NewGuid().ToString("N")
         };
     }
 

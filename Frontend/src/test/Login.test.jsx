@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, within } from '@testing-library/react';
+import { render, screen, fireEvent, within, waitFor } from '@testing-library/react';
 import { describe, test, expect, vi } from 'vitest';
 import { MemoryRouter } from 'react-router-dom';
 import Login from '../pages/Login';
@@ -6,8 +6,18 @@ import Login from '../pages/Login';
 vi.mock('react-icons/fa', () => ({
   FaHospitalAlt: () => <span data-testid="fa-hospital">FaHospitalAlt</span>,
   FaBuilding: () => <span>FaBuilding</span>,
-  FaCheckCircle: () => <span>FaCheckCircle</span>
+  FaCheckCircle: () => <span>FaCheckCircle</span>,
+  FaExclamationCircle: () => <span>FaExclamationCircle</span>,
 }));
+
+vi.mock('../services/superAdminService', async () => {
+  const actual = await vi.importActual('../services/superAdminService');
+  return {
+    ...actual,
+    getNosocomios: vi.fn().mockResolvedValue([]),
+    validateStaffLogin: vi.fn().mockResolvedValue({ success: true }),
+  };
+});
 
 const renderWithRouter = (ui) => render(<MemoryRouter>{ui}</MemoryRouter>);
 
@@ -31,8 +41,8 @@ describe('Componente Login', () => {
 
     
     const select = screen.getByLabelText('Tipo de Usuario');
-    expect(within(select).getByText('Enfermería')).toBeInTheDocument();
-    expect(within(select).getByText('Administrador')).toBeInTheDocument();
+    expect(within(select).getByText(/Enfermería/i)).toBeInTheDocument();
+    expect(within(select).getByText(/Encargado/i)).toBeInTheDocument();
   });
   test('Caso 2: el rol por defecto es "enfermeria" y el select lo muestra correctamente', () => {
     const mockOnLogin = vi.fn();
@@ -106,7 +116,7 @@ describe('Componente Login', () => {
     expect(mockOnLogin).not.toHaveBeenCalled();
   });
 
-  test('Caso 6: envía el formulario correctamente cuando todos los campos son válidos', () => {
+  test('Caso 6: envía el formulario correctamente cuando todos los campos son válidos', async () => {
     const mockOnLogin = vi.fn();
     renderWithRouter(<Login onLogin={mockOnLogin} />);
 
@@ -117,7 +127,7 @@ describe('Componente Login', () => {
     
     fireEvent.change(emailInput, { target: { value: 'usuario@gmail.com' } });
     fireEvent.change(passwordInput, { target: { value: '12345' } });
-    fireEvent.change(select, { target: { value: 'admin' } });
+    fireEvent.change(select, { target: { value: 'encargado' } });
 
     const button = screen.getByRole('button', { name: 'Ingresar' });
     fireEvent.click(button);
@@ -126,12 +136,13 @@ describe('Componente Login', () => {
     expect(screen.queryByText('Ingresá un correo Gmail válido (ejemplo@gmail.com)')).not.toBeInTheDocument();
     expect(screen.queryByText('La contraseña debe tener al menos 4 caracteres')).not.toBeInTheDocument();
     
-    
-    expect(mockOnLogin).toHaveBeenCalledWith('admin', expect.anything());
-    expect(mockOnLogin).toHaveBeenCalledTimes(1);
+    await waitFor(() => {
+      expect(mockOnLogin).toHaveBeenCalledWith('encargado', expect.anything());
+      expect(mockOnLogin).toHaveBeenCalledTimes(1);
+    });
   });
 
-  test('Caso 7: al presionar Enter en un campo, se dispara el login', () => {
+  test('Caso 7: al presionar Enter en un campo, se dispara el login', async () => {
     const mockOnLogin = vi.fn();
     renderWithRouter(<Login onLogin={mockOnLogin} />);
 
@@ -145,9 +156,10 @@ describe('Componente Login', () => {
     
     fireEvent.keyDown(emailInput, { key: 'Enter', code: 'Enter' });
 
-    
-    expect(mockOnLogin).toHaveBeenCalledWith('enfermeria', expect.anything());
-    expect(mockOnLogin).toHaveBeenCalledTimes(1);
+    await waitFor(() => {
+      expect(mockOnLogin).toHaveBeenCalledWith('enfermeria', expect.anything());
+      expect(mockOnLogin).toHaveBeenCalledTimes(1);
+    });
   });
 
   test('Caso 8: los errores se limpian al modificar el campo correspondiente', () => {
