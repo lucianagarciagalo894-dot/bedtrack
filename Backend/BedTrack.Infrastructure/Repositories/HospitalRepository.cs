@@ -186,12 +186,19 @@ public class HospitalRepository : IHospitalRepository
 
     public async Task<IEnumerable<HistorialCama>> ObtenerHistorialCamasAsync(int? camaId = null)
     {
-        var query = _context.HistorialCamas.AsQueryable();
-        if (camaId.HasValue && camaId.Value > 0)
+        try
         {
-            query = query.Where(h => h.CamaId == camaId.Value);
+            var query = _context.HistorialCamas.AsQueryable();
+            if (camaId.HasValue && camaId.Value > 0)
+            {
+                query = query.Where(h => h.CamaId == camaId.Value);
+            }
+            return await query.OrderByDescending(h => h.FechaHora).Take(100).ToListAsync();
         }
-        return await query.OrderByDescending(h => h.FechaHora).Take(100).ToListAsync();
+        catch
+        {
+            return Enumerable.Empty<HistorialCama>();
+        }
     }
 
     public async Task AgregarHistorialCamaAsync(HistorialCama historial)

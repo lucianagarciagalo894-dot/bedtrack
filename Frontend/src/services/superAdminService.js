@@ -807,12 +807,11 @@ export async function getAuditLogs(camaId = null) {
   try {
     const url = camaId ? `${API_BASE}/superadmin/audit-logs?camaId=${camaId}` : `${API_BASE}/superadmin/audit-logs`;
     const res = await fetch(url);
-    if (!res.ok) throw new Error("Error al obtener registros de auditoría");
-    const data = await res.json();
-    return Array.isArray(data) ? data : [];
-  } catch (err) {
-    console.warn("Error al obtener registros de auditoría:", err);
-    return [];
-  }
+    if (res.ok) {
+      const data = await res.json();
+      if (Array.isArray(data)) return data;
+    }
+  } catch (err) {}
+  return [];
 }
 

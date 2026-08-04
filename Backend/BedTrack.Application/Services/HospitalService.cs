@@ -718,21 +718,29 @@ public class HospitalService : IHospitalService
 
     public async Task<IEnumerable<HistorialCamaDto>> GetHistorialCamasAsync(int? camaId = null)
     {
-        var historial = await _repo.ObtenerHistorialCamasAsync(camaId);
-        return historial.Select(h => new HistorialCamaDto
+        try
         {
-            Id = h.Id,
-            CamaId = h.CamaId,
-            CamaNumero = h.CamaNumero,
-            HabitacionId = h.HabitacionId,
-            HabitacionNumero = h.HabitacionNumero,
-            UsuarioNombre = h.UsuarioNombre,
-            UsuarioEmail = h.UsuarioEmail,
-            UsuarioRol = h.UsuarioRol ?? "enfermeria",
-            Accion = h.Accion,
-            EstadoAnterior = h.EstadoAnterior,
-            EstadoNuevo = h.EstadoNuevo,
-            FechaHora = h.FechaHora.ToString("yyyy-MM-dd HH:mm:ss")
-        });
+            var historial = await _repo.ObtenerHistorialCamasAsync(camaId);
+            if (historial == null) return Enumerable.Empty<HistorialCamaDto>();
+            return historial.Select(h => new HistorialCamaDto
+            {
+                Id = h.Id,
+                CamaId = h.CamaId,
+                CamaNumero = h.CamaNumero,
+                HabitacionId = h.HabitacionId,
+                HabitacionNumero = h.HabitacionNumero,
+                UsuarioNombre = h.UsuarioNombre ?? "Personal Hospitalario",
+                UsuarioEmail = h.UsuarioEmail ?? "staff@hospital.com",
+                UsuarioRol = h.UsuarioRol ?? "enfermeria",
+                Accion = h.Accion ?? "Actualización",
+                EstadoAnterior = h.EstadoAnterior ?? "disponible",
+                EstadoNuevo = h.EstadoNuevo ?? "disponible",
+                FechaHora = h.FechaHora.ToString("yyyy-MM-dd HH:mm:ss")
+            }).ToList();
+        }
+        catch
+        {
+            return Enumerable.Empty<HistorialCamaDto>();
+        }
     }
 }

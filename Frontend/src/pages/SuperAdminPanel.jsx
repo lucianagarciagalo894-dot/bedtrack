@@ -860,6 +860,16 @@ export default function SuperAdminPanel({ onLogout }) {
                   >
                     <FaCopy /> Copiar URL
                   </button>
+                  <a
+                    href={`/h/${currentNosocomio.codigo}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn-secondary-sm"
+                    style={{ margin: 0, padding: "6px 12px", fontSize: "0.75rem", display: "flex", alignItems: "center", gap: "4px", textDecoration: "none" }}
+                    title="Abrir panel de usuario para este hospital"
+                  >
+                    <FaLink /> Abrir Enlace
+                  </a>
                 </div>
               </div>
             )}

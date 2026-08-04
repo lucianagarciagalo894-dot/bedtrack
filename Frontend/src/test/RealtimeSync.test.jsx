@@ -109,4 +109,16 @@ describe('Sincronización en Tiempo Real entre Panel de Desarrollador y Hospital
       expect(screen.getByText('Bienvenido')).toBeInTheDocument();
     });
   });
+
+  test('Caso 4: Al ingresar a una URL dedicada (/h/HC-01), muestra el panel de usuario (login) correspondiente', async () => {
+    localStorage.setItem('bedtrack_role', 'superadmin');
+    window.history.pushState({}, 'Hospital Dedicated', '/h/HC-01');
+
+    render(<App />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Bienvenido')).toBeInTheDocument();
+      expect(screen.getByText('Ingresá con tu cuenta institucional')).toBeInTheDocument();
+    });
+  });
 });

@@ -429,22 +429,21 @@ export async function getGlobalAuditHistory(sucursalId = null) {
   try {
     const url = sucursalId ? `${API_BASE}/beds/history?sucursalId=${sucursalId}` : `${API_BASE}/beds/history`;
     const res = await fetch(url);
-    if (!res.ok) throw new Error("Error al obtener el historial de actividades");
-    const data = await res.json();
-    return Array.isArray(data) ? data : [];
-  } catch (err) {
-    console.warn("Error cargando historial de actividades:", err);
-    return [];
-  }
+    if (res.ok) {
+      const data = await res.json();
+      if (Array.isArray(data)) return data;
+    }
+  } catch (err) {}
+  return [];
 }
 
 export async function getBedHistory(bedId) {
   try {
     const res = await fetch(`${API_BASE}/beds/${bedId}/history`);
-    if (!res.ok) throw new Error("Error al obtener historial de la cama");
-    return await res.json();
-  } catch (err) {
-    console.warn("Error cargando historial de cama:", err);
-    return [];
-  }
+    if (res.ok) {
+      const data = await res.json();
+      if (Array.isArray(data)) return data;
+    }
+  } catch (err) {}
+  return [];
 }

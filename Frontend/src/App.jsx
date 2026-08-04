@@ -234,12 +234,21 @@ function AppContent() {
 
   const closeSidebar = () => setSidebarOpen(false);
 
-  // 1. PRIMERA PRIORIDAD: Si el rol es superadmin o developer, mostrar el panel de superadmin
+  const isHospitalDedicatedUrl = location.pathname.startsWith("/h/");
+
+  if (isHospitalDedicatedUrl && (!role || role === "superadmin" || role === "developer")) {
+    return (
+      <Routes>
+        <Route path="/h/:hospitalCode" element={<Login onLogin={handleUserLogin} />} />
+        <Route path="*" element={<Login onLogin={handleUserLogin} />} />
+      </Routes>
+    );
+  }
+
   if (role === "superadmin" || role === "developer") {
     return <SuperAdminPanel onLogout={handleLogout} />;
   }
 
-  // 2. Ruta oculta para el login de desarrolladores (/dev-login, /superadmin, /dev)
   const isDevUrl =
     location.pathname === "/dev-login" ||
     location.pathname === "/superadmin-login" ||
@@ -250,7 +259,6 @@ function AppContent() {
     return <DevLogin onLogin={(devRole) => handleUserLogin(devRole)} />;
   }
 
-  // 3. Usuario no autenticado en ruta regular (soporta /h/:hospitalCode y /)
   if (!role) {
     return (
       <Routes>
