@@ -26,21 +26,28 @@ export async function loginDev(email = "", devKey = "") {
 }
 
 export async function validateStaffLogin(email = "", password = "", role = "enfermeria", nosocomioId = null, sucursalId = null) {
+  let apiErrorMessage = null;
   try {
     const res = await fetch(`${API_BASE}/superadmin/users/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password, role, nosocomioId, sucursalId }),
+      body: JSON.stringify({
+        email: email.trim(),
+        password,
+        role,
+        nosocomioId: nosocomioId ? parseInt(nosocomioId, 10) : null,
+        sucursalId: sucursalId ? parseInt(sucursalId, 10) : null,
+      }),
     });
 
     if (res.ok) {
       return await res.json();
     }
     const errData = await res.json().catch(() => ({}));
-    if (errData.message) throw new Error(errData.message);
+    apiErrorMessage = errData.message || null;
   } catch (error) {
     if (error.message && !error.message.includes("fetch")) {
-      throw error;
+      apiErrorMessage = error.message;
     }
   }
 
@@ -53,43 +60,27 @@ export async function validateStaffLogin(email = "", password = "", role = "enfe
       (!nosocomioId || !u.nosocomioId || parseInt(u.nosocomioId, 10) === parseInt(nosocomioId, 10))
   );
 
-  if (!found) {
-    throw new Error("Usuario no registrado para este hospital o rol inactivo.");
+  if (found) {
+    if (found.activo === false) {
+      throw new Error("Usuario desactivado por la administración.");
+    }
+    if (found.password && found.password !== password) {
+      throw new Error("Contraseña incorrecta.");
+    }
+    return { success: true, user: found, message: "Inicio de sesión exitoso" };
   }
 
-  if (found.password && found.password !== password) {
-    throw new Error("Contraseña incorrecta.");
-  }
-
-  return { success: true, user: found, message: "Inicio de sesión exitoso" };
+  throw new Error(apiErrorMessage || "Usuario no registrado para este hospital o rol inactivo.");
 }
+
+export const NOSOCOMIOS_STORAGE_KEY = "bedtrack_nosocomios_data";
+export const STAFF_USERS_STORAGE_KEY = "bedtrack_staff_users_data";
 
 let localNosocomiosStore = [];
+let localStaffUsersStore = [];
 
-export async function getNosocomios() {
-  try {
-    const res = await fetch(`${API_BASE}/superadmin/nosocomios`);
-    if (res.ok) {
-      const data = await res.json();
-      if (Array.isArray(data) && data.length > 0) {
-        const combined = [...data];
-        for (const localNos of localNosocomiosStore) {
-          if (!combined.some((n) => n.id === localNos.id || n.codigo === localNos.codigo)) {
-            combined.push(localNos);
-          }
-        }
-        return combined;
-      }
-    }
-    return getFallbackNosocomios();
-  } catch (err) {
-    console.warn("Usando datos locales de nosocomios:", err);
-    return getFallbackNosocomios();
-  }
-}
-
-function getFallbackNosocomios() {
-  const base = [
+function getBaseNosocomios() {
+  return [
     {
       id: 1,
       nombre: "Hospital Central BedTrack",
@@ -110,10 +101,81 @@ function getFallbackNosocomios() {
       ]
     }
   ];
+}
 
+export function getStoredNosocomios() {
+  if (typeof window === "undefined") return localNosocomiosStore.length > 0 ? localNosocomiosStore : getBaseNosocomios();
+  try {
+    const raw = localStorage.getItem(NOSOCOMIOS_STORAGE_KEY);
+    if (raw !== null) return JSON.parse(raw);
+  } catch (e) {}
+  return localNosocomiosStore.length > 0 ? localNosocomiosStore : getBaseNosocomios();
+}
+
+export function saveStoredNosocomios(list) {
+  localNosocomiosStore = list;
+  if (typeof window !== "undefined") {
+    try {
+      localStorage.setItem(NOSOCOMIOS_STORAGE_KEY, JSON.stringify(list));
+    } catch (e) {}
+    window.dispatchEvent(new CustomEvent("bedtrack_hospitals_updated", { detail: { nosocomios: list } }));
+  }
+}
+
+export function getStoredStaffUsers() {
+  if (typeof window === "undefined") return localStaffUsersStore;
+  try {
+    const raw = localStorage.getItem(STAFF_USERS_STORAGE_KEY);
+    if (raw !== null) return JSON.parse(raw);
+  } catch (e) {}
+  return localStaffUsersStore;
+}
+
+export function saveStoredStaffUsers(list) {
+  localStaffUsersStore = list;
+  if (typeof window !== "undefined") {
+    try {
+      localStorage.setItem(STAFF_USERS_STORAGE_KEY, JSON.stringify(list));
+    } catch (e) {}
+    window.dispatchEvent(new CustomEvent("bedtrack_users_updated", { detail: { users: list } }));
+  }
+}
+
+export async function getNosocomios() {
+  try {
+    const res = await fetch(`${API_BASE}/superadmin/nosocomios`);
+    if (res.ok) {
+      const data = await res.json();
+      if (Array.isArray(data) && data.length > 0) {
+        const combined = [...data];
+        const stored = getStoredNosocomios();
+        for (const localNos of stored) {
+          const idx = combined.findIndex((n) => n.id.toString() === localNos.id.toString() || n.codigo === localNos.codigo);
+          if (idx >= 0) {
+            combined[idx] = { ...combined[idx], ...localNos };
+          } else {
+            combined.push(localNos);
+          }
+        }
+        return combined;
+      }
+    }
+    return getFallbackNosocomios();
+  } catch (err) {
+    console.warn("Usando datos locales de nosocomios:", err);
+    return getFallbackNosocomios();
+  }
+}
+
+function getFallbackNosocomios() {
+  const base = getBaseNosocomios();
   const combined = [...base];
-  for (const localNos of localNosocomiosStore) {
-    if (!combined.some((n) => n.id === localNos.id || n.codigo === localNos.codigo)) {
+  const stored = getStoredNosocomios();
+  for (const localNos of stored) {
+    const idx = combined.findIndex((n) => n.id.toString() === localNos.id.toString() || n.codigo === localNos.codigo);
+    if (idx >= 0) {
+      combined[idx] = { ...combined[idx], ...localNos };
+    } else {
       combined.push(localNos);
     }
   }
@@ -165,7 +227,9 @@ export async function createNosocomio(data) {
     ];
   }
 
-  localNosocomiosStore.push(createdNos);
+  const currentNosocomios = getStoredNosocomios();
+  const updatedNosocomios = [...currentNosocomios, createdNos];
+  saveStoredNosocomios(updatedNosocomios);
   return createdNos;
 }
 
@@ -183,6 +247,7 @@ export async function getSucursales(nosocomioId) {
 }
 
 export async function createSucursal(data) {
+  let created = null;
   try {
     const res = await fetch(`${API_BASE}/superadmin/sucursales`, {
       method: "POST",
@@ -190,26 +255,48 @@ export async function createSucursal(data) {
       body: JSON.stringify(data),
     });
 
-    if (!res.ok) {
-      const errText = await res.text();
-      let errorJson;
-      try { errorJson = JSON.parse(errText); } catch {}
-      throw new Error(errorJson?.message || "Error al crear la sucursal en el servidor");
+    if (res.ok) {
+      created = await res.json();
     }
-
-    return await res.json();
   } catch (err) {
     if (data.nombre) {
       const createdId = Date.now();
-      return {
+      created = {
         id: createdId,
         nombre: data.nombre,
         direccion: data.direccion || "Dirección Sede",
         nosocomioId: data.nosocomioId,
       };
     }
-    throw err;
   }
+
+  if (!created && data.nombre) {
+    const createdId = Date.now();
+    created = {
+      id: createdId,
+      nombre: data.nombre,
+      direccion: data.direccion || "Dirección Sede",
+      nosocomioId: data.nosocomioId,
+    };
+  }
+
+  if (created) {
+    const currentStore = getStoredNosocomios();
+    const updatedList = currentStore.map((n) => {
+      if (n.id.toString() === data.nosocomioId?.toString()) {
+        const sucursales = n.sucursales || [];
+        const exists = sucursales.some((s) => s.id === created.id);
+        return {
+          ...n,
+          sucursales: exists ? sucursales.map((s) => (s.id === created.id ? created : s)) : [...sucursales, created],
+        };
+      }
+      return n;
+    });
+    saveStoredNosocomios(updatedList);
+  }
+
+  return created;
 }
 
 export async function createRoom(data, sucursalId = null) {
@@ -507,36 +594,55 @@ export async function createFullHospitalSetup(data) {
     console.error("Error al generar habitaciones para nuevo hospital:", e);
   }
 
-  localNosocomiosStore.push(createdNos);
+  const currentStore = getStoredNosocomios();
+  const updatedList = [...currentStore, createdNos];
+  saveStoredNosocomios(updatedList);
   return createdNos;
 }
 
 export async function updateNosocomio(id, data) {
+  let updated = { id, ...data };
   try {
     const res = await fetch(`${API_BASE}/superadmin/nosocomios/${id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
-    if (res.ok) return await res.json();
+    if (res.ok) {
+      const serverUpdated = await res.json();
+      updated = { ...updated, ...serverUpdated };
+    }
   } catch (err) {
     console.warn("Actualización local de nosocomio por fallback:", err);
   }
-  return { id, ...data };
+  const currentStore = getStoredNosocomios();
+  const updatedList = currentStore.map((n) => (n.id.toString() === id.toString() ? { ...n, ...updated } : n));
+  saveStoredNosocomios(updatedList);
+  return updated;
 }
 
 export async function updateSucursal(id, data) {
+  let updated = { id, ...data };
   try {
     const res = await fetch(`${API_BASE}/superadmin/sucursales/${id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
-    if (res.ok) return await res.json();
+    if (res.ok) {
+      const serverUpdated = await res.json();
+      updated = { ...updated, ...serverUpdated };
+    }
   } catch (err) {
     console.warn("Actualización local de sucursal por fallback:", err);
   }
-  return { id, ...data };
+  const currentStore = getStoredNosocomios();
+  const updatedList = currentStore.map((n) => ({
+    ...n,
+    sucursales: (n.sucursales || []).map((s) => (s.id.toString() === id.toString() ? { ...s, ...updated } : s)),
+  }));
+  saveStoredNosocomios(updatedList);
+  return updated;
 }
 
 export async function createFloor(data) {
@@ -579,8 +685,6 @@ export async function deleteFloor(id) {
   return true;
 }
 
-let localStaffUsersStore = [];
-
 export async function getStaffUsers(nosocomioId = null, sucursalId = null) {
   try {
     let url = `${API_BASE}/superadmin/users`;
@@ -594,8 +698,12 @@ export async function getStaffUsers(nosocomioId = null, sucursalId = null) {
       const data = await res.json();
       if (Array.isArray(data)) {
         const combined = [...data];
-        for (const localUser of localStaffUsersStore) {
-          if (!combined.some((u) => u.id === localUser.id)) {
+        const stored = getStoredStaffUsers();
+        for (const localUser of stored) {
+          const idx = combined.findIndex((u) => u.id.toString() === localUser.id.toString());
+          if (idx >= 0) {
+            combined[idx] = { ...combined[idx], ...localUser };
+          } else {
             combined.push(localUser);
           }
         }
@@ -610,7 +718,7 @@ export async function getStaffUsers(nosocomioId = null, sucursalId = null) {
 }
 
 function getFallbackStaffUsers(nosocomioId = null, sucursalId = null) {
-  return filterUsersBySucursal(localStaffUsersStore, nosocomioId, sucursalId);
+  return filterUsersBySucursal(getStoredStaffUsers(), nosocomioId, sucursalId);
 }
 
 function filterUsersBySucursal(users, nosocomioId, sucursalId) {
@@ -648,47 +756,51 @@ export async function createStaffUser(userData) {
       id: createdId,
       nombre: userData.nombre,
       email: userData.email,
+      password: userData.password || "123456",
       rol: userData.rol || "enfermeria",
-      activo: true,
+      activo: userData.activo !== false,
       nosocomioId: userData.nosocomioId ? parseInt(userData.nosocomioId, 10) : null,
       sucursalId: userData.sucursalId ? parseInt(userData.sucursalId, 10) : null,
       hospitalNombre: matchedNos?.nombre || "Hospital Asignado",
     };
   }
 
-  localStaffUsersStore.push(created);
+  const currentStaff = getStoredStaffUsers();
+  const exists = currentStaff.some((u) => u.id.toString() === created.id.toString());
+  const updated = exists
+    ? currentStaff.map((u) => (u.id.toString() === created.id.toString() ? created : u))
+    : [...currentStaff, created];
+  saveStoredStaffUsers(updated);
   return created;
 }
 
 export async function updateStaffUser(id, userData) {
+  let updatedObj = { id, ...userData };
   try {
     const res = await fetch(`${API_BASE}/superadmin/users/${id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(userData),
     });
-    if (!res.ok) throw new Error("Error al actualizar usuario de staff");
-    return await res.json();
-  } catch (err) {
-    return {
-      id,
-      nombre: userData.nombre,
-      email: userData.email,
-      rol: userData.rol,
-      activo: userData.activo,
-      hospitalNombre: "Hospital Asignado",
-    };
-  }
+    if (res.ok) {
+      const resJson = await res.json();
+      updatedObj = { ...updatedObj, ...resJson };
+    }
+  } catch (err) {}
+  const currentStaff = getStoredStaffUsers();
+  const updated = currentStaff.map((u) => (u.id.toString() === id.toString() ? { ...u, ...updatedObj } : u));
+  saveStoredStaffUsers(updated);
+  return updatedObj;
 }
 
 export async function deleteStaffUser(id) {
   try {
-    const res = await fetch(`${API_BASE}/superadmin/users/${id}`, { method: "DELETE" });
-    if (!res.ok) throw new Error("Error al eliminar usuario de staff");
-    return true;
-  } catch (err) {
-    return true;
-  }
+    await fetch(`${API_BASE}/superadmin/users/${id}`, { method: "DELETE" });
+  } catch (err) {}
+  const currentStaff = getStoredStaffUsers();
+  const updated = currentStaff.filter((u) => u.id.toString() !== id.toString());
+  saveStoredStaffUsers(updated);
+  return true;
 }
 
 export async function getAuditLogs(camaId = null) {

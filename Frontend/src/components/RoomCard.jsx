@@ -67,12 +67,12 @@ export default function RoomCard({ room }) {
 
       {/* Resumen de camas (sin botones) */}
       <div className="room-card-beds">
-        {room.beds.map((bed) => (
+        {room.beds.map((bed, bedIdx) => (
           <div key={bed.id} className={`room-bed-item room-bed-${bed.status}`}>
             <div className="room-bed-row">
               <FaBed size={11} className="room-bed-icon" aria-hidden="true" />
               <span className="room-bed-label">
-                Cama {bed.number}
+                Cama {bed.number ?? bed.numero ?? (bedIdx + 1)}
                 {bed.patient && (
                   <span className="room-bed-patient-name">
                     {" "}· {bed.patient.nombre} {bed.patient.apellido}

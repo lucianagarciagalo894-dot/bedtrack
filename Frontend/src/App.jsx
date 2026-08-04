@@ -11,6 +11,7 @@ import Habitaciones from "./pages/Habitaciones";
 import RoomDetail from "./pages/RoomDetail";
 import Pacientes from "./pages/Pacientes";
 import { getAllRooms, updateBedStatus } from "./services/roomService";
+import { getNosocomios, getStaffUsers } from "./services/superAdminService";
 
 const VALID_TRANSITIONS = {
   disponible: ["ocupada", "enlimpieza"],
@@ -19,11 +20,62 @@ const VALID_TRANSITIONS = {
 };
 
 function AppContent() {
-  const [role, setRole]                       = useState(null);
-  const [sessionHospital, setSessionHospital] = useState(null);
+  const [role, setRole] = useState(() => {
+    try {
+      return localStorage.getItem("bedtrack_role") || null;
+    } catch (e) {
+      return null;
+    }
+  });
+  const [sessionHospital, setSessionHospital] = useState(() => {
+    try {
+      const stored = localStorage.getItem("bedtrack_session_hospital");
+      return stored ? JSON.parse(stored) : null;
+    } catch (e) {
+      return null;
+    }
+  });
   const [sidebarOpen, setSidebarOpen]         = useState(false);
   const [rooms, setRooms]                     = useState([]);
   const location = useLocation();
+
+  const handleLogout = () => {
+    setRole(null);
+    setSessionHospital(null);
+    try {
+      localStorage.removeItem("bedtrack_role");
+      localStorage.removeItem("bedtrack_session_hospital");
+    } catch (e) {
+      console.error("Error eliminando sesión de localStorage:", e);
+    }
+  };
+
+  const handleUserLogin = (selectedRole, hospitalData = null) => {
+    setRole(selectedRole);
+    try {
+      if (selectedRole) {
+        localStorage.setItem("bedtrack_role", selectedRole);
+      } else {
+        localStorage.removeItem("bedtrack_role");
+      }
+    } catch (e) {
+      console.error("Error guardando rol en localStorage:", e);
+    }
+
+    if (hospitalData) {
+      setSessionHospital(hospitalData);
+      try {
+        localStorage.setItem("bedtrack_session_hospital", JSON.stringify(hospitalData));
+      } catch (e) {
+        console.error("Error guardando datos de hospital en localStorage:", e);
+      }
+    } else {
+      setSessionHospital(null);
+      try {
+        localStorage.removeItem("bedtrack_session_hospital");
+      } catch (e) {}
+    }
+  };
 
   const fetchRooms = () => {
     const activeSucursalId = sessionHospital?.sucursalId || sessionHospital?.nosocomioId;
@@ -43,9 +95,81 @@ function AppContent() {
       fetchRooms();
     };
 
+    const handleHospitalsUpdated = async () => {
+      if (!sessionHospital) return;
+      try {
+        const nosData = await getNosocomios();
+        const activeNosId = sessionHospital.nosocomioId?.toString();
+        const matchedNos = nosData.find((n) => n.id.toString() === activeNosId || n.nombre === sessionHospital.hospital);
+        
+        if (!matchedNos || matchedNos.activo === false) {
+          handleLogout();
+          return;
+        }
+
+        const activeSucId = sessionHospital.sucursalId?.toString();
+        const matchedSuc = (matchedNos.sucursales || []).find((s) => s.id.toString() === activeSucId || s.nombre === sessionHospital.sede);
+
+        if (matchedSuc && matchedSuc.activo === false) {
+          handleLogout();
+          return;
+        }
+
+        const updatedHospitalData = {
+          ...sessionHospital,
+          hospital: matchedNos.nombre || sessionHospital.hospital,
+          sede: matchedSuc?.nombre || sessionHospital.sede,
+          establecimiento: matchedSuc?.nombre || sessionHospital.establecimiento,
+        };
+
+        setSessionHospital(updatedHospitalData);
+        try {
+          localStorage.setItem("bedtrack_session_hospital", JSON.stringify(updatedHospitalData));
+        } catch (e) {}
+      } catch (err) {}
+    };
+
+    const handleUsersUpdated = async () => {
+      if (!role || role === "superadmin" || role === "developer" || !sessionHospital?.email) return;
+      try {
+        const activeEmail = sessionHospital.email.trim().toLowerCase();
+        const activeNosId = sessionHospital.nosocomioId;
+        const activeSucId = sessionHospital.sucursalId;
+        const users = await getStaffUsers(activeNosId, activeSucId);
+        const currentUser = users.find((u) => u.email && u.email.trim().toLowerCase() === activeEmail);
+
+        if (!currentUser || currentUser.activo === false || currentUser.rol !== role) {
+          handleLogout();
+        }
+      } catch (err) {}
+    };
+
+    const handleStorageEvent = (e) => {
+      if (e.key === "bedtrack_role" && !e.newValue) {
+        handleLogout();
+      } else if (e.key === "bedtrack_session_hospital" && e.newValue) {
+        try {
+          setSessionHospital(JSON.parse(e.newValue));
+        } catch (err) {}
+      } else if (e.key === "bedtrack_nosocomios_data") {
+        handleHospitalsUpdated();
+      } else if (e.key === "bedtrack_staff_users_data") {
+        handleUsersUpdated();
+      } else if (e.key && e.key.startsWith("bedtrack_rooms_data")) {
+        fetchRooms();
+      }
+    };
+
     window.addEventListener("bedtrack_rooms_updated", handleRoomsUpdated);
+    window.addEventListener("bedtrack_hospitals_updated", handleHospitalsUpdated);
+    window.addEventListener("bedtrack_users_updated", handleUsersUpdated);
+    window.addEventListener("storage", handleStorageEvent);
+
     return () => {
       window.removeEventListener("bedtrack_rooms_updated", handleRoomsUpdated);
+      window.removeEventListener("bedtrack_hospitals_updated", handleHospitalsUpdated);
+      window.removeEventListener("bedtrack_users_updated", handleUsersUpdated);
+      window.removeEventListener("storage", handleStorageEvent);
     };
   }, [role, sessionHospital]);
 
@@ -53,9 +177,9 @@ function AppContent() {
   const beds = useMemo(
     () =>
       rooms.flatMap((room) =>
-        (room.beds || []).map((bed) => ({
+        (room.beds || []).map((bed, bedIdx) => ({
           id:         bed.id,
-          number:     bed.number,
+          number:     bed.number ?? bed.numero ?? (bedIdx + 1),
           floor:      room.floor || `Piso ${room.floorId ?? 1}`,
           roomId:     room.id,
           roomNumber: room.number,
@@ -65,13 +189,6 @@ function AppContent() {
       ),
     [rooms]
   );
-
-  const handleUserLogin = (selectedRole, hospitalData = null) => {
-    setRole(selectedRole);
-    if (hospitalData) {
-      setSessionHospital(hospitalData);
-    }
-  };
 
   const changeStatus = async (bedId, newStatus, patientData = null) => {
     if (role !== "enfermeria") {
@@ -119,7 +236,7 @@ function AppContent() {
 
   // 1. PRIMERA PRIORIDAD: Si el rol es superadmin o developer, mostrar el panel de superadmin
   if (role === "superadmin" || role === "developer") {
-    return <SuperAdminPanel onLogout={() => setRole(null)} />;
+    return <SuperAdminPanel onLogout={handleLogout} />;
   }
 
   // 2. Ruta oculta para el login de desarrolladores (/dev-login, /superadmin, /dev)
@@ -154,7 +271,7 @@ function AppContent() {
       <Sidebar
         role={role}
         hospitalInfo={sessionHospital}
-        onLogout={() => setRole(null)}
+        onLogout={handleLogout}
         isOpen={sidebarOpen}
         onClose={closeSidebar}
       />

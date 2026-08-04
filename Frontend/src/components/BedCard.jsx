@@ -23,11 +23,12 @@ export default function BedCard({ bed, onChangeStatus, role }) {
   const cfg    = STATUS_CONFIG[statusKey] ?? STATUS_CONFIG.enlimpieza;
   const { Icon } = cfg;
   const actions  = ALL_ACTIONS.filter(({ key }) => TRANSITIONS[statusKey]?.includes(key));
+  const bedNum   = bed.number ?? bed.numero ?? (typeof bed.id === "number" && bed.id < 10000 ? bed.id : 1);
 
   return (
     <article
       className={`bed-card ${cfg.cardClass}`}
-      aria-label={`Cama ${bed.number ?? bed.numero ?? bed.id}, ${bed.floor}, estado: ${cfg.label}`}
+      aria-label={`Cama ${bedNum}, ${bed.floor}, estado: ${cfg.label}`}
     >
       {/* Header */}
       <div className="bed-card-header">
@@ -41,7 +42,7 @@ export default function BedCard({ bed, onChangeStatus, role }) {
       </div>
 
       {/* Info */}
-      <div className="bed-name">Cama {bed.number ?? bed.numero ?? bed.id}</div>
+      <div className="bed-name">Cama {bedNum}</div>
 
       {/* Paciente (si está ocupada) */}
       {bed.patient && (

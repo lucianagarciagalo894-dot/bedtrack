@@ -112,11 +112,38 @@ export default function SuperAdminPanel({ onLogout }) {
       } catch (e) {}
     };
 
+    const handleSyncHospitals = async () => {
+      try {
+        const freshNosocomios = await getNosocomios();
+        setNosocomios(freshNosocomios || []);
+      } catch (e) {}
+    };
+
+    const handleSyncUsers = async () => {
+      try {
+        const freshUsers = await getStaffUsers(selectedNosocomioId, selectedSucursalId);
+        setStaffUsers(freshUsers || []);
+      } catch (e) {}
+    };
+
+    const handleStorage = (e) => {
+      if (e.key === "bedtrack_nosocomios_data") handleSyncHospitals();
+      if (e.key === "bedtrack_staff_users_data") handleSyncUsers();
+      if (e.key && e.key.startsWith("bedtrack_rooms_data")) handleSyncRooms();
+    };
+
     window.addEventListener("bedtrack_rooms_updated", handleSyncRooms);
+    window.addEventListener("bedtrack_hospitals_updated", handleSyncHospitals);
+    window.addEventListener("bedtrack_users_updated", handleSyncUsers);
+    window.addEventListener("storage", handleStorage);
+
     return () => {
       window.removeEventListener("bedtrack_rooms_updated", handleSyncRooms);
+      window.removeEventListener("bedtrack_hospitals_updated", handleSyncHospitals);
+      window.removeEventListener("bedtrack_users_updated", handleSyncUsers);
+      window.removeEventListener("storage", handleStorage);
     };
-  }, [selectedSucursalId]);
+  }, [selectedNosocomioId, selectedSucursalId]);
 
   const loadInitialData = async () => {
     setLoading(true);
@@ -1121,11 +1148,11 @@ export default function SuperAdminPanel({ onLogout }) {
                         </button>
                       </div>
 
-                      {room.beds?.map((bed) => (
+                      {room.beds?.map((bed, bedIdx) => (
                         <div key={bed.id} className="bed-admin-item">
                           <div className="bed-info">
                             <FaBed className={`bed-status-icon ${bed.status}`} />
-                            <span>Cama #{bed.number}</span>
+                            <span>Cama #{bed.number ?? bed.numero ?? (bedIdx + 1)}</span>
                             <span className={`status-badge ${bed.status}`}>
                               {bed.status}
                             </span>
@@ -1265,11 +1292,11 @@ export default function SuperAdminPanel({ onLogout }) {
                                 </button>
                               </div>
 
-                              {room.beds?.map((bed) => (
+                              {room.beds?.map((bed, bedIdx) => (
                                 <div key={bed.id} className="bed-admin-item">
                                   <div className="bed-info">
                                     <FaBed className={`bed-status-icon ${bed.status}`} />
-                                    <span>Cama #{bed.number}</span>
+                                    <span>Cama #{bed.number ?? bed.numero ?? (bedIdx + 1)}</span>
                                     <span className={`status-badge ${bed.status}`}>
                                       {bed.status}
                                     </span>

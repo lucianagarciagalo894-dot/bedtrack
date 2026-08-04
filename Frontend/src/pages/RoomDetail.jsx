@@ -154,7 +154,8 @@ export default function RoomDetail({ rooms, role, onChangeBedStatus }) {
         </h2>
 
         <div className="rd-beds-list">
-          {room.beds.map((bed) => {
+          {room.beds.map((bed, bedIdx) => {
+            const bedNum = bed.number ?? bed.numero ?? (bedIdx + 1);
             const statusKey = bed.status?.toLowerCase();
             const bedCfg  = STATUS_CONFIG[statusKey] ?? STATUS_CONFIG.disponible;
             const BedIcon = bedCfg.Icon;
@@ -166,7 +167,7 @@ export default function RoomDetail({ rooms, role, onChangeBedStatus }) {
                 <div className="rd-bed-header">
                   <div className="rd-bed-title">
                     <FaBed size={15} aria-hidden="true" />
-                    <span>Cama {bed.number}</span>
+                    <span>Cama {bedNum}</span>
                   </div>
                   <span className={`room-card-status ${bedCfg.cls}`}>
                     <BedIcon size={10} aria-hidden="true" />
@@ -233,7 +234,7 @@ export default function RoomDetail({ rooms, role, onChangeBedStatus }) {
                   <div
                     className="rd-bed-actions"
                     role="group"
-                    aria-label={`Cambiar estado cama ${bed.number}`}
+                    aria-label={`Cambiar estado cama ${bedNum}`}
                   >
                     {BED_TRANSITIONS[statusKey]?.map((target) => (
                       <button

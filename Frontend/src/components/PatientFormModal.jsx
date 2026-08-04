@@ -101,7 +101,7 @@ export default function PatientFormModal({
             <div>
               <h2 id="modal-title" className="modal-title">{titleText}</h2>
               <p className="modal-subtitle">
-                Cama {bed.number ?? bed.id}
+                Cama {bed.number ?? bed.numero ?? (typeof bed.id === 'number' && bed.id < 10000 ? bed.id : 1)}
                 {room && <> &middot; Hab.&nbsp;{room.number} &middot; {room.floor}</>}
               </p>
             </div>
