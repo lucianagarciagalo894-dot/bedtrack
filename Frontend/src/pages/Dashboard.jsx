@@ -33,9 +33,7 @@ export default function Dashboard({ role, sessionHospital, beds }) {
   const totalCleaning = beds.filter((b) => b.status?.toLowerCase() === "enlimpieza").length;
 
   const uniqueFloors = Array.from(new Set(beds.map((b) => b.floor).filter(Boolean)));
-  const floorList = (uniqueFloors.length > 0 && uniqueFloors.every(uf => !FLOORS.includes(uf)))
-    ? uniqueFloors
-    : FLOORS;
+  const floorList = Array.from(new Set([...FLOORS, ...uniqueFloors]));
 
   const floorStats = floorList.map((floor) => {
     const fb = beds.filter((b) => b.floor === floor);
@@ -48,7 +46,7 @@ export default function Dashboard({ role, sessionHospital, beds }) {
     };
   });
 
-  const criticalFloors = floorStats.filter((f) => f.available < 3);
+  const criticalFloors = floorStats.filter((f) => f.total > 0 && f.available < 3);
 
   return (
     <div className="page-wrapper">
@@ -158,21 +156,21 @@ export default function Dashboard({ role, sessionHospital, beds }) {
                 {available > 0 && (
                   <div
                     className="floor-bar floor-bar-available"
-                    style={{ width: `${(available / total) * 100}%` }}
+                    style={{ width: `${total > 0 ? (available / total) * 100 : 0}%` }}
                     title={`${available} disponibles`}
                   />
                 )}
                 {occupied > 0 && (
                   <div
                     className="floor-bar floor-bar-occupied"
-                    style={{ width: `${(occupied / total) * 100}%` }}
+                    style={{ width: `${total > 0 ? (occupied / total) * 100 : 0}%` }}
                     title={`${occupied} ocupadas`}
                   />
                 )}
                 {cleaning > 0 && (
                   <div
                     className="floor-bar floor-bar-cleaning"
-                    style={{ width: `${(cleaning / total) * 100}%` }}
+                    style={{ width: `${total > 0 ? (cleaning / total) * 100 : 0}%` }}
                     title={`${cleaning} en limpieza`}
                   />
                 )}

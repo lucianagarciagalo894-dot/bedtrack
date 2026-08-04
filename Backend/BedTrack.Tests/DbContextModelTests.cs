@@ -15,7 +15,6 @@ public class DbContextModelTests
 
         using var context = new ApplicationDbContext(options);
 
-        // Accessing context.Model triggers EF Core model finalizing and constructor binding validation
         var model = context.Model;
 
         Assert.NotNull(model);

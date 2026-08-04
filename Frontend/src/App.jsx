@@ -25,23 +25,38 @@ function AppContent() {
   const [rooms, setRooms]                     = useState([]);
   const location = useLocation();
 
+  const fetchRooms = () => {
+    const activeSucursalId = sessionHospital?.sucursalId || sessionHospital?.nosocomioId;
+    getAllRooms(activeSucursalId)
+      .then((data) => setRooms(data))
+      .catch((err) => console.error("Error cargando habitaciones para la institución", err));
+  };
+
   useEffect(() => {
-    if (role && role !== "superadmin") {
-      const activeSucursalId = sessionHospital?.sucursalId || sessionHospital?.nosocomioId;
-      getAllRooms(activeSucursalId)
-        .then((data) => setRooms(data))
-        .catch((err) => console.error("Error cargando habitaciones para la institución", err));
+    if (role) {
+      fetchRooms();
     }
+  }, [role, sessionHospital]);
+
+  useEffect(() => {
+    const handleRoomsUpdated = () => {
+      fetchRooms();
+    };
+
+    window.addEventListener("bedtrack_rooms_updated", handleRoomsUpdated);
+    return () => {
+      window.removeEventListener("bedtrack_rooms_updated", handleRoomsUpdated);
+    };
   }, [role, sessionHospital]);
 
   // Fuente única de verdad: beds derivado de rooms
   const beds = useMemo(
     () =>
       rooms.flatMap((room) =>
-        room.beds.map((bed) => ({
+        (room.beds || []).map((bed) => ({
           id:         bed.id,
           number:     bed.number,
-          floor:      room.floor,
+          floor:      room.floor || `Piso ${room.floorId ?? 1}`,
           roomId:     room.id,
           roomNumber: room.number,
           status:     bed.status?.toLowerCase(),
@@ -59,7 +74,7 @@ function AppContent() {
   };
 
   const changeStatus = async (bedId, newStatus, patientData = null) => {
-    const currentBed = rooms.flatMap((r) => r.beds).find((b) => b.id === bedId);
+    const currentBed = rooms.flatMap((r) => r.beds || []).find((b) => b.id === bedId);
     const currentStatus = currentBed?.status?.toLowerCase();
     if (!currentBed || !VALID_TRANSITIONS[currentStatus]?.includes(newStatus)) {
       return;
@@ -72,12 +87,13 @@ function AppContent() {
         role: role || "enfermeria",
       };
 
-      const updatedBed = await updateBedStatus(bedId, newStatus, patientData, operatorInfo);
+      const activeSucursalId = sessionHospital?.sucursalId || sessionHospital?.nosocomioId;
+      const updatedBed = await updateBedStatus(bedId, newStatus, patientData, operatorInfo, activeSucursalId);
 
       setRooms((prev) =>
         prev.map((room) => ({
           ...room,
-          beds: room.beds.map((bed) =>
+          beds: (room.beds || []).map((bed) =>
             bed.id === bedId
               ? {
                   ...bed,

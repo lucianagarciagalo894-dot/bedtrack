@@ -1,3 +1,5 @@
+import { getAllRooms, saveStoredRooms } from "./roomService";
+
 const API_BASE = "https://bedtrack-frontend-final-production.up.railway.app/api";
 
 export async function loginDev(email = "", devKey = "") {
@@ -172,23 +174,37 @@ export async function createSucursal(data) {
   }
 }
 
-export async function createRoom(data) {
+export async function createRoom(data, sucursalId = null) {
+  const sId = sucursalId || data?.sucursalId;
+  let created = null;
   try {
     const res = await fetch(`${API_BASE}/superadmin/rooms`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
-    if (!res.ok) throw new Error("Error al crear la habitación");
-    return await res.json();
+    if (res.ok) {
+      created = await res.json();
+    }
   } catch (err) {
+    console.warn("Creación local de habitación por fallback:", err);
+  }
+
+  if (!created) {
     const createdId = Date.now();
-    return {
+    const num = parseInt(data.numero, 10) || 101;
+    const pId = data.pisoId !== undefined ? parseInt(data.pisoId, 10) : 1;
+    const bedCount = parseInt(data.cantidadCamasInicial || data.bedsCount, 10) || 1;
+
+    created = {
       id: createdId,
-      number: data.numero || 101,
-      floorId: data.pisoId || 1,
-      floor: "Piso 1",
-      beds: Array.from({ length: data.cantidadCamasInicial || 1 }, (_, i) => ({
+      number: num,
+      floorId: pId,
+      floor: data.floor || `Piso ${pId}`,
+      type: data.tipo || "General",
+      typeKey: data.tipoKey || "general",
+      sucursalId: sId ? parseInt(sId, 10) : undefined,
+      beds: Array.from({ length: bedCount }, (_, i) => ({
         id: createdId + i + 1,
         number: i + 1,
         status: "disponible",
@@ -196,87 +212,175 @@ export async function createRoom(data) {
       })),
     };
   }
+
+  try {
+    const currentRooms = await getAllRooms(sId);
+    const updatedRooms = [...currentRooms, created];
+    saveStoredRooms(updatedRooms, sId);
+  } catch (e) {
+    console.error("Error guardando habitación en localStorage:", e);
+  }
+
+  return created;
 }
 
-export async function updateRoom(roomId, data) {
+export async function updateRoom(roomId, data, sucursalId = null) {
+  const sId = sucursalId || data?.sucursalId;
+  let updated = null;
   try {
     const res = await fetch(`${API_BASE}/superadmin/rooms/${roomId}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
-    if (!res.ok) throw new Error("Error al actualizar la habitación");
-    return await res.json();
+    if (res.ok) {
+      updated = await res.json();
+    }
   } catch (err) {
-    return {
-      id: roomId,
-      number: data.numero,
-      floorId: data.pisoId,
-      beds: [],
+    console.warn("Actualización local de habitación por fallback:", err);
+  }
+
+  const currentRooms = await getAllRooms(sId);
+  const existingRoom = currentRooms.find((r) => r.id === Number(roomId));
+
+  if (!updated) {
+    const num = parseInt(data.numero, 10) || existingRoom?.number || 101;
+    const pId = data.pisoId !== undefined ? parseInt(data.pisoId, 10) : (existingRoom?.floorId ?? 1);
+    updated = {
+      ...existingRoom,
+      id: Number(roomId),
+      number: num,
+      floorId: pId,
+      floor: data.floor || existingRoom?.floor || `Piso ${pId}`,
+      beds: existingRoom?.beds || [],
     };
   }
+
+  try {
+    const updatedRooms = currentRooms.map((r) => (r.id === Number(roomId) ? { ...r, ...updated } : r));
+    saveStoredRooms(updatedRooms, sId);
+  } catch (e) {
+    console.error("Error actualizando habitación en localStorage:", e);
+  }
+
+  return updated;
 }
 
-export async function deleteRoom(roomId) {
+export async function deleteRoom(roomId, sucursalId = null) {
   try {
-    const res = await fetch(`${API_BASE}/superadmin/rooms/${roomId}`, {
+    await fetch(`${API_BASE}/superadmin/rooms/${roomId}`, {
       method: "DELETE",
     });
-    if (!res.ok) throw new Error("Error al eliminar la habitación");
-    return true;
   } catch (err) {
-    return true;
+    console.warn("Eliminación local de habitación por fallback:", err);
   }
+
+  try {
+    const currentRooms = await getAllRooms(sucursalId);
+    const updatedRooms = currentRooms.filter((r) => r.id !== Number(roomId));
+    saveStoredRooms(updatedRooms, sucursalId);
+  } catch (e) {
+    console.error("Error eliminando habitación de localStorage:", e);
+  }
+
+  return true;
 }
 
-export async function createBed(data) {
+export async function createBed(data, sucursalId = null) {
+  const sId = sucursalId || data?.sucursalId;
+  let created = null;
   try {
     const res = await fetch(`${API_BASE}/superadmin/beds`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
-    if (!res.ok) throw new Error("Error al crear la cama");
-    return await res.json();
+    if (res.ok) {
+      created = await res.json();
+    }
   } catch (err) {
-    return {
+    console.warn("Creación local de cama por fallback:", err);
+  }
+
+  if (!created) {
+    created = {
       id: Date.now(),
-      number: data.numero || 1,
+      number: parseInt(data.numero, 10) || 1,
       status: data.status || "disponible",
       patient: null,
     };
   }
+
+  try {
+    const targetRoomId = parseInt(data.habitacionId, 10);
+    const currentRooms = await getAllRooms(sId);
+    const updatedRooms = currentRooms.map((r) =>
+      r.id === targetRoomId
+        ? { ...r, beds: [...(r.beds || []), created] }
+        : r
+    );
+    saveStoredRooms(updatedRooms, sId);
+  } catch (e) {}
+
+  return created;
 }
 
-export async function updateBed(bedId, data) {
+export async function updateBed(bedId, data, sucursalId = null) {
+  const sId = sucursalId || data?.sucursalId;
+  let updated = null;
   try {
     const res = await fetch(`${API_BASE}/superadmin/beds/${bedId}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
-    if (!res.ok) throw new Error("Error al actualizar la cama");
-    return await res.json();
+    if (res.ok) {
+      updated = await res.json();
+    }
   } catch (err) {
-    return {
-      id: bedId,
-      number: data.numero || 1,
+    console.warn("Actualización local de cama por fallback:", err);
+  }
+
+  if (!updated) {
+    updated = {
+      id: Number(bedId),
+      number: parseInt(data.numero, 10) || 1,
       status: data.status || "disponible",
       patient: null,
     };
   }
+
+  try {
+    const currentRooms = await getAllRooms(sId);
+    const updatedRooms = currentRooms.map((r) => ({
+      ...r,
+      beds: (r.beds || []).map((b) => (b.id === Number(bedId) ? { ...b, ...updated } : b)),
+    }));
+    saveStoredRooms(updatedRooms, sId);
+  } catch (e) {}
+
+  return updated;
 }
 
-export async function deleteBed(bedId) {
+export async function deleteBed(bedId, sucursalId = null) {
   try {
-    const res = await fetch(`${API_BASE}/superadmin/beds/${bedId}`, {
+    await fetch(`${API_BASE}/superadmin/beds/${bedId}`, {
       method: "DELETE",
     });
-    if (!res.ok) throw new Error("Error al eliminar la cama");
-    return true;
   } catch (err) {
-    return true;
+    console.warn("Eliminación local de cama por fallback:", err);
   }
+
+  try {
+    const currentRooms = await getAllRooms(sucursalId);
+    const updatedRooms = currentRooms.map((r) => ({
+      ...r,
+      beds: (r.beds || []).filter((b) => b.id !== Number(bedId)),
+    }));
+    saveStoredRooms(updatedRooms, sucursalId);
+  } catch (e) {}
+
+  return true;
 }
 
 export async function createFullHospitalSetup(data) {
@@ -321,6 +425,48 @@ export async function createFullHospitalSetup(data) {
         nosocomioId: createdNos.id,
       },
     ];
+  }
+
+  try {
+    const generatedRooms = [];
+    let rIdSeq = Date.now();
+    let bIdSeq = Date.now() + 10000;
+
+    (data.pisos || []).forEach((floorSpec, fIdx) => {
+      const fId = fIdx + 1;
+      const habCount = parseInt(floorSpec.cantidadHabitaciones, 10) || 2;
+      const bedCount = parseInt(floorSpec.camasPorHabitacion, 10) || 2;
+
+      for (let r = 1; r <= habCount; r++) {
+        const roomNum = fId * 100 + r;
+        const roomId = rIdSeq++;
+        const beds = [];
+        for (let b = 1; b <= bedCount; b++) {
+          beds.push({
+            id: bIdSeq++,
+            number: b,
+            status: "disponible",
+            patient: null,
+          });
+        }
+        generatedRooms.push({
+          id: roomId,
+          number: roomNum,
+          floorId: fId,
+          floor: floorSpec.nombre || `Piso ${fId}`,
+          type: floorSpec.tipo || "General",
+          typeKey: floorSpec.tipoKey || "general",
+          beds,
+        });
+      }
+    });
+
+    const sucursalId = createdNos?.sucursales?.[0]?.id;
+    if (generatedRooms.length > 0) {
+      saveStoredRooms(generatedRooms, sucursalId);
+    }
+  } catch (e) {
+    console.error("Error al generar habitaciones para nuevo hospital:", e);
   }
 
   localNosocomiosStore.push(createdNos);
@@ -408,7 +554,7 @@ export async function getStaffUsers(nosocomioId = null, sucursalId = null) {
     const res = await fetch(url);
     if (res.ok) {
       const data = await res.json();
-      if (Array.isArray(data) && data.length > 0) {
+      if (Array.isArray(data)) {
         const combined = [...data];
         for (const localUser of localStaffUsersStore) {
           if (!combined.some((u) => u.id === localUser.id)) {
@@ -458,6 +604,8 @@ export async function createStaffUser(userData) {
 
   if (!created) {
     const createdId = Date.now();
+    const allNos = getFallbackNosocomios();
+    const matchedNos = allNos.find((n) => n.id.toString() === userData.nosocomioId?.toString());
     created = {
       id: createdId,
       nombre: userData.nombre,
@@ -466,7 +614,7 @@ export async function createStaffUser(userData) {
       activo: true,
       nosocomioId: userData.nosocomioId ? parseInt(userData.nosocomioId, 10) : null,
       sucursalId: userData.sucursalId ? parseInt(userData.sucursalId, 10) : null,
-      hospitalNombre: "Hospital Asignado",
+      hospitalNombre: matchedNos?.nombre || "Hospital Asignado",
     };
   }
 

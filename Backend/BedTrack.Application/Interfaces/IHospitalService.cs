@@ -10,7 +10,6 @@ public interface IHospitalService
     Task<CamaDto> UpdateBedStatusAsync(int bedId, UpdateBedStatusDto request);
     Task<IEnumerable<HabitacionDto>> GetAllRoomsAsync(int? sucursalId = null);
 
-    // Métodos para Superadmin / Desarrollador
     Task<IEnumerable<NosocomioDto>> GetNosocomiosAsync();
     Task<NosocomioDto> CreateNosocomioAsync(CreateNosocomioDto dto);
     Task<NosocomioDto> UpdateNosocomioAsync(int id, UpdateNosocomioDto dto);
@@ -32,7 +31,6 @@ public interface IHospitalService
     DevLoginResponseDto ValidateDevLogin(DevLoginRequestDto request);
     Task<NosocomioDto> CreateFullHospitalSetupAsync(FullHospitalSetupDto dto);
 
-    // Usuarios Staff y Auditoría de Historial
     Task<IEnumerable<UsuarioStaffDto>> GetUsuariosStaffAsync(int? nosocomioId = null, int? sucursalId = null);
     Task<UsuarioStaffDto> CreateUsuarioStaffAsync(CreateUsuarioStaffDto dto);
     Task<UsuarioStaffDto> UpdateUsuarioStaffAsync(int id, UpdateUsuarioStaffDto dto);

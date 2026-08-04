@@ -7,54 +7,41 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// 1. Conexión segura a la Base de Datos (PostgreSQL en Supabase)
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Inyección de Dependencias
 builder.Services.AddScoped<IHospitalRepository, HospitalRepository>();
 builder.Services.AddScoped<IHospitalService, HospitalService>();
 
-// 2. Configuración de CORS (Permite que React se conecte de forma segura)
 var allowedOrigins = builder.Configuration.GetSection("AllowedOrigins").Get<string[]>();
 
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("PermitirReact", policy =>
     {
-        // Para este proyecto universitario, permitimos cualquier origen (Vercel, Localhost, etc)
-        // para evitar dolores de cabeza con configuraciones de entorno.
         policy.AllowAnyOrigin()
               .AllowAnyHeader()
               .AllowAnyMethod();
     });
 });
 
-// 3. Soporte para Controladores y serialización de Enums como strings (ej: "disponible" en vez de 0)
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
         options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter(System.Text.Json.JsonNamingPolicy.CamelCase));
     });
 
-
-// 4. Configuración de Swagger (Documentación de la API)
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-// --- SEEDER AUTOMÁTICO DE BASE DE DATOS ---
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     
-    // Limpieza removida - ya no borramos la base de datos en cada inicio
-
-    // Aplica las migraciones automáticamente
     context.Database.Migrate();
 
-    // Si la tabla Pisos está vacía, la poblamos con los datos iniciales
     if (!context.Pisos.Any())
     {
         var pisos = new List<Piso>
@@ -95,8 +82,6 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-// --- CONFIGURACIÓN DE SEGURIDAD ---
-
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -109,10 +94,8 @@ else
 
 app.UseHttpsRedirection();
 
-// 5. Encender CORS ANTES de los controladores
 app.UseCors("PermitirReact");
 
-// 6. Activar las rutas de los Controladores
 app.MapControllers();
 
 app.Run();

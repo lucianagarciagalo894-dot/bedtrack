@@ -8,7 +8,7 @@ public class PisoDto
     public string TipoKey { get; set; } = string.Empty;
     public int RoomCount { get; set; }
     public int BedsPerRoom { get; set; }
-    public string Label => Nombre; // Frontend expects "label" mapping sometimes or we can map it in frontend
+    public string Label => Nombre;
 }
 
 public class HabitacionDto

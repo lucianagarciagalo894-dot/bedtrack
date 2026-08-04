@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import RoomCard from "../components/RoomCard";
 import { FLOOR_CONFIG } from "../data/beds";
 import {
@@ -20,23 +20,58 @@ const TYPE_THEME = {
   aislamiento: { color: "#F59E0B", bg: "#FFFBEB", border: "#FDE68A" },
 };
 
-export default function Habitaciones({ rooms }) {
+export default function Habitaciones({ rooms = [] }) {
   const [selectedFloorId, setSelectedFloorId] = useState(1);
   const isLoading = false;
   const error     = null;
 
-  const currentFloor = FLOOR_CONFIG.find((f) => f.id === selectedFloorId);
+  const dynamicFloors = useMemo(() => {
+    const map = new Map();
+    if (rooms && rooms.length > 0) {
+      rooms.forEach((r) => {
+        const fId = r.floorId ?? 1;
+        if (!map.has(fId)) {
+          const baseConfig = FLOOR_CONFIG.find((f) => String(f.id) === String(fId));
+          map.set(fId, {
+            id: fId,
+            label: r.floor || baseConfig?.label || (fId === 0 ? "Planta Baja" : `Piso ${fId}`),
+            type: r.type || baseConfig?.type || "General",
+            typeKey: r.typeKey || baseConfig?.typeKey || "privada",
+          });
+        }
+      });
+    }
+    if (map.size === 0) {
+      FLOOR_CONFIG.forEach((f) => map.set(f.id, f));
+    }
+    return Array.from(map.values()).sort((a, b) => {
+      const numA = Number(a.id);
+      const numB = Number(b.id);
+      if (!isNaN(numA) && !isNaN(numB)) {
+        return numA - numB;
+      }
+      return String(a.id).localeCompare(String(b.id));
+    });
+  }, [rooms]);
+
+  useEffect(() => {
+    if (dynamicFloors.length > 0 && !dynamicFloors.some((f) => String(f.id) === String(selectedFloorId))) {
+      setSelectedFloorId(dynamicFloors[0].id);
+    }
+  }, [dynamicFloors, selectedFloorId]);
+
+  const currentFloor = dynamicFloors.find((f) => String(f.id) === String(selectedFloorId)) || dynamicFloors[0];
   const theme        = TYPE_THEME[currentFloor?.typeKey] ?? TYPE_THEME.privada;
 
   const floorRooms = useMemo(
-    () => rooms.filter((r) => r.floorId === selectedFloorId),
+    () => rooms.filter((r) => String(r.floorId ?? 1) === String(selectedFloorId)),
     [rooms, selectedFloorId]
   );
 
-  const totalBeds     = floorRooms.reduce((s, r) => s + r.beds.length, 0);
-  const availableBeds = floorRooms.reduce((s, r) => s + r.beds.filter((b) => b.status?.toLowerCase() === "disponible").length, 0);
-  const occupiedBeds  = floorRooms.reduce((s, r) => s + r.beds.filter((b) => b.status?.toLowerCase() === "ocupada").length, 0);
-  const cleaningBeds  = floorRooms.reduce((s, r) => s + r.beds.filter((b) => b.status?.toLowerCase() === "enlimpieza").length, 0);
+  const totalBeds     = floorRooms.reduce((s, r) => s + (r.beds?.length || 0), 0);
+  const availableBeds = floorRooms.reduce((s, r) => s + (r.beds || []).filter((b) => b.status?.toLowerCase() === "disponible").length, 0);
+  const occupiedBeds  = floorRooms.reduce((s, r) => s + (r.beds || []).filter((b) => b.status?.toLowerCase() === "ocupada").length, 0);
+  const cleaningBeds  = floorRooms.reduce((s, r) => s + (r.beds || []).filter((b) => b.status?.toLowerCase() === "enlimpieza").length, 0);
 
   return (
     <div className="page-wrapper">
@@ -51,9 +86,9 @@ export default function Habitaciones({ rooms }) {
 
       {/* ── Selector de piso ───────────────────────────────────── */}
       <div className="floor-tabs-wrap" role="group" aria-label="Selector de piso">
-        {FLOOR_CONFIG.map((floor) => {
-          const ft       = TYPE_THEME[floor.typeKey];
-          const isActive = floor.id === selectedFloorId;
+        {dynamicFloors.map((floor) => {
+          const ft       = TYPE_THEME[floor.typeKey] ?? TYPE_THEME.privada;
+          const isActive = String(floor.id) === String(selectedFloorId);
           return (
             <button
               key={floor.id}
@@ -96,10 +131,7 @@ export default function Habitaciones({ rooms }) {
               {currentFloor?.label} &middot; {currentFloor?.type}
             </div>
             <div className="floor-info-desc">
-              {currentFloor?.roomCount} habitaciones &middot;{" "}
-              {currentFloor?.bedsPerRoom}{" "}
-              cama{currentFloor?.bedsPerRoom > 1 ? "s" : ""} por habitación &middot;{" "}
-              {totalBeds} camas en total
+              {floorRooms.length} habitaciones &middot; {totalBeds} camas en total
             </div>
           </div>
         </div>

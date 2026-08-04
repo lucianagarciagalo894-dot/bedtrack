@@ -104,6 +104,20 @@ export default function SuperAdminPanel({ onLogout }) {
     loadInitialData();
   }, []);
 
+  useEffect(() => {
+    const handleSyncRooms = async () => {
+      try {
+        const freshRooms = await getAllRooms(selectedSucursalId);
+        setRooms(freshRooms || []);
+      } catch (e) {}
+    };
+
+    window.addEventListener("bedtrack_rooms_updated", handleSyncRooms);
+    return () => {
+      window.removeEventListener("bedtrack_rooms_updated", handleSyncRooms);
+    };
+  }, [selectedSucursalId]);
+
   const loadInitialData = async () => {
     setLoading(true);
     try {
@@ -154,6 +168,10 @@ export default function SuperAdminPanel({ onLogout }) {
       getStaffUsers(selectedNosocomioId, selectedSucursalId)
         .then((users) => setStaffUsers(users || []))
         .catch((err) => console.warn("Error al filtrar usuarios de enfermería por sucursal:", err));
+
+      getAllRooms(selectedSucursalId)
+        .then((r) => setRooms(r || []))
+        .catch((err) => console.warn("Error al cargar habitaciones por sucursal:", err));
     }
   }, [selectedNosocomioId, selectedSucursalId]);
 
@@ -381,22 +399,24 @@ export default function SuperAdminPanel({ onLogout }) {
     try {
       if (roomForm.id) {
         // Actualizar
-        const updated = await updateRoom(roomForm.id, {
+        await updateRoom(roomForm.id, {
           numero: parseInt(roomForm.numero, 10),
           pisoId: parseInt(roomForm.pisoId, 10),
-        });
-        setRooms((prev) => prev.map((r) => (r.id === roomForm.id ? updated : r)));
+          sucursalId: selectedSucursalId,
+        }, selectedSucursalId);
         showNotification("Habitación actualizada con éxito");
       } else {
         // Crear
-        const created = await createRoom({
+        await createRoom({
           numero: parseInt(roomForm.numero, 10) || 1,
           pisoId: parseInt(roomForm.pisoId, 10),
           cantidadCamasInicial: parseInt(roomForm.bedsCount, 10) || 1,
-        });
-        setRooms((prev) => [...prev, created]);
+          sucursalId: selectedSucursalId,
+        }, selectedSucursalId);
         showNotification("Habitación agregada con éxito");
       }
+      const freshRooms = await getAllRooms(selectedSucursalId);
+      setRooms(freshRooms || []);
       setShowRoomModal(false);
     } catch (err) {
       showNotification(err.message, "error");
@@ -406,8 +426,9 @@ export default function SuperAdminPanel({ onLogout }) {
   const handleDeleteRoom = async (roomId) => {
     if (!window.confirm("¿Está seguro de eliminar esta habitación y sus camas?")) return;
     try {
-      await deleteRoom(roomId);
-      setRooms((prev) => prev.filter((r) => r.id !== roomId));
+      await deleteRoom(roomId, selectedSucursalId);
+      const freshRooms = await getAllRooms(selectedSucursalId);
+      setRooms(freshRooms || []);
       showNotification("Habitación eliminada correctamente");
     } catch (err) {
       showNotification(err.message, "error");
@@ -1635,7 +1656,7 @@ export default function SuperAdminPanel({ onLogout }) {
                 <label>Hospital Asignado:</label>
                 <select
                   value={userForm.nosocomioId}
-                  onChange={(e) => setUserForm({ ...userForm, nosocomioId: e.target.value })}
+                  onChange={(e) => setUserForm({ ...userForm, nosocomioId: e.target.value, sucursalId: "" })}
                 >
                   <option value="">-- Todos los Hospitales --</option>
                   {nosocomios.map((n) => (
@@ -1653,11 +1674,15 @@ export default function SuperAdminPanel({ onLogout }) {
                   onChange={(e) => setUserForm({ ...userForm, sucursalId: e.target.value })}
                 >
                   <option value="">Todas las sucursales del hospital (Global)</option>
-                  {sucursalesList.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.nombre}
-                    </option>
-                  ))}
+                  {(() => {
+                    const modalNosocomio = nosocomios.find((n) => n.id.toString() === userForm.nosocomioId?.toString());
+                    const list = modalNosocomio?.sucursales || sucursalesList;
+                    return list.map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.nombre}
+                      </option>
+                    ));
+                  })()}
                 </select>
               </div>
 

@@ -63,7 +63,6 @@ public class HospitalService : IHospitalService
             
             if (cama.Estado == EstadoCama.Ocupada && cama.Paciente != null)
             {
-                // Si la cama ya está ocupada y tiene un paciente, actualizamos sus datos en lugar de crear uno nuevo
                 cama.Paciente.ActualizarDatos(
                     request.Patient.Nombre,
                     request.Patient.Apellido,
@@ -74,7 +73,6 @@ public class HospitalService : IHospitalService
             }
             else
             {
-                // Es un paciente nuevo
                 var fechaIngreso = string.IsNullOrWhiteSpace(request.Patient.FechaIngreso)
                     ? DateTime.UtcNow
                     : DateTime.TryParse(request.Patient.FechaIngreso, out var parsedDate)
@@ -91,7 +89,7 @@ public class HospitalService : IHospitalService
                 );
                 
                 await _repo.AgregarPacienteAsync(paciente);
-                await _repo.GuardarCambiosAsync(); // Para generar el Id
+                await _repo.GuardarCambiosAsync();
 
                 cama.Ocupar(paciente.Id);
                 cama.Paciente = paciente;
@@ -118,7 +116,6 @@ public class HospitalService : IHospitalService
             }
         }
 
-        // Registrar entrada en el Historial de Auditoría
         var operatorName = string.IsNullOrWhiteSpace(request.OperatorName) ? "Personal de Enfermería" : request.OperatorName;
         var operatorEmail = string.IsNullOrWhiteSpace(request.OperatorEmail) ? "enfermeria@bedtrack.com" : request.OperatorEmail;
         
@@ -170,7 +167,7 @@ public class HospitalService : IHospitalService
         return new HabitacionDto
         {
             Id = h.Id,
-            Number = (h.Piso != null ? h.Piso.Id * 100 : 0) + h.Numero,
+            Number = h.Numero,
             FloorId = h.PisoId,
             Floor = h.Piso?.Nombre ?? "",
             Type = h.Piso?.Tipo ?? "",
@@ -437,6 +434,19 @@ public class HospitalService : IHospitalService
         var bedNumber = dto.Numero > 0 ? dto.Numero : (hab.Camas.Count + 1);
         var cama = new Cama(bedNumber, dto.HabitacionId);
 
+        if (!string.IsNullOrWhiteSpace(dto.Status))
+        {
+            var cleanStatus = dto.Status.Trim().ToLower();
+            if (cleanStatus == "enlimpieza" || cleanStatus == "en limpieza" || cleanStatus == "limpieza")
+            {
+                cama.ActualizarDatos(bedNumber, dto.HabitacionId, EstadoCama.EnLimpieza);
+            }
+            else if (Enum.TryParse<EstadoCama>(dto.Status, true, out var parsedEstado))
+            {
+                cama.ActualizarDatos(bedNumber, dto.HabitacionId, parsedEstado);
+            }
+        }
+
         await _repo.AgregarCamaAsync(cama);
         await _repo.GuardarCambiosAsync();
 
@@ -444,7 +454,7 @@ public class HospitalService : IHospitalService
         {
             Id = cama.Id,
             Number = cama.Numero,
-            Status = cama.Estado.ToString().ToLower(),
+            Status = cama.Estado == EstadoCama.EnLimpieza ? "enlimpieza" : cama.Estado.ToString().ToLower(),
             Patient = null
         };
     }
@@ -493,7 +503,6 @@ public class HospitalService : IHospitalService
 
     public DevLoginResponseDto ValidateDevLogin(DevLoginRequestDto request)
     {
-        // Validación de desarrollador seguro (clave master / correo dev)
         bool isValidEmail = !string.IsNullOrWhiteSpace(request.Email) && (request.Email.EndsWith("@bedtrack.dev") || request.Email.Contains("dev") || request.Email.Contains("admin"));
         bool isValidKey = string.IsNullOrWhiteSpace(request.DevKey) || request.DevKey == "bedtrack2026" || request.DevKey == "superadmin123" || request.DevKey.Length >= 4;
 
@@ -537,6 +546,7 @@ public class HospitalService : IHospitalService
 
         if (dto.Pisos != null && dto.Pisos.Any())
         {
+            int floorIndex = 1;
             foreach (var floorConfig in dto.Pisos)
             {
                 var tipoStr = string.IsNullOrWhiteSpace(floorConfig.Tipo) ? "Privada" : floorConfig.Tipo;
@@ -551,7 +561,8 @@ public class HospitalService : IHospitalService
 
                 for (int r = 1; r <= roomCount; r++)
                 {
-                    var hab = new Habitacion(r, piso.Id);
+                    int roomNum = (floorIndex * 100) + r;
+                    var hab = new Habitacion(roomNum, piso.Id);
                     for (int b = 1; b <= bedsPerRoom; b++)
                     {
                         var cama = new Cama(b, hab.Id);
@@ -560,6 +571,7 @@ public class HospitalService : IHospitalService
                     await _repo.AgregarHabitacionAsync(hab);
                 }
                 await _repo.GuardarCambiosAsync();
+                floorIndex++;
             }
         }
 
@@ -613,16 +625,18 @@ public class HospitalService : IHospitalService
         await _repo.AgregarUsuarioStaffAsync(usuario);
         await _repo.GuardarCambiosAsync();
 
+        var created = await _repo.ObtenerUsuarioStaffPorIdAsync(usuario.Id);
+
         return new UsuarioStaffDto
         {
-            Id = usuario.Id,
-            Nombre = usuario.Nombre,
-            Email = usuario.Email,
-            Rol = usuario.Rol,
-            Activo = usuario.Activo,
-            NosocomioId = usuario.NosocomioId,
-            SucursalId = usuario.SucursalId,
-            HospitalNombre = "Asignado"
+            Id = created?.Id ?? usuario.Id,
+            Nombre = created?.Nombre ?? usuario.Nombre,
+            Email = created?.Email ?? usuario.Email,
+            Rol = created?.Rol ?? usuario.Rol,
+            Activo = created?.Activo ?? usuario.Activo,
+            NosocomioId = created?.NosocomioId ?? usuario.NosocomioId,
+            SucursalId = created?.SucursalId ?? usuario.SucursalId,
+            HospitalNombre = created?.Nosocomio?.Nombre ?? "Hospital Asignado"
         };
     }
 
