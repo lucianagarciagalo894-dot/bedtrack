@@ -126,6 +126,8 @@ public class HospitalService : IHospitalService
                 : "Habilitó la cama como Disponible";
 
         var operatorRole = string.IsNullOrWhiteSpace(request.OperatorRole) ? "enfermeria" : request.OperatorRole;
+        var sucursalId = cama.Habitacion?.Piso?.SucursalId;
+        var nosocomioId = cama.Habitacion?.Piso?.Sucursal?.NosocomioId;
 
         var historial = new HistorialCama(
             cama.Id,
@@ -138,7 +140,9 @@ public class HospitalService : IHospitalService
             estadoAnteriorStr,
             estadoStr,
             null,
-            operatorRole
+            operatorRole,
+            sucursalId,
+            nosocomioId
         );
         await _repo.AgregarHistorialCamaAsync(historial);
 
@@ -717,11 +721,11 @@ public class HospitalService : IHospitalService
         return true;
     }
 
-    public async Task<IEnumerable<HistorialCamaDto>> GetHistorialCamasAsync(int? camaId = null)
+    public async Task<IEnumerable<HistorialCamaDto>> GetHistorialCamasAsync(int? camaId = null, int? sucursalId = null, int? nosocomioId = null)
     {
         try
         {
-            var historial = await _repo.ObtenerHistorialCamasAsync(camaId);
+            var historial = await _repo.ObtenerHistorialCamasAsync(camaId, sucursalId, nosocomioId);
             if (historial == null) return Enumerable.Empty<HistorialCamaDto>();
             return historial.Select(h => new HistorialCamaDto
             {
@@ -736,7 +740,9 @@ public class HospitalService : IHospitalService
                 Accion = h.Accion ?? "Actualización",
                 EstadoAnterior = h.EstadoAnterior ?? "disponible",
                 EstadoNuevo = h.EstadoNuevo ?? "disponible",
-                FechaHora = h.FechaHora.ToString("yyyy-MM-dd HH:mm:ss")
+                FechaHora = h.FechaHora.ToString("yyyy-MM-dd HH:mm:ss"),
+                SucursalId = h.SucursalId,
+                NosocomioId = h.NosocomioId
             }).ToList();
         }
         catch

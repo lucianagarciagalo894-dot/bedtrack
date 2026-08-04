@@ -203,9 +203,18 @@ function AppContent() {
     }
 
     try {
+      const activeName =
+        sessionHospital?.userName ||
+        sessionHospital?.userNombre ||
+        (sessionHospital?.email ? sessionHospital.email.split("@")[0] : null) ||
+        (role === "enfermeria" ? "Lic. Personal de Enfermería" : "Encargado de Hospital");
+      const activeEmail =
+        sessionHospital?.email ||
+        (role === "enfermeria" ? "enfermeria@hospital.com" : "encargado@hospital.com");
+
       const operatorInfo = {
-        name: role === "enfermeria" ? "Lic. María Elena Fernández" : "Encargado de Hospital",
-        email: role === "enfermeria" ? "maria.fernandez@hospital.com" : "encargado@hospital.com",
+        name: activeName,
+        email: activeEmail,
         role: role || "enfermeria",
       };
 

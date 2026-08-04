@@ -114,6 +114,8 @@ public class HistorialCamaDto
     public string EstadoAnterior { get; set; } = string.Empty;
     public string EstadoNuevo { get; set; } = string.Empty;
     public string FechaHora { get; set; } = string.Empty;
+    public int? SucursalId { get; set; }
+    public int? NosocomioId { get; set; }
 }
 
 public class NosocomioDto

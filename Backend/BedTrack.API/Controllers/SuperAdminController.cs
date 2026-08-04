@@ -231,9 +231,9 @@ public class SuperAdminController : ControllerBase
     }
 
     [HttpGet("audit-logs")]
-    public async Task<ActionResult<IEnumerable<HistorialCamaDto>>> GetAuditLogs([FromQuery] int? camaId)
+    public async Task<ActionResult<IEnumerable<HistorialCamaDto>>> GetAuditLogs([FromQuery] int? camaId = null, [FromQuery] int? sucursalId = null, [FromQuery] int? nosocomioId = null)
     {
-        var logs = await _service.GetHistorialCamasAsync(camaId);
+        var logs = await _service.GetHistorialCamasAsync(camaId, sucursalId, nosocomioId);
         return Ok(logs);
     }
 }

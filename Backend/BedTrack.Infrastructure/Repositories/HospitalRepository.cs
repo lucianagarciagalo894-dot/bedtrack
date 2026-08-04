@@ -188,7 +188,7 @@ public class HospitalRepository : IHospitalRepository
         _context.UsuariosStaff.Remove(usuario);
     }
 
-    public async Task<IEnumerable<HistorialCama>> ObtenerHistorialCamasAsync(int? camaId = null)
+    public async Task<IEnumerable<HistorialCama>> ObtenerHistorialCamasAsync(int? camaId = null, int? sucursalId = null, int? nosocomioId = null)
     {
         try
         {
@@ -196,6 +196,14 @@ public class HospitalRepository : IHospitalRepository
             if (camaId.HasValue && camaId.Value > 0)
             {
                 query = query.Where(h => h.CamaId == camaId.Value);
+            }
+            if (sucursalId.HasValue && sucursalId.Value > 0)
+            {
+                query = query.Where(h => h.SucursalId == sucursalId.Value);
+            }
+            if (nosocomioId.HasValue && nosocomioId.Value > 0)
+            {
+                query = query.Where(h => h.NosocomioId == nosocomioId.Value);
             }
             return await query.OrderByDescending(h => h.FechaHora).Take(100).ToListAsync();
         }

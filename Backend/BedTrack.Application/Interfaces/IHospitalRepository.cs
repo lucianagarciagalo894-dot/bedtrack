@@ -35,7 +35,7 @@ public interface IHospitalRepository
     Task AgregarUsuarioStaffAsync(UsuarioStaff usuario);
     void EliminarUsuarioStaff(UsuarioStaff usuario);
 
-    Task<IEnumerable<HistorialCama>> ObtenerHistorialCamasAsync(int? camaId = null);
+    Task<IEnumerable<HistorialCama>> ObtenerHistorialCamasAsync(int? camaId = null, int? sucursalId = null, int? nosocomioId = null);
     Task AgregarHistorialCamaAsync(HistorialCama historial);
 
     Task GuardarCambiosAsync();

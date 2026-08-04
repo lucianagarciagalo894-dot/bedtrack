@@ -37,9 +37,9 @@ public class BedsController : ControllerBase
     }
 
     [HttpGet("history")]
-    public async Task<IActionResult> GetGlobalHistory()
+    public async Task<IActionResult> GetGlobalHistory([FromQuery] int? sucursalId = null, [FromQuery] int? nosocomioId = null)
     {
-        var logs = await _service.GetHistorialCamasAsync(null);
+        var logs = await _service.GetHistorialCamasAsync(null, sucursalId, nosocomioId);
         return Ok(logs);
     }
 

@@ -1,4 +1,4 @@
-import { getAllRooms, saveStoredRooms } from "./roomService";
+import { getAllRooms, saveStoredRooms, getStoredAuditLogs } from "./roomService";
 
 const API_BASE = "https://bedtrack-frontend-final-production.up.railway.app/api";
 
@@ -817,15 +817,24 @@ export async function deleteStaffUser(id) {
   return true;
 }
 
-export async function getAuditLogs(camaId = null) {
+export async function getAuditLogs(camaId = null, sucursalId = null) {
   try {
-    const url = camaId ? `${API_BASE}/superadmin/audit-logs?camaId=${camaId}` : `${API_BASE}/superadmin/audit-logs`;
+    let url = `${API_BASE}/superadmin/audit-logs`;
+    const params = new URLSearchParams();
+    if (camaId) params.append("camaId", camaId);
+    if (sucursalId) params.append("sucursalId", sucursalId);
+    if (params.toString()) url += `?${params.toString()}`;
+
     const res = await fetch(url);
     if (res.ok) {
       const data = await res.json();
-      if (Array.isArray(data)) return data;
+      if (Array.isArray(data) && data.length > 0) return data;
     }
   } catch (err) {}
-  return [];
+  const localLogs = getStoredAuditLogs(sucursalId);
+  if (camaId) {
+    return localLogs.filter((l) => l.camaId === Number(camaId));
+  }
+  return localLogs;
 }
 

@@ -21,10 +21,26 @@ export default function Dashboard({ role, sessionHospital, beds }) {
 
   const activeSucursalId = sessionHospital?.sucursalId || sessionHospital?.nosocomioId;
 
-  useEffect(() => {
+  const fetchAuditLogs = () => {
     getGlobalAuditHistory(activeSucursalId)
       .then((data) => setRecentLogs(data || []))
       .catch((err) => console.warn("Error obteniendo historial reciente:", err));
+  };
+
+  useEffect(() => {
+    fetchAuditLogs();
+
+    const handleAuditUpdated = () => {
+      fetchAuditLogs();
+    };
+
+    window.addEventListener("bedtrack_audit_updated", handleAuditUpdated);
+    window.addEventListener("bedtrack_rooms_updated", handleAuditUpdated);
+
+    return () => {
+      window.removeEventListener("bedtrack_audit_updated", handleAuditUpdated);
+      window.removeEventListener("bedtrack_rooms_updated", handleAuditUpdated);
+    };
   }, [activeSucursalId]);
 
   const totalBeds = beds.length;

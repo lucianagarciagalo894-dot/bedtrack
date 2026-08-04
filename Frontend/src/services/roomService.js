@@ -206,6 +206,96 @@ export async function deleteRoom(roomId, sucursalId = null) {
   return true;
 }
 
+export const AUDIT_STORAGE_KEY = "bedtrack_audit_logs";
+
+export function getInitialSeedAuditLogs() {
+  return [
+    {
+      id: 1001,
+      camaId: 1,
+      camaNumero: 1,
+      habitacionId: 101,
+      habitacionNumero: 101,
+      sucursalId: "1",
+      nosocomioId: "1",
+      usuarioNombre: "Lic. María Elena Fernández",
+      usuarioEmail: "maria.fernandez@hospital.com",
+      usuarioRol: "enfermeria",
+      accion: "Asignó paciente Juan Pérez (Diag: Neumonía)",
+      estadoAnterior: "disponible",
+      estadoNuevo: "ocupada",
+      fechaHora: "2026-08-04 10:15:00"
+    },
+    {
+      id: 1002,
+      camaId: 3,
+      camaNumero: 1,
+      habitacionId: 102,
+      habitacionNumero: 102,
+      sucursalId: "1",
+      nosocomioId: "1",
+      usuarioNombre: "Carlos Encargado",
+      usuarioEmail: "carlos.encargado@hospital.com",
+      usuarioRol: "encargado",
+      accion: "Liberó la cama para desinfección y limpieza",
+      estadoAnterior: "ocupada",
+      estadoNuevo: "enlimpieza",
+      fechaHora: "2026-08-04 11:30:00"
+    },
+    {
+      id: 1003,
+      camaId: 11,
+      camaNumero: 1,
+      habitacionId: 103,
+      habitacionNumero: 103,
+      sucursalId: "2",
+      nosocomioId: "1",
+      usuarioNombre: "Lic. Cristian Rodríguez",
+      usuarioEmail: "cristian.rodriguez@hospital.com",
+      usuarioRol: "enfermeria",
+      accion: "Asignó paciente Carlos Benítez (Diag: Traumatismo)",
+      estadoAnterior: "disponible",
+      estadoNuevo: "ocupada",
+      fechaHora: "2026-08-04 12:00:00"
+    }
+  ];
+}
+
+export function getStoredAuditLogs(sucursalId = null) {
+  if (typeof window === "undefined") return getInitialSeedAuditLogs();
+  try {
+    const raw = localStorage.getItem(AUDIT_STORAGE_KEY);
+    let logs = [];
+    if (!raw) {
+      logs = getInitialSeedAuditLogs();
+      localStorage.setItem(AUDIT_STORAGE_KEY, JSON.stringify(logs));
+    } else {
+      logs = JSON.parse(raw);
+    }
+    if (!Array.isArray(logs)) logs = [];
+    if (sucursalId) {
+      return logs.filter(
+        (log) => !log.sucursalId || log.sucursalId.toString() === sucursalId.toString()
+      );
+    }
+    return logs;
+  } catch (e) {
+    return getInitialSeedAuditLogs();
+  }
+}
+
+export function addLocalAuditLog(logEntry) {
+  if (typeof window === "undefined") return;
+  try {
+    const current = getStoredAuditLogs();
+    const updated = [logEntry, ...current];
+    localStorage.setItem(AUDIT_STORAGE_KEY, JSON.stringify(updated));
+    window.dispatchEvent(new CustomEvent("bedtrack_audit_updated", { detail: logEntry }));
+  } catch (e) {
+    console.error("Error al guardar log de auditoría local:", e);
+  }
+}
+
 export async function updateBedStatus(bedId, status, patient = null, operatorInfo = null, sucursalId = null) {
   const payload = {
     status,
@@ -238,13 +328,24 @@ export async function updateBedStatus(bedId, status, patient = null, operatorInf
     };
   }
 
-  const sId = sucursalId || findSucursalKeyForBed(bedId);
+  const sId = sucursalId || findSucursalKeyForBed(bedId) || "1";
+  let targetRoom = null;
+  let targetBed = null;
+
   try {
     const rooms = await getAllRooms(sId);
+    for (const r of rooms) {
+      const b = (r.beds || []).find((x) => x.id === Number(bedId));
+      if (b) {
+        targetRoom = r;
+        targetBed = b;
+        break;
+      }
+    }
     const newRooms = rooms.map((room) => ({
       ...room,
       beds: (room.beds || []).map((bed) =>
-        bed.id === bedId
+        bed.id === Number(bedId)
           ? {
               ...bed,
               status: updatedBed.status,
@@ -257,6 +358,33 @@ export async function updateBedStatus(bedId, status, patient = null, operatorInf
   } catch (e) {
     console.warn("Error guardando cama actualizada en localStorage:", e);
   }
+
+  const previousStatus = targetBed?.status?.toLowerCase() || "disponible";
+  const now = new Date();
+  const dateStr = now.toISOString().slice(0, 10) + " " + now.toTimeString().slice(0, 8);
+  const accionText = status === "ocupada"
+    ? `Asignó paciente ${patient?.nombre || ''} ${patient?.apellido || ''}`.trim()
+    : status === "enlimpieza"
+      ? "Liberó la cama para desinfección y limpieza"
+      : "Habilitó la cama como Disponible";
+
+  const localLog = {
+    id: Date.now(),
+    camaId: bedId,
+    camaNumero: targetBed?.number || 1,
+    habitacionId: targetRoom?.id || 101,
+    habitacionNumero: targetRoom?.number || 101,
+    sucursalId: sId ? sId.toString() : "1",
+    nosocomioId: "1",
+    usuarioNombre: operatorInfo?.name || "Personal de Enfermería",
+    usuarioEmail: operatorInfo?.email || "enfermeria@hospital.com",
+    usuarioRol: operatorInfo?.role || "enfermeria",
+    accion: accionText,
+    estadoAnterior: previousStatus,
+    estadoNuevo: status,
+    fechaHora: dateStr
+  };
+  addLocalAuditLog(localLog);
 
   return updatedBed;
 }

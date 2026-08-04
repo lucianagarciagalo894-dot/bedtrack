@@ -200,8 +200,28 @@ export default function SuperAdminPanel({ onLogout }) {
       getAllRooms(selectedSucursalId)
         .then((r) => setRooms(r || []))
         .catch((err) => console.warn("Error al cargar habitaciones por sucursal:", err));
+
+      getAuditLogs(null, selectedSucursalId)
+        .then((logs) => setAuditLogs(logs || []))
+        .catch((err) => console.warn("Error al filtrar auditoría por sucursal:", err));
     }
   }, [selectedNosocomioId, selectedSucursalId]);
+
+  useEffect(() => {
+    const handleAuditUpdated = () => {
+      getAuditLogs(null, selectedSucursalId)
+        .then((logs) => setAuditLogs(logs || []))
+        .catch((err) => console.warn("Error re-cargando auditoría:", err));
+    };
+
+    window.addEventListener("bedtrack_audit_updated", handleAuditUpdated);
+    window.addEventListener("bedtrack_rooms_updated", handleAuditUpdated);
+
+    return () => {
+      window.removeEventListener("bedtrack_audit_updated", handleAuditUpdated);
+      window.removeEventListener("bedtrack_rooms_updated", handleAuditUpdated);
+    };
+  }, [selectedSucursalId]);
 
   const currentNosocomio = nosocomios.find((n) => n.id.toString() === selectedNosocomioId);
   const sucursalesList = currentNosocomio?.sucursales || [];

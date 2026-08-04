@@ -80,10 +80,12 @@ export default function Login({ onLogin }) {
     setErrors(next);
     if (Object.keys(next).length === 0) {
       try {
-        await validateStaffLogin(email, password, role, selectedNosocomioId, selectedSucursalId);
+        const loginRes = await validateStaffLogin(email, password, role, selectedNosocomioId, selectedSucursalId);
         const selectedHospital = currentNosocomio?.nombre || "Hospital Central";
         const selectedEstablecimiento =
           sucursalesList.find((s) => s.id.toString() === selectedSucursalId)?.nombre || "Establecimiento Central";
+
+        const userName = loginRes?.user?.nombre || (email ? email.split("@")[0] : (role === "enfermeria" ? "Enfermero/a" : "Encargado"));
 
         onLogin(role, {
           hospital: selectedHospital,
@@ -92,6 +94,9 @@ export default function Login({ onLogin }) {
           nosocomioId: selectedNosocomioId,
           sucursalId: selectedSucursalId,
           email: email,
+          userName: userName,
+          userNombre: userName,
+          role: role,
         });
       } catch (err) {
         setErrors({ api: err.message || "Error al autenticar usuario del personal" });

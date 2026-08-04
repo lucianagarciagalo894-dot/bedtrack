@@ -13,6 +13,8 @@ public class HistorialCama
     public string Accion { get; private set; }
     public string EstadoAnterior { get; private set; }
     public string EstadoNuevo { get; private set; }
+    public int? SucursalId { get; private set; }
+    public int? NosocomioId { get; private set; }
     public DateTime FechaHora { get; private set; }
 
     private HistorialCama()
@@ -36,7 +38,9 @@ public class HistorialCama
         string estadoAnterior,
         string estadoNuevo,
         DateTime? fechaHora = null,
-        string? usuarioRol = null)
+        string? usuarioRol = null,
+        int? sucursalId = null,
+        int? nosocomioId = null)
     {
         CamaId = camaId;
         CamaNumero = camaNumero;
@@ -49,5 +53,7 @@ public class HistorialCama
         EstadoAnterior = estadoAnterior;
         EstadoNuevo = estadoNuevo;
         FechaHora = fechaHora ?? DateTime.UtcNow;
+        SucursalId = sucursalId;
+        NosocomioId = nosocomioId;
     }
 }
