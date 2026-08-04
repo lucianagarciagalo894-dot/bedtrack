@@ -73,17 +73,6 @@ export default function Sidebar({ role, hospitalInfo, onLogout, isOpen, onClose 
           Pacientes
         </NavLink>
 
-        <span className="nav-section-label" style={{ marginTop: "8px" }}>
-          Sistema
-        </span>
-
-        <button className="nav-item">
-          <span className="nav-item-icon" aria-hidden="true">
-            <FaCog />
-          </span>
-          
-        </button>
-      </nav>
 
       {/* User / Logout */}
       <div className="sidebar-footer">
