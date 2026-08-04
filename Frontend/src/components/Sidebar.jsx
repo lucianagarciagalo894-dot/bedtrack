@@ -81,7 +81,7 @@ export default function Sidebar({ role, hospitalInfo, onLogout, isOpen, onClose 
           <span className="nav-item-icon" aria-hidden="true">
             <FaCog />
           </span>
-          Configuración
+          
         </button>
       </nav>
 
