@@ -5,7 +5,6 @@ import {
   FaBed,
   FaDoorOpen,
   FaUserInjured,
-  FaCog,
   FaSignOutAlt,
   FaTimes,
 } from "react-icons/fa";
@@ -72,7 +71,7 @@ export default function Sidebar({ role, hospitalInfo, onLogout, isOpen, onClose 
           </span>
           Pacientes
         </NavLink>
-
+      </nav>
 
       {/* User / Logout */}
       <div className="sidebar-footer">

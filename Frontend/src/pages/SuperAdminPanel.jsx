@@ -101,51 +101,6 @@ export default function SuperAdminPanel({ onLogout }) {
     setTimeout(() => setMessage(null), 4000);
   };
 
-  useEffect(() => {
-    loadInitialData();
-  }, []);
-
-  useEffect(() => {
-    const handleSyncRooms = async () => {
-      try {
-        const freshRooms = await getAllRooms(selectedSucursalId);
-        setRooms(freshRooms || []);
-      } catch (e) {}
-    };
-
-    const handleSyncHospitals = async () => {
-      try {
-        const freshNosocomios = await getNosocomios();
-        setNosocomios(freshNosocomios || []);
-      } catch (e) {}
-    };
-
-    const handleSyncUsers = async () => {
-      try {
-        const freshUsers = await getStaffUsers(selectedNosocomioId, selectedSucursalId);
-        setStaffUsers(freshUsers || []);
-      } catch (e) {}
-    };
-
-    const handleStorage = (e) => {
-      if (e.key === "bedtrack_nosocomios_data") handleSyncHospitals();
-      if (e.key === "bedtrack_staff_users_data") handleSyncUsers();
-      if (e.key && e.key.startsWith("bedtrack_rooms_data")) handleSyncRooms();
-    };
-
-    window.addEventListener("bedtrack_rooms_updated", handleSyncRooms);
-    window.addEventListener("bedtrack_hospitals_updated", handleSyncHospitals);
-    window.addEventListener("bedtrack_users_updated", handleSyncUsers);
-    window.addEventListener("storage", handleStorage);
-
-    return () => {
-      window.removeEventListener("bedtrack_rooms_updated", handleSyncRooms);
-      window.removeEventListener("bedtrack_hospitals_updated", handleSyncHospitals);
-      window.removeEventListener("bedtrack_users_updated", handleSyncUsers);
-      window.removeEventListener("storage", handleStorage);
-    };
-  }, [selectedNosocomioId, selectedSucursalId]);
-
   const loadInitialData = async () => {
     setLoading(true);
     try {
@@ -190,6 +145,58 @@ export default function SuperAdminPanel({ onLogout }) {
       setLoading(false);
     }
   };
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    loadInitialData();
+  }, []);
+
+  useEffect(() => {
+    const handleSyncRooms = async () => {
+      try {
+        const freshRooms = await getAllRooms(selectedSucursalId);
+        setRooms(freshRooms || []);
+      } catch (error) {
+        console.warn("Error sincronizando habitaciones:", error);
+      }
+    };
+
+    const handleSyncHospitals = async () => {
+      try {
+        const freshNosocomios = await getNosocomios();
+        setNosocomios(freshNosocomios || []);
+      } catch (error) {
+        console.warn("Error sincronizando nosocomios:", error);
+      }
+    };
+
+    const handleSyncUsers = async () => {
+      try {
+        const freshUsers = await getStaffUsers(selectedNosocomioId, selectedSucursalId);
+        setStaffUsers(freshUsers || []);
+      } catch (error) {
+        console.warn("Error sincronizando usuarios:", error);
+      }
+    };
+
+    const handleStorage = (e) => {
+      if (e.key === "bedtrack_nosocomios_data") handleSyncHospitals();
+      if (e.key === "bedtrack_staff_users_data") handleSyncUsers();
+      if (e.key && e.key.startsWith("bedtrack_rooms_data")) handleSyncRooms();
+    };
+
+    window.addEventListener("bedtrack_rooms_updated", handleSyncRooms);
+    window.addEventListener("bedtrack_hospitals_updated", handleSyncHospitals);
+    window.addEventListener("bedtrack_users_updated", handleSyncUsers);
+    window.addEventListener("storage", handleStorage);
+
+    return () => {
+      window.removeEventListener("bedtrack_rooms_updated", handleSyncRooms);
+      window.removeEventListener("bedtrack_hospitals_updated", handleSyncHospitals);
+      window.removeEventListener("bedtrack_users_updated", handleSyncUsers);
+      window.removeEventListener("storage", handleStorage);
+    };
+  }, [selectedNosocomioId, selectedSucursalId]);
 
   useEffect(() => {
     if (selectedNosocomioId || selectedSucursalId) {
@@ -690,8 +697,8 @@ export default function SuperAdminPanel({ onLogout }) {
         ...user,
         activo: !user.activo,
       });
-      setStaffUsers((prev) => prev.map((u) => (u.id === user.id ? { ...u, activo: !u.activo } : u)));
-      showNotification(`Usuario ${!user.activo ? "activado" : "desactivado"}`);
+      setStaffUsers((prev) => prev.map((u) => (u.id === user.id ? { ...u, ...updated } : u)));
+      showNotification(`Usuario ${updated.activo ? "activado" : "desactivado"}`);
     } catch (err) {
       showNotification(err.message, "error");
     }
