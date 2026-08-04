@@ -156,11 +156,15 @@ public class HospitalRepository : IHospitalRepository
 
         if (sucursalId.HasValue)
         {
-            query = query.Where(u => u.SucursalId == sucursalId.Value || (u.NosocomioId == nosocomioId && u.SucursalId == null));
+            query = query.Where(u => 
+                u.SucursalId == sucursalId.Value || 
+                (nosocomioId.HasValue && u.NosocomioId == nosocomioId.Value) || 
+                u.NosocomioId == null || 
+                u.SucursalId == null);
         }
         else if (nosocomioId.HasValue)
         {
-            query = query.Where(u => u.NosocomioId == nosocomioId.Value);
+            query = query.Where(u => u.NosocomioId == nosocomioId.Value || u.NosocomioId == null);
         }
 
         return await query.ToListAsync();

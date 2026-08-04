@@ -528,10 +528,11 @@ public class HospitalService : IHospitalService
 
     public async Task<StaffLoginResponseDto> ValidateStaffLoginAsync(StaffLoginRequestDto request)
     {
+        var requestedNormalizedRole = UsuarioStaff.NormalizarRol(request.Rol);
         var users = await _repo.ObtenerUsuariosStaffAsync(request.NosocomioId, request.SucursalId);
         var user = users.FirstOrDefault(u => 
             u.Email.Equals(request.Email.Trim(), StringComparison.OrdinalIgnoreCase) && 
-            u.Rol.Equals(request.Rol.Trim(), StringComparison.OrdinalIgnoreCase) &&
+            UsuarioStaff.NormalizarRol(u.Rol) == requestedNormalizedRole &&
             u.Activo);
 
         if (user == null)

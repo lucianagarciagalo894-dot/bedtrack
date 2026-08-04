@@ -41,6 +41,7 @@ import {
   updateStaffUser,
   deleteStaffUser,
   getAuditLogs,
+  normalizeRole,
 } from "../services/superAdminService";
 import { getAllRooms, getFloors } from "../services/roomService";
 
@@ -950,7 +951,7 @@ export default function SuperAdminPanel({ onLogout }) {
                       <td style={{ padding: "10px" }}>{u.email}</td>
                       <td style={{ padding: "10px" }}>
                         <span style={{ background: u.rol === "admin" ? "#FEF3C7" : "#DBEAFE", color: u.rol === "admin" ? "#D97706" : "#2563EB", padding: "4px 8px", borderRadius: "6px", fontSize: "0.75rem", fontWeight: "600" }}>
-                          {u.rol === "enfermeria" ? "Enfermería" : u.rol}
+                          {normalizeRole(u.rol) === "enfermeria" ? "Enfermería" : normalizeRole(u.rol) === "encargado" ? "Encargado" : u.rol}
                         </span>
                       </td>
                       <td style={{ padding: "10px", color: "#64748B" }}>{u.hospitalNombre || "Global"}</td>

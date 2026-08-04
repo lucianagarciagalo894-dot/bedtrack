@@ -25,6 +25,14 @@ export async function loginDev(email = "", devKey = "") {
   }
 }
 
+export function normalizeRole(role) {
+  if (!role) return "enfermeria";
+  const clean = role.toString().trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  if (clean.includes("enferm") || clean.includes("nurse")) return "enfermeria";
+  if (clean.includes("encargad") || clean.includes("admin")) return "encargado";
+  return clean;
+}
+
 export async function validateStaffLogin(email = "", password = "", role = "enfermeria", nosocomioId = null, sucursalId = null) {
   let apiErrorMessage = null;
   try {
@@ -34,7 +42,7 @@ export async function validateStaffLogin(email = "", password = "", role = "enfe
       body: JSON.stringify({
         email: email.trim(),
         password,
-        role,
+        role: normalizeRole(role),
         nosocomioId: nosocomioId ? parseInt(nosocomioId, 10) : null,
         sucursalId: sucursalId ? parseInt(sucursalId, 10) : null,
       }),
@@ -51,12 +59,13 @@ export async function validateStaffLogin(email = "", password = "", role = "enfe
     }
   }
 
+  const targetRole = normalizeRole(role);
   const staff = getStoredStaffUsers();
   const found = staff.find(
     (u) =>
       u.email &&
       u.email.trim().toLowerCase() === email.trim().toLowerCase() &&
-      u.rol === role &&
+      normalizeRole(u.rol) === targetRole &&
       (!nosocomioId || !u.nosocomioId || parseInt(u.nosocomioId, 10) === parseInt(nosocomioId, 10))
   );
 
@@ -123,12 +132,17 @@ export function saveStoredNosocomios(list) {
 }
 
 export function getStoredStaffUsers() {
-  if (typeof window === "undefined") return localStaffUsersStore;
-  try {
-    const raw = localStorage.getItem(STAFF_USERS_STORAGE_KEY);
-    if (raw !== null) return JSON.parse(raw);
-  } catch (e) {}
-  return localStaffUsersStore;
+  let list = localStaffUsersStore;
+  if (typeof window !== "undefined") {
+    try {
+      const raw = localStorage.getItem(STAFF_USERS_STORAGE_KEY);
+      if (raw !== null) list = JSON.parse(raw);
+    } catch (e) {}
+  }
+  return (list || []).map((u) => ({
+    ...u,
+    rol: normalizeRole(u.rol),
+  }));
 }
 
 export function saveStoredStaffUsers(list) {
@@ -757,7 +771,7 @@ export async function createStaffUser(userData) {
       nombre: userData.nombre,
       email: userData.email,
       password: userData.password || "123456",
-      rol: userData.rol || "enfermeria",
+      rol: normalizeRole(userData.rol),
       activo: userData.activo !== false,
       nosocomioId: userData.nosocomioId ? parseInt(userData.nosocomioId, 10) : null,
       sucursalId: userData.sucursalId ? parseInt(userData.sucursalId, 10) : null,

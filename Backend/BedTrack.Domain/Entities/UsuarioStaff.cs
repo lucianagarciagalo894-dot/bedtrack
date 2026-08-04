@@ -22,12 +22,22 @@ public class UsuarioStaff
         Rol = string.Empty;
     }
 
+    public static string NormalizarRol(string? rol)
+    {
+        if (string.IsNullOrWhiteSpace(rol)) return "enfermeria";
+        var clean = rol.Trim().ToLowerInvariant();
+        clean = clean.Replace("á", "a").Replace("é", "e").Replace("í", "i").Replace("ó", "o").Replace("ú", "u");
+        if (clean.Contains("enferm") || clean.Contains("nurse")) return "enfermeria";
+        if (clean.Contains("encargad") || clean.Contains("admin")) return "encargado";
+        return clean;
+    }
+
     public UsuarioStaff(string nombre, string email, string password, string rol, int? nosocomioId = null, int? sucursalId = null)
     {
         Nombre = nombre;
         Email = email;
         Password = password;
-        Rol = rol;
+        Rol = NormalizarRol(rol);
         NosocomioId = nosocomioId;
         SucursalId = sucursalId;
         Activo = true;
@@ -38,7 +48,7 @@ public class UsuarioStaff
         Nombre = nombre;
         Email = email;
         if (!string.IsNullOrWhiteSpace(password)) Password = password;
-        Rol = rol;
+        Rol = NormalizarRol(rol);
         Activo = activo;
         NosocomioId = nosocomioId;
         SucursalId = sucursalId;
