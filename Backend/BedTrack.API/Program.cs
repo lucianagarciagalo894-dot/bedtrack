@@ -25,10 +25,9 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("PermitirReact", policy =>
     {
-        policy.SetIsOriginAllowed(_ => true)
+        policy.AllowAnyOrigin()
               .AllowAnyHeader()
-              .AllowAnyMethod()
-              .AllowCredentials();
+              .AllowAnyMethod();
     });
 });
 
@@ -44,7 +43,6 @@ builder.Services.AddSwaggerGen();
 var app = builder.Build();
 
 app.UseForwardedHeaders();
-app.UseCors("PermitirReact");
 
 using (var scope = app.Services.CreateScope())
 {
@@ -183,14 +181,12 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-else
-{
-    app.UseHsts();
-}
+
+app.UseHttpsRedirection();
 
 app.UseRouting();
 
-app.UseHttpsRedirection();
+app.UseCors("PermitirReact");
 
 app.MapControllers();
 
