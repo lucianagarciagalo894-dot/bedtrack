@@ -1046,11 +1046,7 @@ export default function SuperAdminPanel({ onLogout }) {
               placeholder="🔍 Buscar por nombre, email o acción del operador..."
               value={auditUserFilter}
               onChange={(e) => setAuditUserFilter(e.target.value)}
-<<<<<<< HEAD
-              style={{ padding: "8px 12px", borderRadius: "8px", border: "1px solid #CBD5E1", fontSize: "0.85rem", minWidth: "280px", flex: 1 }}
-=======
               style={{ padding: "8px 12px", borderRadius: "8px", border: "1px solid #CBD5E1", fontSize: "0.85rem", flex: "1 1 200px", minWidth: "0" }}
->>>>>>> cd11055bf8ded0815b89f35eabe762ec0d25ec30
             />
             <select
               value={auditRoleFilter}
