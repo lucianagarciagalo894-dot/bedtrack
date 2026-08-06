@@ -209,16 +209,13 @@ export async function getNosocomios() {
     if (res.ok) {
       const data = await res.json();
       if (Array.isArray(data)) {
-        const combined = [...data];
-        for (const localNos of stored) {
-          const idx = combined.findIndex((n) => n.id.toString() === localNos.id.toString() || n.codigo === localNos.codigo);
-          if (idx >= 0) {
-            combined[idx] = { ...combined[idx], ...localNos };
-          } else {
-            combined.push(localNos);
-          }
+        localNosocomiosStore = filterDeletedNosocomios(data);
+        if (typeof window !== "undefined") {
+          try {
+            localStorage.setItem(NOSOCOMIOS_STORAGE_KEY, JSON.stringify(localNosocomiosStore));
+          } catch (e) {}
         }
-        return filterDeletedNosocomios(combined);
+        return localNosocomiosStore;
       }
     }
     return filterDeletedNosocomios(stored.length > 0 ? stored : getFallbackNosocomios());
