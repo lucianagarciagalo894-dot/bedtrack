@@ -31,11 +31,17 @@ function AppContent() {
 
   const [devRole, setDevRole] = useState(() => {
     try {
-      const storedDev = localStorage.getItem("bedtrack_dev_role");
-      if (storedDev) return storedDev;
-      const storedRole = localStorage.getItem("bedtrack_role");
-      if (storedRole === "superadmin" || storedRole === "developer") return storedRole;
-      return null;
+      let storedDev = localStorage.getItem("bedtrack_dev_role");
+      if (!storedDev) {
+        const storedRole = localStorage.getItem("bedtrack_role");
+        if (storedRole === "superadmin" || storedRole === "developer") {
+          storedDev = storedRole;
+          try {
+            localStorage.setItem("bedtrack_dev_role", storedDev);
+          } catch (e) {}
+        }
+      }
+      return storedDev || null;
     } catch (e) {
       return null;
     }
