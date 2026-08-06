@@ -35,27 +35,37 @@ public class HospitalRepository : IHospitalRepository
 
     public void EliminarNosocomio(Nosocomio nosocomio)
     {
-        var sucursales = _context.Sucursales.Where(s => s.NosocomioId == nosocomio.Id).ToList();
-        var sucursalIds = sucursales.Select(s => s.Id).ToList();
-        var pisos = _context.Pisos.Where(p => p.SucursalId.HasValue && sucursalIds.Contains(p.SucursalId.Value)).ToList();
-        var pisoIds = pisos.Select(p => p.Id).ToList();
-        var habitaciones = _context.Habitaciones.Where(h => pisoIds.Contains(h.PisoId)).ToList();
-        var habitacionIds = habitaciones.Select(h => h.Id).ToList();
-        var camas = _context.Camas.Where(c => habitacionIds.Contains(c.HabitacionId)).ToList();
-        var camaIds = camas.Select(c => c.Id).ToList();
-        var pacientes = _context.Pacientes.Where(p => p.Cama != null && camaIds.Contains(p.Cama.Id)).ToList();
-        var usuarios = _context.UsuariosStaff.Where(u => u.NosocomioId == nosocomio.Id).ToList();
-        var historial = _context.HistorialCamas.Where(h => (h.NosocomioId.HasValue && h.NosocomioId.Value == nosocomio.Id) || (h.CamaId > 0 && camaIds.Contains(h.CamaId))).ToList();
+        var id = nosocomio.Id;
 
-        if (historial.Any()) _context.HistorialCamas.RemoveRange(historial);
-        if (pacientes.Any()) _context.Pacientes.RemoveRange(pacientes);
-        if (camas.Any()) _context.Camas.RemoveRange(camas);
-        if (habitaciones.Any()) _context.Habitaciones.RemoveRange(habitaciones);
-        if (pisos.Any()) _context.Pisos.RemoveRange(pisos);
-        if (usuarios.Any()) _context.UsuariosStaff.RemoveRange(usuarios);
-        if (sucursales.Any()) _context.Sucursales.RemoveRange(sucursales);
+        // 1. Desvincular PacienteId de Camas para romper FK circular Pacientes <-> Camas
+        _context.Database.ExecuteSqlRaw(@"UPDATE ""Camas"" SET ""PacienteId"" = NULL WHERE ""HabitacionId"" IN (SELECT h.""Id"" FROM ""Habitaciones"" h JOIN ""Pisos"" p ON h.""PisoId"" = p.""Id"" JOIN ""Sucursales"" s ON p.""SucursalId"" = s.""Id"" WHERE s.""NosocomioId"" = {0})", id);
 
-        _context.Nosocomios.Remove(nosocomio);
+        // 2. Eliminar HistorialCamas
+        _context.Database.ExecuteSqlRaw(@"DELETE FROM ""HistorialCamas"" WHERE ""NosocomioId"" = {0} OR ""CamaId"" IN (SELECT c.""Id"" FROM ""Camas"" c JOIN ""Habitaciones"" h ON c.""HabitacionId"" = h.""Id"" JOIN ""Pisos"" p ON h.""PisoId"" = p.""Id"" JOIN ""Sucursales"" s ON p.""SucursalId"" = s.""Id"" WHERE s.""NosocomioId"" = {0})", id);
+
+        // 3. Eliminar Camas
+        _context.Database.ExecuteSqlRaw(@"DELETE FROM ""Camas"" WHERE ""HabitacionId"" IN (SELECT h.""Id"" FROM ""Habitaciones"" h JOIN ""Pisos"" p ON h.""PisoId"" = p.""Id"" JOIN ""Sucursales"" s ON p.""SucursalId"" = s.""Id"" WHERE s.""NosocomioId"" = {0})", id);
+
+        // 4. Eliminar Pacientes huerfanos
+        _context.Database.ExecuteSqlRaw(@"DELETE FROM ""Pacientes"" WHERE ""Id"" NOT IN (SELECT ""PacienteId"" FROM ""Camas"" WHERE ""PacienteId"" IS NOT NULL)");
+
+        // 5. Eliminar Habitaciones
+        _context.Database.ExecuteSqlRaw(@"DELETE FROM ""Habitaciones"" WHERE ""PisoId"" IN (SELECT p.""Id"" FROM ""Pisos"" p JOIN ""Sucursales"" s ON p.""SucursalId"" = s.""Id"" WHERE s.""NosocomioId"" = {0})", id);
+
+        // 6. Eliminar Pisos
+        _context.Database.ExecuteSqlRaw(@"DELETE FROM ""Pisos"" WHERE ""SucursalId"" IN (SELECT s.""Id"" FROM ""Sucursales"" s WHERE s.""NosocomioId"" = {0})", id);
+
+        // 7. Eliminar UsuariosStaff
+        _context.Database.ExecuteSqlRaw(@"DELETE FROM ""UsuariosStaff"" WHERE ""NosocomioId"" = {0}", id);
+
+        // 8. Eliminar Sucursales
+        _context.Database.ExecuteSqlRaw(@"DELETE FROM ""Sucursales"" WHERE ""NosocomioId"" = {0}", id);
+
+        // 9. Eliminar Nosocomio de PostgreSQL / Supabase
+        _context.Database.ExecuteSqlRaw(@"DELETE FROM ""Nosocomios"" WHERE ""Id"" = {0}", id);
+
+        var entry = _context.Entry(nosocomio);
+        if (entry != null) entry.State = EntityState.Detached;
     }
 
     public async Task<IEnumerable<Sucursal>> ObtenerSucursalesPorNosocomioAsync(int nosocomioId)
