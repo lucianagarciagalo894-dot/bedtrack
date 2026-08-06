@@ -1,6 +1,22 @@
 import { getAllRooms, saveStoredRooms, getStoredRooms, getStoredFloors, saveStoredFloors, getStoredAuditLogs, addLocalAuditLog } from "./roomService";
 
 const API_BASE = "https://bedtrack-frontend-final-production.up.railway.app/api";
+const FETCH_TIMEOUT_MS = 5000;
+
+/**
+ * Wraps fetch() with an AbortController timeout.
+ * Falls through quickly (after ~5s) instead of waiting for the browser's default timeout (~90s).
+ */
+async function fetchWithTimeout(url, options = {}) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+  try {
+    const response = await fetch(url, { ...options, signal: controller.signal });
+    return response;
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
 
 // Throttle fallback warnings to once per 60 seconds per message key
 const _warnTimestamps = {};
@@ -15,7 +31,7 @@ function warnOnce(key, ...args) {
 export async function loginDev(email = "", devKey = "") {
   const cleanEmail = email.trim().toLowerCase();
   if (cleanEmail !== "dev@gmail.com" || devKey !== "proyectofinal") {
-    throw new Error("Credenciales de desarrollador inválidas. Ingrese dev@gmail.com y clave proyectofinal.");
+    throw new Error("Credenciales de desarrollador invรกlidas. Ingrese dev@gmail.com y clave proyectofinal.");
   }
 
   try {
@@ -81,12 +97,12 @@ export async function validateStaffLogin(email = "", password = "", role = "enfe
 
   if (found) {
     if (found.activo === false) {
-      throw new Error("Usuario desactivado por la administración.");
+      throw new Error("Usuario desactivado por la administraciรณn.");
     }
     if (found.password && found.password !== password) {
-      throw new Error("Contraseña incorrecta.");
+      throw new Error("Contraseรฑa incorrecta.");
     }
-    return { success: true, user: found, message: "Inicio de sesión exitoso" };
+    return { success: true, user: found, message: "Inicio de sesiรณn exitoso" };
   }
 
   throw new Error(apiErrorMessage || "Usuario no registrado para este hospital o rol inactivo.");
@@ -217,7 +233,7 @@ export async function createNosocomio(data) {
       createdNos = await res.json();
     }
   } catch (err) {
-    warnOnce("createNos", "Creación local de nosocomio por fallback:", err);
+    warnOnce("createNos", "Creaciรณn local de nosocomio por fallback:", err);
   }
 
   if (!createdNos) {
@@ -226,12 +242,12 @@ export async function createNosocomio(data) {
       id: createdId,
       nombre: data.nombre,
       codigo: data.codigo || `NOS-${Math.floor(Math.random() * 9000 + 1000)}`,
-      direccion: data.direccion || "Dirección Principal",
+      direccion: data.direccion || "Direcciรณn Principal",
       sucursales: [
         {
           id: createdId + 1,
           nombre: "Establecimiento Central",
-          direccion: data.direccion || "Dirección Principal",
+          direccion: data.direccion || "Direcciรณn Principal",
           nosocomioId: createdId,
         },
       ],
@@ -243,7 +259,7 @@ export async function createNosocomio(data) {
       {
         id: createdNos.id + 100,
         nombre: "Establecimiento Central",
-        direccion: createdNos.direccion || "Dirección Principal",
+        direccion: createdNos.direccion || "Direcciรณn Principal",
         nosocomioId: createdNos.id,
       },
     ];
@@ -277,7 +293,7 @@ export async function deleteNosocomio(id) {
     // Manejar fallo de red en silencio
   }
 
-  // Purgar datos de habitaciones/camas/auditoría de localStorage para cada sede del hospital
+  // Purgar datos de habitaciones/camas/auditorรญa de localStorage para cada sede del hospital
   if (typeof window !== "undefined") {
     try {
       localStorage.removeItem(`bedtrack_rooms_data_${id}`);
@@ -343,11 +359,11 @@ export async function exportHospitalAuditHistoryCSV(nosocomioId = null, sucursal
     "ID Evento",
     "Fecha y Hora",
     "Operador",
-    "Correo Electrónico",
+    "Correo Electrรณnico",
     "Rol",
-    "Habitación",
-    "Cama N°",
-    "Acción Realizada",
+    "Habitaciรณn",
+    "Cama Nยฐ",
+    "Acciรณn Realizada",
     "Estado Anterior",
     "Estado Nuevo",
   ];
@@ -417,7 +433,7 @@ export async function createSucursal(data) {
       created = {
         id: createdId,
         nombre: data.nombre,
-        direccion: data.direccion || "Dirección Sede",
+        direccion: data.direccion || "Direcciรณn Sede",
         nosocomioId: data.nosocomioId,
       };
     }
@@ -428,7 +444,7 @@ export async function createSucursal(data) {
     created = {
       id: createdId,
       nombre: data.nombre,
-      direccion: data.direccion || "Dirección Sede",
+      direccion: data.direccion || "Direcciรณn Sede",
       nosocomioId: data.nosocomioId,
     };
   }
@@ -465,7 +481,7 @@ export async function createRoom(data, sucursalId = null) {
       created = await res.json();
     }
   } catch (err) {
-    warnOnce("createRoom", "Creación local de habitación por fallback:", err);
+    warnOnce("createRoom", "Creaciรณn local de habitaciรณn por fallback:", err);
   }
 
   if (!created) {
@@ -496,7 +512,7 @@ export async function createRoom(data, sucursalId = null) {
     const updatedRooms = [...currentRooms, created];
     saveStoredRooms(updatedRooms, sId);
   } catch (e) {
-    console.error("Error guardando habitación en localStorage:", e);
+    console.error("Error guardando habitaciรณn en localStorage:", e);
   }
 
   return created;
@@ -515,7 +531,7 @@ export async function updateRoom(roomId, data, sucursalId = null) {
       updated = await res.json();
     }
   } catch (err) {
-    warnOnce("updateRoom", "Actualización local de habitación por fallback:", err);
+    warnOnce("updateRoom", "Actualizaciรณn local de habitaciรณn por fallback:", err);
   }
 
   const currentRooms = await getAllRooms(sId);
@@ -538,7 +554,7 @@ export async function updateRoom(roomId, data, sucursalId = null) {
     const updatedRooms = currentRooms.map((r) => (r.id === Number(roomId) ? { ...r, ...updated } : r));
     saveStoredRooms(updatedRooms, sId);
   } catch (e) {
-    console.error("Error actualizando habitación en localStorage:", e);
+    console.error("Error actualizando habitaciรณn en localStorage:", e);
   }
 
   return updated;
@@ -550,7 +566,7 @@ export async function deleteRoom(roomId, sucursalId = null) {
       method: "DELETE",
     });
   } catch (err) {
-    warnOnce("deleteRoom", "Eliminación local de habitación por fallback:", err);
+    warnOnce("deleteRoom", "Eliminaciรณn local de habitaciรณn por fallback:", err);
   }
 
   try {
@@ -558,7 +574,7 @@ export async function deleteRoom(roomId, sucursalId = null) {
     const updatedRooms = currentRooms.filter((r) => r.id !== Number(roomId));
     saveStoredRooms(updatedRooms, sucursalId);
   } catch (e) {
-    console.error("Error eliminando habitación de localStorage:", e);
+    console.error("Error eliminando habitaciรณn de localStorage:", e);
   }
 
   return true;
@@ -577,7 +593,7 @@ export async function createBed(data, sucursalId = null) {
       created = await res.json();
     }
   } catch (err) {
-    warnOnce("createBed", "Creación local de cama por fallback:", err);
+    warnOnce("createBed", "Creaciรณn local de cama por fallback:", err);
   }
 
   if (!created) {
@@ -609,7 +625,7 @@ export async function createBed(data, sucursalId = null) {
     usuarioNombre: data.operatorName || "Desarrollador / SuperAdmin",
     usuarioEmail: data.operatorEmail || "developer@bedtrack.com",
     usuarioRol: data.operatorRole || "developer",
-    accion: `Creó la Cama #${created.number || created.numero || 1} (${data.status || "disponible"})`,
+    accion: `Creรณ la Cama #${created.number || created.numero || 1} (${data.status || "disponible"})`,
     estadoAnterior: "-",
     estadoNuevo: data.status || "disponible",
     fechaHora: new Date().toLocaleString("es-AR"),
@@ -632,7 +648,7 @@ export async function updateBed(bedId, data, sucursalId = null) {
       updated = await res.json();
     }
   } catch (err) {
-    warnOnce("updateBed", "Actualización local de cama por fallback:", err);
+    warnOnce("updateBed", "Actualizaciรณn local de cama por fallback:", err);
   }
 
   if (!updated) {
@@ -662,7 +678,7 @@ export async function updateBed(bedId, data, sucursalId = null) {
     usuarioNombre: data.operatorName || "Desarrollador / SuperAdmin",
     usuarioEmail: data.operatorEmail || "developer@bedtrack.com",
     usuarioRol: data.operatorRole || "developer",
-    accion: `Modificó datos/estado de la Cama #${updated.number || updated.numero || 1}`,
+    accion: `Modificรณ datos/estado de la Cama #${updated.number || updated.numero || 1}`,
     estadoAnterior: "modificado",
     estadoNuevo: data.status || "disponible",
     fechaHora: new Date().toLocaleString("es-AR"),
@@ -690,7 +706,7 @@ export async function deleteBed(bedId, sucursalId = null) {
       method: "DELETE",
     });
   } catch (err) {
-    warnOnce("deleteBed", "Eliminación local de cama por fallback:", err);
+    warnOnce("deleteBed", "Eliminaciรณn local de cama por fallback:", err);
   }
 
   try {
@@ -711,7 +727,7 @@ export async function deleteBed(bedId, sucursalId = null) {
     usuarioNombre: "Desarrollador / SuperAdmin",
     usuarioEmail: "developer@bedtrack.com",
     usuarioRol: "developer",
-    accion: `Eliminó la Cama #${targetBedNum}`,
+    accion: `Eliminรณ la Cama #${targetBedNum}`,
     estadoAnterior: "disponible",
     estadoNuevo: "eliminada",
     fechaHora: new Date().toLocaleString("es-AR"),
@@ -733,7 +749,7 @@ export async function createFullHospitalSetup(data) {
       createdNos = await res.json();
     }
   } catch (err) {
-    warnOnce("createHospital", "Creación local de hospital completo por fallback:", err);
+    warnOnce("createHospital", "Creaciรณn local de hospital completo por fallback:", err);
   }
 
   if (!createdNos) {
@@ -742,12 +758,12 @@ export async function createFullHospitalSetup(data) {
       id: createdId,
       nombre: data.nombreNosocomio,
       codigo: data.codigoNosocomio || "HOSP-" + Math.floor(Math.random() * 900 + 100),
-      direccion: data.direccionNosocomio || "Dirección Principal",
+      direccion: data.direccionNosocomio || "Direcciรณn Principal",
       sucursales: [
         {
           id: createdId + 1,
           nombre: data.nombreSucursal || "Establecimiento Central",
-          direccion: data.direccionSucursal || "Dirección Principal",
+          direccion: data.direccionSucursal || "Direcciรณn Principal",
           nosocomioId: createdId,
         },
       ],
@@ -759,7 +775,7 @@ export async function createFullHospitalSetup(data) {
       {
         id: createdNos.id + 100,
         nombre: data.nombreSucursal || "Establecimiento Central",
-        direccion: data.direccionSucursal || createdNos.direccion || "Dirección Principal",
+        direccion: data.direccionSucursal || createdNos.direccion || "Direcciรณn Principal",
         nosocomioId: createdNos.id,
       },
     ];
@@ -836,7 +852,7 @@ export async function updateNosocomio(id, data) {
       updated = { ...updated, ...serverUpdated };
     }
   } catch (err) {
-    warnOnce("updateNos", "Actualización local de nosocomio por fallback:", err);
+    warnOnce("updateNos", "Actualizaciรณn local de nosocomio por fallback:", err);
   }
   const currentStore = getStoredNosocomios();
   const updatedList = currentStore.map((n) => (n.id.toString() === id.toString() ? { ...n, ...updated } : n));
@@ -857,7 +873,7 @@ export async function updateSucursal(id, data) {
       updated = { ...updated, ...serverUpdated };
     }
   } catch (err) {
-    warnOnce("updateSuc", "Actualización local de sucursal por fallback:", err);
+    warnOnce("updateSuc", "Actualizaciรณn local de sucursal por fallback:", err);
   }
   const currentStore = getStoredNosocomios();
   const updatedList = currentStore.map((n) => ({
@@ -879,7 +895,7 @@ export async function createFloor(data, sucursalId = null) {
     });
     if (res.ok) created = await res.json();
   } catch (err) {
-    warnOnce("createFloor", "Creación local de piso por fallback:", err);
+    warnOnce("createFloor", "Creaciรณn local de piso por fallback:", err);
   }
 
   if (!created) {
@@ -908,7 +924,7 @@ export async function updateFloor(id, data, sucursalId = null) {
       updatedFloor = await res.json();
     }
   } catch (err) {
-    warnOnce("updateFloor", "Actualización local de piso por fallback:", err);
+    warnOnce("updateFloor", "Actualizaciรณn local de piso por fallback:", err);
   }
 
   if (!updatedFloor) {
@@ -963,7 +979,7 @@ export async function deleteFloor(id, sucursalId = null) {
       method: "DELETE",
     });
   } catch (err) {
-    warnOnce("deleteFloor", "Eliminación local de piso por fallback:", err);
+    warnOnce("deleteFloor", "Eliminaciรณn local de piso por fallback:", err);
   }
 
   if (sucursalId) {
@@ -1031,7 +1047,7 @@ export async function createStaffUser(userData) {
       created = await res.json();
     }
   } catch (err) {
-    warnOnce("createUser", "Creación local de usuario por fallback:", err);
+    warnOnce("createUser", "Creaciรณn local de usuario por fallback:", err);
   }
 
   if (!created) {

@@ -1,4 +1,5 @@
 const API_BASE = "https://bedtrack-frontend-final-production.up.railway.app/api";
+const FETCH_TIMEOUT_MS = 5000;
 
 // Throttle fallback warnings to once per 60 seconds per message key
 const _warnTimestamps = {};
@@ -7,6 +8,21 @@ function warnOnce(key, ...args) {
   if (!_warnTimestamps[key] || now - _warnTimestamps[key] > 60000) {
     _warnTimestamps[key] = now;
     console.warn(...args);
+  }
+}
+
+/**
+ * Wraps fetch() with an AbortController timeout.
+ * Falls through quickly (after ~5s) instead of waiting for the browser's default timeout (~90s).
+ */
+async function fetchWithTimeout(url, options = {}) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+  try {
+    const response = await fetch(url, { ...options, signal: controller.signal });
+    return response;
+  } finally {
+    clearTimeout(timeoutId);
   }
 }
 
@@ -152,7 +168,7 @@ export async function getFloors(sucursalId = null) {
 
   try {
     const url = `${API_BASE}/floors?sucursalId=${sId}`;
-    const res = await fetch(url);
+    const res = await fetchWithTimeout(url);
     if (res.ok) {
       const data = await res.json();
       if (Array.isArray(data) && data.length > 0) {
@@ -170,7 +186,7 @@ export async function getAllRooms(sucursalId = null) {
 
   try {
     const url = sucursalId ? `${API_BASE}/rooms?sucursalId=${sucursalId}` : `${API_BASE}/rooms`;
-    const res = await fetch(url);
+    const res = await fetchWithTimeout(url);
     if (res.ok) {
       const data = await res.json();
       if (Array.isArray(data)) {
@@ -319,7 +335,7 @@ export async function updateBedStatus(bedId, status, patient = null, operatorInf
 
   let updatedBed = null;
   try {
-    const res = await fetch(`${API_BASE}/beds/${bedId}/status`, {
+    const res = await fetchWithTimeout(`${API_BASE}/beds/${bedId}/status`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
@@ -422,7 +438,7 @@ export async function getGlobalAuditHistory(sucursalId = null) {
   let logs = [];
   try {
     const url = sucursalId ? `${API_BASE}/beds/history?sucursalId=${sucursalId}` : `${API_BASE}/beds/history`;
-    const res = await fetch(url);
+    const res = await fetchWithTimeout(url);
     if (res.ok) {
       const data = await res.json();
       if (Array.isArray(data) && data.length > 0) {
@@ -445,7 +461,7 @@ export async function getGlobalAuditHistory(sucursalId = null) {
 export async function getBedHistory(bedId) {
   let logs = [];
   try {
-    const res = await fetch(`${API_BASE}/beds/${bedId}/history`);
+    const res = await fetchWithTimeout(`${API_BASE}/beds/${bedId}/history`);
     if (res.ok) {
       const data = await res.json();
       if (Array.isArray(data) && data.length > 0) {

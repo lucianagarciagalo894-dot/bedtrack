@@ -45,7 +45,7 @@ import {
   deleteNosocomio,
   exportHospitalAuditHistoryCSV,
 } from "../services/superAdminService";
-import { getAllRooms, getFloors } from "../services/roomService";
+import { getAllRooms, getFloors, getStoredRooms, getStoredFloors } from "../services/roomService";
 
 export default function SuperAdminPanel({ onLogout }) {
   // State for Nosocomio & Sucursal selection
@@ -113,6 +113,9 @@ export default function SuperAdminPanel({ onLogout }) {
     selectedSucIdRef.current = selectedSucursalId;
   }, [selectedNosocomioId, selectedSucursalId]);
 
+  // Cache for sucursal data to avoid flickering when switching back
+  const sucursalCache = useRef({});
+
   // --- Load sucursal-specific data (rooms, floors, staff, audit) ---
   const loadSucursalData = useCallback(async (nosId, sucId) => {
     if (!nosId || !sucId) {
@@ -122,6 +125,18 @@ export default function SuperAdminPanel({ onLogout }) {
       setAuditLogs([]);
       return;
     }
+
+    // STEP 1: Load cached data immediately (no flicker)
+    const cacheKey = `${nosId}_${sucId}`;
+    const cached = sucursalCache.current[cacheKey];
+    if (cached) {
+      setRooms(cached.rooms || []);
+      setFloors(cached.floors || []);
+      setStaffUsers(cached.staffUsers || []);
+      setAuditLogs(cached.auditLogs || []);
+    }
+
+    // STEP 2: Try to refresh from server (or localStorage) in background
     try {
       const [roomsData, floorsData, usersData, logsData] = await Promise.all([
         getAllRooms(sucId),
@@ -131,13 +146,29 @@ export default function SuperAdminPanel({ onLogout }) {
       ]);
       // Only update if the selection hasn't changed while we were fetching
       if (selectedNosIdRef.current === nosId && selectedSucIdRef.current === sucId) {
-        setRooms(roomsData || []);
-        setFloors(floorsData || []);
-        setStaffUsers(usersData || []);
-        setAuditLogs(logsData || []);
+        const freshRooms = roomsData || [];
+        const freshFloors = floorsData || [];
+        const freshUsers = usersData || [];
+        const freshLogs = logsData || [];
+        setRooms(freshRooms);
+        setFloors(freshFloors);
+        setStaffUsers(freshUsers);
+        setAuditLogs(freshLogs);
+        // Populate cache
+        sucursalCache.current[cacheKey] = {
+          rooms: freshRooms,
+          floors: freshFloors,
+          staffUsers: freshUsers,
+          auditLogs: freshLogs,
+        };
       }
     } catch (err) {
       console.warn("Error al cargar datos de sucursal:", err);
+      // If we didn't have cached data, try loading from localStorage as last resort
+      if (!cached && selectedNosIdRef.current === nosId && selectedSucIdRef.current === sucId) {
+        setRooms(getStoredRooms(sucId));
+        setFloors(getStoredFloors(sucId));
+      }
     }
   }, []);
 
