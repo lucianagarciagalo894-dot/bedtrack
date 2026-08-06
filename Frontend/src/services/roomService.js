@@ -1,5 +1,15 @@
 const API_BASE = "https://bedtrack-frontend-final-production.up.railway.app/api";
 
+// Throttle fallback warnings to once per 60 seconds per message key
+const _warnTimestamps = {};
+function warnOnce(key, ...args) {
+  const now = Date.now();
+  if (!_warnTimestamps[key] || now - _warnTimestamps[key] > 60000) {
+    _warnTimestamps[key] = now;
+    console.warn(...args);
+  }
+}
+
 export const ROOMS_STORAGE_KEY = "bedtrack_rooms_data";
 
 export function getStorageKey(sucursalId = null) {
@@ -178,7 +188,7 @@ export async function getRoomsByFloor(floorId, sucursalId = null) {
     const all = await getAllRooms(sucursalId);
     return all.filter((r) => String(r.floorId) === String(floorId));
   } catch (err) {
-    console.warn("Usando filtro local de habitaciones por piso:", err);
+    warnOnce("roomsByFloor", "Usando filtro local de habitaciones por piso:", err);
     const all = getStoredRooms(sucursalId);
     return all.filter((r) => String(r.floorId) === String(floorId));
   }
@@ -189,7 +199,7 @@ export async function getRoomById(roomId, sucursalId = null) {
     const all = await getAllRooms(sucursalId);
     return all.find((r) => r.id === Number(roomId)) || all[0];
   } catch (err) {
-    console.warn("Usando búsqueda local de habitación:", err);
+    warnOnce("roomById", "Usando búsqueda local de habitación:", err);
     const all = getStoredRooms(sucursalId);
     return all.find((r) => r.id === Number(roomId)) || all[0];
   }
@@ -318,7 +328,7 @@ export async function updateBedStatus(bedId, status, patient = null, operatorInf
       updatedBed = await res.json();
     }
   } catch (err) {
-    console.warn("Usando respuesta local para actualizar cama:", err);
+    warnOnce("updateBedLocal", "Usando respuesta local para actualizar cama:", err);
   }
 
   if (!updatedBed) {

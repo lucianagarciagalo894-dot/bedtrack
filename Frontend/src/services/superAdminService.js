@@ -2,6 +2,16 @@ import { getAllRooms, saveStoredRooms, getStoredRooms, getStoredFloors, saveStor
 
 const API_BASE = "https://bedtrack-frontend-final-production.up.railway.app/api";
 
+// Throttle fallback warnings to once per 60 seconds per message key
+const _warnTimestamps = {};
+function warnOnce(key, ...args) {
+  const now = Date.now();
+  if (!_warnTimestamps[key] || now - _warnTimestamps[key] > 60000) {
+    _warnTimestamps[key] = now;
+    console.warn(...args);
+  }
+}
+
 export async function loginDev(email = "", devKey = "") {
   const cleanEmail = email.trim().toLowerCase();
   if (cleanEmail !== "dev@gmail.com" || devKey !== "proyectofinal") {
@@ -207,7 +217,7 @@ export async function createNosocomio(data) {
       createdNos = await res.json();
     }
   } catch (err) {
-    console.warn("Creación local de nosocomio por fallback:", err);
+    warnOnce("createNos", "Creación local de nosocomio por fallback:", err);
   }
 
   if (!createdNos) {
@@ -382,7 +392,7 @@ export async function getSucursales(nosocomioId) {
     if (!res.ok) throw new Error("Error al obtener sucursales");
     return await res.json();
   } catch (err) {
-    console.warn("Usando lista local de sucursales:", err);
+    warnOnce("sucursales", "Usando lista local de sucursales:", err);
     return [
       { id: 1, nombre: "Sede Central", direccion: "Av. Principal 123", nosocomioId },
     ];
@@ -455,7 +465,7 @@ export async function createRoom(data, sucursalId = null) {
       created = await res.json();
     }
   } catch (err) {
-    console.warn("Creación local de habitación por fallback:", err);
+    warnOnce("createRoom", "Creación local de habitación por fallback:", err);
   }
 
   if (!created) {
@@ -505,7 +515,7 @@ export async function updateRoom(roomId, data, sucursalId = null) {
       updated = await res.json();
     }
   } catch (err) {
-    console.warn("Actualización local de habitación por fallback:", err);
+    warnOnce("updateRoom", "Actualización local de habitación por fallback:", err);
   }
 
   const currentRooms = await getAllRooms(sId);
@@ -540,7 +550,7 @@ export async function deleteRoom(roomId, sucursalId = null) {
       method: "DELETE",
     });
   } catch (err) {
-    console.warn("Eliminación local de habitación por fallback:", err);
+    warnOnce("deleteRoom", "Eliminación local de habitación por fallback:", err);
   }
 
   try {
@@ -567,7 +577,7 @@ export async function createBed(data, sucursalId = null) {
       created = await res.json();
     }
   } catch (err) {
-    console.warn("Creación local de cama por fallback:", err);
+    warnOnce("createBed", "Creación local de cama por fallback:", err);
   }
 
   if (!created) {
@@ -622,7 +632,7 @@ export async function updateBed(bedId, data, sucursalId = null) {
       updated = await res.json();
     }
   } catch (err) {
-    console.warn("Actualización local de cama por fallback:", err);
+    warnOnce("updateBed", "Actualización local de cama por fallback:", err);
   }
 
   if (!updated) {
@@ -680,7 +690,7 @@ export async function deleteBed(bedId, sucursalId = null) {
       method: "DELETE",
     });
   } catch (err) {
-    console.warn("Eliminación local de cama por fallback:", err);
+    warnOnce("deleteBed", "Eliminación local de cama por fallback:", err);
   }
 
   try {
@@ -723,7 +733,7 @@ export async function createFullHospitalSetup(data) {
       createdNos = await res.json();
     }
   } catch (err) {
-    console.warn("Creación local de hospital completo por fallback:", err);
+    warnOnce("createHospital", "Creación local de hospital completo por fallback:", err);
   }
 
   if (!createdNos) {
@@ -826,7 +836,7 @@ export async function updateNosocomio(id, data) {
       updated = { ...updated, ...serverUpdated };
     }
   } catch (err) {
-    console.warn("Actualización local de nosocomio por fallback:", err);
+    warnOnce("updateNos", "Actualización local de nosocomio por fallback:", err);
   }
   const currentStore = getStoredNosocomios();
   const updatedList = currentStore.map((n) => (n.id.toString() === id.toString() ? { ...n, ...updated } : n));
@@ -847,7 +857,7 @@ export async function updateSucursal(id, data) {
       updated = { ...updated, ...serverUpdated };
     }
   } catch (err) {
-    console.warn("Actualización local de sucursal por fallback:", err);
+    warnOnce("updateSuc", "Actualización local de sucursal por fallback:", err);
   }
   const currentStore = getStoredNosocomios();
   const updatedList = currentStore.map((n) => ({
@@ -869,7 +879,7 @@ export async function createFloor(data, sucursalId = null) {
     });
     if (res.ok) created = await res.json();
   } catch (err) {
-    console.warn("Creación local de piso por fallback:", err);
+    warnOnce("createFloor", "Creación local de piso por fallback:", err);
   }
 
   if (!created) {
@@ -898,7 +908,7 @@ export async function updateFloor(id, data, sucursalId = null) {
       updatedFloor = await res.json();
     }
   } catch (err) {
-    console.warn("Actualización local de piso por fallback:", err);
+    warnOnce("updateFloor", "Actualización local de piso por fallback:", err);
   }
 
   if (!updatedFloor) {
@@ -953,7 +963,7 @@ export async function deleteFloor(id, sucursalId = null) {
       method: "DELETE",
     });
   } catch (err) {
-    console.warn("Eliminación local de piso por fallback:", err);
+    warnOnce("deleteFloor", "Eliminación local de piso por fallback:", err);
   }
 
   if (sucursalId) {
@@ -987,7 +997,7 @@ export async function getStaffUsers(nosocomioId = null, sucursalId = null) {
     }
     return getFallbackStaffUsers(nosocomioId, sucursalId);
   } catch (err) {
-    console.warn("Usando lista local de usuarios staff:", err);
+    warnOnce("staff", "Usando lista local de usuarios staff:", err);
     return getFallbackStaffUsers(nosocomioId, sucursalId);
   }
 }
@@ -1021,7 +1031,7 @@ export async function createStaffUser(userData) {
       created = await res.json();
     }
   } catch (err) {
-    console.warn("Creación local de usuario por fallback:", err);
+    warnOnce("createUser", "Creación local de usuario por fallback:", err);
   }
 
   if (!created) {

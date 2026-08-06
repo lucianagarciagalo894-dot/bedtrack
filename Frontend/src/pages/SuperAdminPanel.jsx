@@ -179,7 +179,7 @@ export default function SuperAdminPanel({ onLogout }) {
       if (!ignore) {
         loadInitialData();
       }
-    }, 3000);
+    }, 30000);
     return () => {
       ignore = true;
       clearInterval(timer);
