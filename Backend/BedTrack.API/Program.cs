@@ -57,14 +57,39 @@ using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     
-    context.Database.Migrate();
+    try
+    {
+        context.Database.Migrate();
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Error ejecutando Database.Migrate(): {ex.Message}");
+    }
+
+    try
+    {
+        context.Database.ExecuteSqlRaw(@"
+            ALTER TABLE IF EXISTS ""HistorialCamas"" ADD COLUMN IF NOT EXISTS ""NosocomioId"" integer NULL;
+            ALTER TABLE IF EXISTS ""HistorialCamas"" ADD COLUMN IF NOT EXISTS ""SucursalId"" integer NULL;
+            ALTER TABLE IF EXISTS ""HistorialCamas"" ADD COLUMN IF NOT EXISTS ""UsuarioRol"" character varying(50) DEFAULT 'enfermeria';
+        ");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Error añadiendo columnas faltantes a HistorialCamas: {ex.Message}");
+    }
 
     try
     {
         var testHospitals = context.Nosocomios
             .Where(n => n.Nombre.ToLower().Contains("prueba") || 
                         n.Nombre.ToLower().Contains("hospital nuevo") || 
-                        n.Codigo.StartsWith("HOSP-"))
+                        n.Nombre.ToLower().Contains("hospital central bedtrack") || 
+                        n.Nombre.ToLower().Contains("sanatorio allende") || 
+                        n.Codigo.StartsWith("HOSP-") || 
+                        n.Codigo == "HC-01" || 
+                        n.Codigo == "SA-02" || 
+                        n.Nombre.ToLower().Contains("cypress"))
             .ToList();
 
         if (testHospitals.Any())
@@ -96,43 +121,30 @@ using (var scope = app.Services.CreateScope())
         Console.WriteLine($"Error al purgar hospitales de prueba: {ex.Message}");
     }
 
-    if (!context.Pisos.Any())
+    try
     {
-        var pisos = new List<Piso>
+        var orphanFloors = context.Pisos.Where(p => p.SucursalId == null).ToList();
+        if (orphanFloors.Any())
         {
-            new Piso("Piso 1", "Privada", "privada"),
-            new Piso("Piso 2", "Compartida", "compartida"),
-            new Piso("Piso 3", "Compartida", "compartida"),
-            new Piso("Piso 4", "Terapia Intensiva", "intensiva"),
-            new Piso("Piso 5", "Aislamiento", "aislamiento")
-        };
+            var orphanFloorIds = orphanFloors.Select(p => p.Id).ToList();
+            var orphanRooms = context.Habitaciones.Where(h => orphanFloorIds.Contains(h.PisoId)).ToList();
+            var orphanRoomIds = orphanRooms.Select(h => h.Id).ToList();
+            var orphanBeds = context.Camas.Where(c => orphanRoomIds.Contains(c.HabitacionId)).ToList();
+            var orphanBedIds = orphanBeds.Select(b => b.Id).ToList();
+            var orphanPacientes = context.Pacientes.Where(p => p.Cama != null && orphanBedIds.Contains(p.Cama.Id)).ToList();
+            var orphanHistorial = orphanBedIds.Any() ? context.HistorialCamas.Where(h => orphanBedIds.Contains(h.CamaId)).ToList() : new List<HistorialCama>();
 
-        var config = new[]
-        {
-            new { Piso = pisos[0], RoomCount = 12, BedsPerRoom = 1 },
-            new { Piso = pisos[1], RoomCount = 6, BedsPerRoom = 2 },
-            new { Piso = pisos[2], RoomCount = 6, BedsPerRoom = 2 },
-            new { Piso = pisos[3], RoomCount = 12, BedsPerRoom = 1 },
-            new { Piso = pisos[4], RoomCount = 12, BedsPerRoom = 1 }
-        };
-
-        foreach (var c in config)
-        {
-            for (int r = 1; r <= c.RoomCount; r++)
-            {
-                var hab = new Habitacion(r, 0);
-                c.Piso.Habitaciones.Add(hab);
-
-                for (int b = 1; b <= c.BedsPerRoom; b++)
-                {
-                    var cama = new Cama(b, 0);
-                    hab.Camas.Add(cama);
-                }
-            }
+            if (orphanHistorial.Any()) context.HistorialCamas.RemoveRange(orphanHistorial);
+            if (orphanPacientes.Any()) context.Pacientes.RemoveRange(orphanPacientes);
+            if (orphanBeds.Any()) context.Camas.RemoveRange(orphanBeds);
+            if (orphanRooms.Any()) context.Habitaciones.RemoveRange(orphanRooms);
+            context.Pisos.RemoveRange(orphanFloors);
+            context.SaveChanges();
         }
-
-        context.Pisos.AddRange(pisos);
-        context.SaveChanges();
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Error al purgar pisos huérfanos: {ex.Message}");
     }
 }
 

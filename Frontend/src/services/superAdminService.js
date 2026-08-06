@@ -110,45 +110,21 @@ export function registerDeletedNosocomio(id, codigo = null) {
 }
 
 function filterDeletedNosocomios(list) {
-  const deleted = getDeletedNosocomioIds();
   return (list || []).filter((n) => {
     if (!n) return false;
-    const idStr = n.id ? n.id.toString() : "";
     const nameLower = (n.nombre || "").toLowerCase();
     const codeStr = n.codigo ? n.codigo.toString().toLowerCase() : "";
 
-    // Filter out test/junk hospitals created by testing artifacts
     if (nameLower.includes("prueba") || nameLower === "hospital nuevo" || codeStr.startsWith("hosp-")) {
       return false;
     }
 
-    if (!deleted || deleted.length === 0) return true;
-    return !deleted.includes(idStr) && !deleted.includes(codeStr);
+    return true;
   });
 }
 
 function getBaseNosocomios() {
-  return [
-    {
-      id: 1,
-      nombre: "Hospital Central BedTrack",
-      codigo: "HC-01",
-      direccion: "Av. Colón 1234",
-      sucursales: [
-        { id: 1, nombre: "Establecimiento Central", direccion: "Av. Colón 1234", nosocomioId: 1 },
-        { id: 2, nombre: "Establecimiento Norte", direccion: "Av. Rafael Nuñez 4567", nosocomioId: 1 }
-      ]
-    },
-    {
-      id: 2,
-      nombre: "Sanatorio Allende S.A.",
-      codigo: "SA-02",
-      direccion: "Obispo Oro 345",
-      sucursales: [
-        { id: 3, nombre: "Establecimiento Nueva Córdoba", direccion: "Obispo Oro 345", nosocomioId: 2 }
-      ]
-    }
-  ];
+  return [];
 }
 
 export function getStoredNosocomios() {
@@ -164,11 +140,7 @@ export function getStoredNosocomios() {
       }
     }
   } catch (e) {}
-  const deleted = getDeletedNosocomioIds();
-  if (deleted && deleted.length > 0) {
-    return [];
-  }
-  return filterDeletedNosocomios(localNosocomiosStore.length > 0 ? localNosocomiosStore : getBaseNosocomios());
+  return filterDeletedNosocomios(localNosocomiosStore);
 }
 
 export function saveStoredNosocomios(list) {
@@ -209,7 +181,7 @@ export function saveStoredStaffUsers(list) {
 export async function getNosocomios() {
   const stored = getStoredNosocomios();
   try {
-    const res = await fetch(`${API_BASE}/superadmin/nosocomios`);
+    const res = await fetch(`${API_BASE}/superadmin/nosocomios?_t=${Date.now()}`, { cache: "no-store" });
     if (res.ok) {
       const data = await res.json();
       if (Array.isArray(data)) {
@@ -222,29 +194,14 @@ export async function getNosocomios() {
         return localNosocomiosStore;
       }
     }
-    return filterDeletedNosocomios(stored.length > 0 ? stored : getFallbackNosocomios());
+    return filterDeletedNosocomios(stored);
   } catch (err) {
-    return filterDeletedNosocomios(stored.length > 0 ? stored : getFallbackNosocomios());
+    return filterDeletedNosocomios(stored);
   }
 }
 
 function getFallbackNosocomios() {
-  const deleted = getDeletedNosocomioIds();
-  if (deleted && deleted.length > 0) {
-    return filterDeletedNosocomios(localNosocomiosStore);
-  }
-  const base = getBaseNosocomios();
-  const combined = [...base];
-  const stored = getStoredNosocomios();
-  for (const localNos of stored) {
-    const idx = combined.findIndex((n) => n.id.toString() === localNos.id.toString() || n.codigo === localNos.codigo);
-    if (idx >= 0) {
-      combined[idx] = { ...combined[idx], ...localNos };
-    } else {
-      combined.push(localNos);
-    }
-  }
-  return filterDeletedNosocomios(combined);
+  return filterDeletedNosocomios(getStoredNosocomios());
 }
 
 export async function createNosocomio(data) {

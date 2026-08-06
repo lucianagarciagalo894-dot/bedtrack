@@ -6,6 +6,17 @@ import { updateNosocomio, updateStaffUser, createRoom, saveStoredNosocomios, sav
 describe('Sincronización en Tiempo Real entre Panel de Desarrollador y Hospital', () => {
   beforeEach(() => {
     localStorage.clear();
+    saveStoredNosocomios([
+      {
+        id: 1,
+        nombre: 'Hospital Central BedTrack',
+        codigo: 'HC-01',
+        activo: true,
+        sucursales: [
+          { id: 1, nombre: 'Establecimiento Central', nosocomioId: 1, activo: true }
+        ]
+      }
+    ]);
     window.history.pushState({}, 'Dashboard', '/dashboard');
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('Offline Fallback')));
   });
