@@ -69,10 +69,6 @@ function AppContent() {
     setDevRole(null);
     try {
       localStorage.removeItem("bedtrack_dev_role");
-      const currentRole = localStorage.getItem("bedtrack_role");
-      if (currentRole === "superadmin" || currentRole === "developer") {
-        localStorage.removeItem("bedtrack_role");
-      }
     } catch (e) {
       console.error("Error eliminando sesión de desarrollador de localStorage:", e);
     }
@@ -82,7 +78,6 @@ function AppContent() {
     setDevRole(selectedDevRole);
     try {
       localStorage.setItem("bedtrack_dev_role", selectedDevRole);
-      localStorage.setItem("bedtrack_role", selectedDevRole);
     } catch (e) {}
   };
 
@@ -297,7 +292,7 @@ function AppContent() {
     location.pathname === "/superadmin" ||
     location.pathname === "/dev";
 
-  const activeDevRole = devRole || (role === "superadmin" || role === "developer" ? role : null);
+  const activeDevRole = devRole;
 
   if (isDevUrl) {
     if (activeDevRole === "superadmin" || activeDevRole === "developer") {
