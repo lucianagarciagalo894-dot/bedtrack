@@ -45,6 +45,7 @@ function findSucursalKeyForBed(bedId) {
 }
 
 export function getStoredRooms(sucursalId = null) {
+  if (sucursalId === "") return [];
   if (typeof window === "undefined") return getFallbackRooms(sucursalId);
   const key = getStorageKey(sucursalId);
   try {
@@ -56,7 +57,9 @@ export function getStoredRooms(sucursalId = null) {
       }
     }
   } catch (err) {
-    console.warn(`Error leyendo ${key} de localStorage:`, err);
+    try {
+      localStorage.removeItem(key);
+    } catch (e) {}
   }
   const fallback = getFallbackRooms(sucursalId);
   try {
@@ -66,18 +69,18 @@ export function getStoredRooms(sucursalId = null) {
 }
 
 export function saveStoredRooms(rooms, sucursalId = null) {
-  if (typeof window === "undefined") return;
-  const sId = sucursalId || (Array.isArray(rooms) && rooms.length > 0 ? rooms[0]?.sucursalId : null);
-  const key = getStorageKey(sId);
+  if (typeof window === "undefined" || sucursalId === "") return;
+  const key = getStorageKey(sucursalId);
   try {
     localStorage.setItem(key, JSON.stringify(rooms));
   } catch (err) {
     console.error(`Error guardando ${key} en localStorage:`, err);
   }
-  window.dispatchEvent(new CustomEvent("bedtrack_rooms_updated", { detail: { sucursalId: sId } }));
+  window.dispatchEvent(new CustomEvent("bedtrack_rooms_updated", { detail: { sucursalId } }));
 }
 
 export async function getFloors(sucursalId = null) {
+  if (sucursalId === "") return [];
   try {
     const url = sucursalId ? `${API_BASE}/floors?sucursalId=${sucursalId}` : `${API_BASE}/floors`;
     const res = await fetch(url);
@@ -91,6 +94,7 @@ export async function getFloors(sucursalId = null) {
 }
 
 export async function getAllRooms(sucursalId = null) {
+  if (sucursalId === "") return [];
   const key = getStorageKey(sucursalId);
   if (typeof window !== "undefined") {
     try {
@@ -102,7 +106,10 @@ export async function getAllRooms(sucursalId = null) {
         }
       }
     } catch (err) {
-      console.warn(`Error consultando localStorage para habitaciones (${key}):`, err);
+      try {
+        localStorage.removeItem(key);
+      } catch (e) {}
+      return getStoredRooms(sucursalId);
     }
   }
 
@@ -117,7 +124,6 @@ export async function getAllRooms(sucursalId = null) {
     }
     return getStoredRooms(sucursalId);
   } catch (err) {
-    console.warn("Usando habitaciones locales de respaldo para sucursal:", sucursalId, err);
     return getStoredRooms(sucursalId);
   }
 }
@@ -398,6 +404,7 @@ function getFallbackFloors(sucursalId) {
 }
 
 function getFallbackRooms(sucursalId) {
+  if (sucursalId === "") return [];
   const sId = sucursalId ? sucursalId.toString() : "1";
 
   if (sId === "2") {

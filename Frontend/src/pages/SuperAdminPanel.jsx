@@ -218,9 +218,18 @@ export default function SuperAdminPanel({ onLogout }) {
         .then((r) => setRooms(r || []))
         .catch((err) => console.warn("Error al cargar habitaciones por sucursal:", err));
 
-      getAuditLogs(null, selectedSucursalId)
+      getFloors(selectedSucursalId)
+        .then((f) => setFloors(f || []))
+        .catch((err) => console.warn("Error al cargar pisos por sucursal:", err));
+
+      getAuditLogs(selectedSucursalId, selectedNosocomioId)
         .then((logs) => setAuditLogs(logs || []))
         .catch((err) => console.warn("Error al filtrar auditoría por sucursal:", err));
+    } else {
+      setStaffUsers([]);
+      setRooms([]);
+      setFloors([]);
+      setAuditLogs([]);
     }
   }, [selectedNosocomioId, selectedSucursalId]);
 
@@ -290,6 +299,10 @@ export default function SuperAdminPanel({ onLogout }) {
       } else {
         setSelectedNosocomioId("");
         setSelectedSucursalId("");
+        setStaffUsers([]);
+        setRooms([]);
+        setFloors([]);
+        setAuditLogs([]);
       }
       showNotification(`Nosocomio "${targetName}" y todas sus dependencias eliminadas con éxito.`);
     } catch (err) {

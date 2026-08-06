@@ -290,6 +290,8 @@ export async function deleteNosocomio(id) {
   const targetNos = currentStore.find((n) => n.id.toString() === id.toString());
   registerDeletedNosocomio(id, targetNos?.codigo);
 
+  const sucursalIds = (targetNos?.sucursales || []).map((s) => s.id.toString());
+
   try {
     await fetch(`${API_BASE}/superadmin/nosocomios/${id}`, {
       method: "DELETE",
@@ -298,12 +300,32 @@ export async function deleteNosocomio(id) {
     // Manejar fallo de red en silencio
   }
 
+  // Purgar datos de habitaciones/camas de localStorage para cada sede del hospital
+  if (typeof window !== "undefined") {
+    try {
+      localStorage.removeItem(`bedtrack_rooms_data_${id}`);
+      sucursalIds.forEach((sId) => {
+        localStorage.removeItem(`bedtrack_rooms_data_${sId}`);
+        localStorage.removeItem(`bedtrack_floors_data_${sId}`);
+      });
+    } catch (e) {}
+  }
+
   const updatedList = currentStore.filter((n) => n.id.toString() !== id.toString());
   saveStoredNosocomios(updatedList);
 
   const currentStaff = getStoredStaffUsers();
-  const updatedStaff = currentStaff.filter((u) => !u.nosocomioId || u.nosocomioId.toString() !== id.toString());
+  const updatedStaff = currentStaff.filter((u) => {
+    if (!u) return false;
+    const matchNos = u.nosocomioId && u.nosocomioId.toString() === id.toString();
+    const matchSuc = u.sucursalId && sucursalIds.includes(u.sucursalId.toString());
+    return !matchNos && !matchSuc;
+  });
   saveStoredStaffUsers(updatedStaff);
+
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent("bedtrack_rooms_updated", { detail: { nosocomioId: id } }));
+  }
 
   return true;
 }
