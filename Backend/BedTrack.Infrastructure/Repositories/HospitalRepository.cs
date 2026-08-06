@@ -45,7 +45,7 @@ public class HospitalRepository : IHospitalRepository
         var camaIds = camas.Select(c => c.Id).ToList();
         var pacientes = _context.Pacientes.Where(p => p.Cama != null && camaIds.Contains(p.Cama.Id)).ToList();
         var usuarios = _context.UsuariosStaff.Where(u => u.NosocomioId == nosocomio.Id).ToList();
-        var historial = _context.HistorialCamas.Where(h => (h.NosocomioId.HasValue && h.NosocomioId.Value == nosocomio.Id) || (h.CamaId > 0 && camaIds.Contains(h.CamaId))).ToList();
+        var historial = camaIds.Any() ? _context.HistorialCamas.Where(h => camaIds.Contains(h.CamaId)).ToList() : new List<HistorialCama>();
 
         if (historial.Any()) _context.HistorialCamas.RemoveRange(historial);
         if (pacientes.Any()) _context.Pacientes.RemoveRange(pacientes);

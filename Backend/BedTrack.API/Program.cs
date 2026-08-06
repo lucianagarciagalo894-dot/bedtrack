@@ -76,7 +76,7 @@ using (var scope = app.Services.CreateScope())
             var beds = context.Camas.Where(c => roomIds.Contains(c.HabitacionId)).ToList();
             var bedIds = beds.Select(b => b.Id).ToList();
             var pacientes = context.Pacientes.Where(p => p.Cama != null && bedIds.Contains(p.Cama.Id)).ToList();
-            var historial = context.HistorialCamas.Where(h => (h.NosocomioId.HasValue && testIds.Contains(h.NosocomioId.Value)) || (h.CamaId > 0 && bedIds.Contains(h.CamaId))).ToList();
+            var historial = bedIds.Any() ? context.HistorialCamas.Where(h => bedIds.Contains(h.CamaId)).ToList() : new List<HistorialCama>();
 
             if (historial.Any()) context.HistorialCamas.RemoveRange(historial);
             if (pacientes.Any()) context.Pacientes.RemoveRange(pacientes);
