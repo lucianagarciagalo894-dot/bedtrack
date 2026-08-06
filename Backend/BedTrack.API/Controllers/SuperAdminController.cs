@@ -61,9 +61,16 @@ public class SuperAdminController : ControllerBase
     [HttpDelete("nosocomios/{id}")]
     public async Task<IActionResult> DeleteNosocomio(int id)
     {
-        var deleted = await _service.DeleteNosocomioAsync(id);
-        if (!deleted) return NotFound(new { message = "Nosocomio no encontrado" });
-        return NoContent();
+        try
+        {
+            var deleted = await _service.DeleteNosocomioAsync(id);
+            if (!deleted) return NotFound(new { message = "Nosocomio no encontrado" });
+            return NoContent();
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { error = ex.Message, inner = ex.InnerException?.Message, stackTrace = ex.StackTrace });
+        }
     }
 
     [HttpGet("nosocomios/{nosocomioId}/sucursales")]
