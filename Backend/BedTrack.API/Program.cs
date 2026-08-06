@@ -21,22 +21,14 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
     options.KnownProxies.Clear();
 });
 
-var allowedOrigins = builder.Configuration.GetSection("AllowedOrigins").Get<string[]>() ?? Array.Empty<string>();
-
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("PermitirReact", policy =>
     {
-        policy.SetIsOriginAllowed(origin =>
-        {
-            if (string.IsNullOrEmpty(origin)) return false;
-            if (allowedOrigins.Contains(origin)) return true;
-            if (origin.EndsWith(".vercel.app") || origin.EndsWith(".railway.app")) return true;
-            return true;
-        })
-        .AllowAnyHeader()
-        .AllowAnyMethod()
-        .AllowCredentials();
+        policy.SetIsOriginAllowed(_ => true)
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials();
     });
 });
 
@@ -52,6 +44,7 @@ builder.Services.AddSwaggerGen();
 var app = builder.Build();
 
 app.UseForwardedHeaders();
+app.UseCors("PermitirReact");
 
 using (var scope = app.Services.CreateScope())
 {
@@ -196,8 +189,6 @@ else
 }
 
 app.UseRouting();
-
-app.UseCors("PermitirReact");
 
 app.UseHttpsRedirection();
 
