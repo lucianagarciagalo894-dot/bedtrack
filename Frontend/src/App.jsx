@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { FaBars } from "react-icons/fa";
 import Sidebar from "./components/Sidebar";
 import Login from "./pages/Login";
@@ -58,6 +58,7 @@ function AppContent() {
 
   const [sidebarOpen, setSidebarOpen]         = useState(false);
   const [rooms, setRooms]                     = useState([]);
+  const navigate = useNavigate();
   const location = useLocation();
 
   const handleLogout = () => {
@@ -68,6 +69,18 @@ function AppContent() {
       localStorage.removeItem("bedtrack_session_hospital");
     } catch (e) {
       console.error("Error eliminando sesión de hospital de localStorage:", e);
+    }
+
+    const hasDevActive = devRole || (() => {
+      try {
+        return localStorage.getItem("bedtrack_dev_role");
+      } catch (e) {
+        return null;
+      }
+    })();
+
+    if (hasDevActive) {
+      navigate("/superadmin");
     }
   };
 
