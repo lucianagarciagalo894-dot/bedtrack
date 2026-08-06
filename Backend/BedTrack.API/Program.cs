@@ -59,6 +59,37 @@ using (var scope = app.Services.CreateScope())
     
     context.Database.Migrate();
 
+    try
+    {
+        var testHospitals = context.Nosocomios
+            .Where(n => n.Nombre.ToLower().Contains("prueba") || 
+                        n.Nombre.ToLower().Contains("hospital nuevo") || 
+                        n.Codigo.StartsWith("HOSP-"))
+            .ToList();
+
+        if (testHospitals.Any())
+        {
+            var testIds = testHospitals.Select(h => h.Id).ToList();
+            var sucursalIds = context.Sucursales.Where(s => testIds.Contains(s.NosocomioId)).Select(s => s.Id).ToList();
+            var pisoIds = context.Pisos.Where(p => p.SucursalId.HasValue && sucursalIds.Contains(p.SucursalId.Value)).Select(p => p.Id).ToList();
+            var roomIds = context.Habitaciones.Where(h => pisoIds.Contains(h.PisoId)).Select(h => h.Id).ToList();
+            var beds = context.Camas.Where(c => roomIds.Contains(c.HabitacionId)).ToList();
+            
+            if (beds.Any()) context.Camas.RemoveRange(beds);
+            if (roomIds.Any()) context.Habitaciones.RemoveRange(context.Habitaciones.Where(h => roomIds.Contains(h.Id)));
+            if (pisoIds.Any()) context.Pisos.RemoveRange(context.Pisos.Where(p => pisoIds.Contains(p.Id)));
+            if (sucursalIds.Any()) context.Sucursales.RemoveRange(context.Sucursales.Where(s => sucursalIds.Contains(s.Id)));
+            context.UsuariosStaff.RemoveRange(context.UsuariosStaff.Where(u => u.NosocomioId.HasValue && testIds.Contains(u.NosocomioId.Value)));
+            context.HistorialCamas.RemoveRange(context.HistorialCamas.Where(h => h.NosocomioId.HasValue && testIds.Contains(h.NosocomioId.Value)));
+            context.Nosocomios.RemoveRange(testHospitals);
+            context.SaveChanges();
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Error al purgar hospitales de prueba: {ex.Message}");
+    }
+
     if (!context.Pisos.Any())
     {
         var pisos = new List<Piso>

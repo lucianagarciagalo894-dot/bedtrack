@@ -150,8 +150,14 @@ export default function SuperAdminPanel({ onLogout }) {
       }
     };
     init();
+    const timer = setInterval(() => {
+      if (!ignore) {
+        loadInitialData();
+      }
+    }, 5000);
     return () => {
       ignore = true;
+      clearInterval(timer);
     };
   }, [loadInitialData]);
 

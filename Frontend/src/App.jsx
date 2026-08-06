@@ -129,6 +129,10 @@ function AppContent() {
   useEffect(() => {
     if (role) {
       fetchRooms();
+      const timer = setInterval(() => {
+        fetchRooms();
+      }, 4000);
+      return () => clearInterval(timer);
     }
   }, [role, sessionHospital]);
 

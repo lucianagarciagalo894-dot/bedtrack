@@ -140,19 +140,6 @@ export async function getFloors(sucursalId = null) {
   const sId = sucursalId ? sucursalId.toString() : null;
   if (!sId) return [];
 
-  const key = `bedtrack_floors_data_${sId}`;
-  if (typeof window !== "undefined") {
-    try {
-      const raw = localStorage.getItem(key);
-      if (raw !== null) {
-        const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          return parsed;
-        }
-      }
-    } catch (e) {}
-  }
-
   try {
     const url = `${API_BASE}/floors?sucursalId=${sId}`;
     const res = await fetch(url);
@@ -170,37 +157,20 @@ export async function getFloors(sucursalId = null) {
 
 export async function getAllRooms(sucursalId = null) {
   if (sucursalId === "") return [];
-  const key = getStorageKey(sucursalId);
-  if (typeof window !== "undefined") {
-    try {
-      const raw = localStorage.getItem(key);
-      if (raw !== null) {
-        const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed)) {
-          return parsed;
-        }
-      }
-    } catch (err) {
-      try {
-        localStorage.removeItem(key);
-      } catch (e) {}
-      return getStoredRooms(sucursalId);
-    }
-  }
 
   try {
     const url = sucursalId ? `${API_BASE}/rooms?sucursalId=${sucursalId}` : `${API_BASE}/rooms`;
     const res = await fetch(url);
-    if (!res.ok) throw new Error("Error al obtener las habitaciones");
-    const data = await res.json();
-    if (Array.isArray(data)) {
-      saveStoredRooms(data, sucursalId);
-      return data;
+    if (res.ok) {
+      const data = await res.json();
+      if (Array.isArray(data)) {
+        saveStoredRooms(data, sucursalId);
+        return data;
+      }
     }
-    return getStoredRooms(sucursalId);
-  } catch (err) {
-    return getStoredRooms(sucursalId);
-  }
+  } catch (err) {}
+
+  return getStoredRooms(sucursalId);
 }
 
 export async function getRoomsByFloor(floorId, sucursalId = null) {

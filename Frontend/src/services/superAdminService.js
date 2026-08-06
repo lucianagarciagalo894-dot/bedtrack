@@ -1,4 +1,4 @@
-import { getAllRooms, saveStoredRooms, getStoredRooms, getStoredFloors, saveStoredFloors, getStoredAuditLogs } from "./roomService";
+import { getAllRooms, saveStoredRooms, getStoredRooms, getStoredFloors, saveStoredFloors, getStoredAuditLogs, addLocalAuditLog } from "./roomService";
 
 const API_BASE = "https://bedtrack-frontend-final-production.up.railway.app/api";
 
@@ -111,11 +111,18 @@ export function registerDeletedNosocomio(id, codigo = null) {
 
 function filterDeletedNosocomios(list) {
   const deleted = getDeletedNosocomioIds();
-  if (!deleted || deleted.length === 0) return list || [];
   return (list || []).filter((n) => {
     if (!n) return false;
     const idStr = n.id ? n.id.toString() : "";
+    const nameLower = (n.nombre || "").toLowerCase();
     const codeStr = n.codigo ? n.codigo.toString().toLowerCase() : "";
+
+    // Filter out test/junk hospitals created by testing artifacts
+    if (nameLower.includes("prueba") || nameLower === "hospital nuevo" || codeStr.startsWith("hosp-")) {
+      return false;
+    }
+
+    if (!deleted || deleted.length === 0) return true;
     return !deleted.includes(idStr) && !deleted.includes(codeStr);
   });
 }
@@ -1030,17 +1037,8 @@ export async function getStaffUsers(nosocomioId = null, sucursalId = null) {
     if (res.ok) {
       const data = await res.json();
       if (Array.isArray(data)) {
-        const combined = [...data];
-        const stored = getStoredStaffUsers();
-        for (const localUser of stored) {
-          const idx = combined.findIndex((u) => u.id.toString() === localUser.id.toString());
-          if (idx >= 0) {
-            combined[idx] = { ...combined[idx], ...localUser };
-          } else {
-            combined.push(localUser);
-          }
-        }
-        return filterUsersBySucursal(combined, nosocomioId, sucursalId);
+        saveStoredStaffUsers(data);
+        return filterUsersBySucursal(data, nosocomioId, sucursalId);
       }
     }
     return getFallbackStaffUsers(nosocomioId, sucursalId);
@@ -1159,7 +1157,7 @@ export async function getAuditLogs(sucursalId = null, nosocomioId = null, camaId
     const res = await fetch(url);
     if (res.ok) {
       const data = await res.json();
-      if (Array.isArray(data) && data.length > 0) return data;
+      if (Array.isArray(data)) return data;
     }
   } catch (err) {}
 
