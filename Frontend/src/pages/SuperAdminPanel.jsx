@@ -98,6 +98,7 @@ export default function SuperAdminPanel({ onLogout }) {
   // System Settings State
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [maintenanceMode, setMaintenanceMode] = useState(false);
+  const [loadingData, setLoadingData] = useState(false);
 
   const showNotification = (text, type = "success") => {
     setMessage({ text, type });
@@ -112,7 +113,36 @@ export default function SuperAdminPanel({ onLogout }) {
     selectedSucIdRef.current = selectedSucursalId;
   }, [selectedNosocomioId, selectedSucursalId]);
 
-  const loadInitialData = useCallback(async () => {
+  // --- Load sucursal-specific data (rooms, floors, staff, audit) ---
+  const loadSucursalData = useCallback(async (nosId, sucId) => {
+    if (!nosId || !sucId) {
+      setRooms([]);
+      setFloors([]);
+      setStaffUsers([]);
+      setAuditLogs([]);
+      return;
+    }
+    try {
+      const [roomsData, floorsData, usersData, logsData] = await Promise.all([
+        getAllRooms(sucId),
+        getFloors(sucId),
+        getStaffUsers(nosId, sucId),
+        getAuditLogs(sucId, nosId),
+      ]);
+      // Only update if the selection hasn't changed while we were fetching
+      if (selectedNosIdRef.current === nosId && selectedSucIdRef.current === sucId) {
+        setRooms(roomsData || []);
+        setFloors(floorsData || []);
+        setStaffUsers(usersData || []);
+        setAuditLogs(logsData || []);
+      }
+    } catch (err) {
+      console.warn("Error al cargar datos de sucursal:", err);
+    }
+  }, []);
+
+  // --- Load nosocomios list only (used for init + polling) ---
+  const loadNosocomiosList = useCallback(async (isInitial = false) => {
     try {
       const nosData = await getNosocomios();
       const activeNosocomios = nosData || [];
@@ -134,24 +164,6 @@ export default function SuperAdminPanel({ onLogout }) {
           currentSucId = sucs[0]?.id?.toString() || "";
           setSelectedSucursalId(currentSucId);
         }
-
-        if (currentSucId) {
-          const [roomsData, floorsData, usersData, logsData] = await Promise.all([
-            getAllRooms(currentSucId),
-            getFloors(currentSucId),
-            getStaffUsers(currentNosId, currentSucId),
-            getAuditLogs(currentSucId, currentNosId),
-          ]);
-          setRooms(roomsData || []);
-          setFloors(floorsData || []);
-          setStaffUsers(usersData || []);
-          setAuditLogs(logsData || []);
-        } else {
-          setRooms([]);
-          setFloors([]);
-          setStaffUsers([]);
-          setAuditLogs([]);
-        }
       } else {
         setSelectedNosocomioId("");
         setSelectedSucursalId("");
@@ -161,52 +173,61 @@ export default function SuperAdminPanel({ onLogout }) {
         setAuditLogs([]);
       }
     } catch (err) {
-      console.error("Error al cargar datos iniciales:", err);
+      console.error("Error al cargar nosocomios:", err);
     } finally {
-      setLoading(false);
+      if (isInitial) setLoading(false);
     }
   }, []);
 
+  // Backwards-compatible alias used by event handlers and other parts of the component
+  const loadInitialData = useCallback(async () => {
+    await loadNosocomiosList(false);
+    // Also refresh current sucursal data
+    const nosId = selectedNosIdRef.current;
+    const sucId = selectedSucIdRef.current;
+    if (nosId && sucId) {
+      await loadSucursalData(nosId, sucId);
+    }
+  }, [loadNosocomiosList, loadSucursalData]);
+
+  // --- Initial load + polling for nosocomios list ---
   useEffect(() => {
     let ignore = false;
     const init = async () => {
       if (!ignore) {
-        await loadInitialData();
+        await loadNosocomiosList(true);
       }
     };
     init();
     const timer = setInterval(() => {
       if (!ignore) {
-        loadInitialData();
+        loadNosocomiosList(false);
       }
     }, 30000);
     return () => {
       ignore = true;
       clearInterval(timer);
     };
-  }, [loadInitialData]);
+  }, [loadNosocomiosList]);
 
+  // --- Load sucursal data when selection changes ---
   useEffect(() => {
-    let isSubscribed = true;
+    let cancelled = false;
     if (selectedNosocomioId && selectedSucursalId) {
-      Promise.all([
-        getAllRooms(selectedSucursalId),
-        getFloors(selectedSucursalId),
-        getStaffUsers(selectedNosocomioId, selectedSucursalId),
-        getAuditLogs(selectedSucursalId, selectedNosocomioId),
-      ]).then(([r, f, u, l]) => {
-        if (isSubscribed) {
-          setRooms(r || []);
-          setFloors(f || []);
-          setStaffUsers(u || []);
-          setAuditLogs(l || []);
-        }
-      }).catch((err) => console.warn("Error al cargar datos de sucursal:", err));
+      setLoadingData(true);
+      loadSucursalData(selectedNosocomioId, selectedSucursalId).finally(() => {
+        if (!cancelled) setLoadingData(false);
+      });
+    } else {
+      setRooms([]);
+      setFloors([]);
+      setStaffUsers([]);
+      setAuditLogs([]);
     }
     return () => {
-      isSubscribed = false;
+      cancelled = true;
     };
-  }, [selectedNosocomioId, selectedSucursalId]);
+  }, [selectedNosocomioId, selectedSucursalId, loadSucursalData]);
 
   useEffect(() => {
     const handleSyncAll = () => {
@@ -231,10 +252,6 @@ export default function SuperAdminPanel({ onLogout }) {
 
   const handleNosocomioChange = (e) => {
     const id = e.target.value;
-    setRooms([]);
-    setFloors([]);
-    setStaffUsers([]);
-    setAuditLogs([]);
     setSelectedNosocomioId(id);
     const nos = nosocomios.find((n) => n.id.toString() === id);
     if (nos && nos.sucursales && nos.sucursales.length > 0) {
@@ -246,10 +263,6 @@ export default function SuperAdminPanel({ onLogout }) {
 
   const handleSucursalChange = (e) => {
     const newSucId = e.target.value;
-    setRooms([]);
-    setFloors([]);
-    setStaffUsers([]);
-    setAuditLogs([]);
     setSelectedSucursalId(newSucId);
   };
 
