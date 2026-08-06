@@ -173,22 +173,6 @@ export default function Login({ onLogin }) {
       {/* ── Right form container ── */}
       <div className="login-right">
         <main className="login-card" role="main">
-          {(() => {
-            try {
-              if (localStorage.getItem("bedtrack_dev_role")) {
-                return (
-                  <div style={{ marginBottom: "16px", padding: "10px 14px", background: "#F3F4F6", border: "1px solid #E5E7EB", borderRadius: "8px", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.85rem" }}>
-                    <span style={{ color: "#374151", fontWeight: 500 }}>Sesión de Desarrollador activa</span>
-                    <a href="/superadmin" style={{ color: "#2563EB", fontWeight: 600, textDecoration: "none" }}>
-                      Volver al Panel Dev &rarr;
-                    </a>
-                  </div>
-                );
-              }
-            } catch (e) {}
-            return null;
-          })()}
-
           <div className="login-header">
             <div className="login-logo" aria-hidden="true">
               <FaHospitalAlt />
