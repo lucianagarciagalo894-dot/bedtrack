@@ -394,53 +394,10 @@ function AppContent() {
   );
 }
 
-class ErrorBoundary extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = { hasError: false, error: null };
-  }
-
-  static getDerivedStateFromError(error) {
-    return { hasError: true, error };
-  }
-
-  componentDidCatch(error, errorInfo) {
-    console.error("Error capturado por React ErrorBoundary:", error, errorInfo);
-  }
-
-  render() {
-    if (this.state.hasError) {
-      return (
-        <div style={{ minHeight: "100vh", background: "#0F172A", color: "#F8FAFC", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "24px", textAlign: "center" }}>
-          <h2 style={{ fontSize: "1.5rem", marginBottom: "12px", color: "#38BDF8" }}>Portal BedTrack - Restablecimiento de Aplicación</h2>
-          <p style={{ color: "#94A3B8", maxWidth: "500px", marginBottom: "24px" }}>
-            Se detectó un cambio en el estado de la sesión. Haz clic a continuación para recargar la aplicación en un estado limpio.
-          </p>
-          <button
-            onClick={() => {
-              try {
-                localStorage.removeItem("bedtrack_dev_role");
-                localStorage.removeItem("bedtrack_role");
-              } catch (e) {}
-              window.location.href = "/dev-login";
-            }}
-            style={{ padding: "12px 24px", background: "linear-gradient(135deg, #0EA5E9 0%, #0284C7 100%)", color: "#FFFFFF", border: "none", borderRadius: "8px", fontWeight: "600", cursor: "pointer", boxShadow: "0 4px 12px rgba(14, 165, 233, 0.3)" }}
-          >
-            Ir al Portal de Desarrollador
-          </button>
-        </div>
-      );
-    }
-    return this.props.children;
-  }
-}
-
 export default function App() {
   return (
-    <ErrorBoundary>
-      <BrowserRouter>
-        <AppContent />
-      </BrowserRouter>
-    </ErrorBoundary>
+    <BrowserRouter>
+      <AppContent />
+    </BrowserRouter>
   );
 }
