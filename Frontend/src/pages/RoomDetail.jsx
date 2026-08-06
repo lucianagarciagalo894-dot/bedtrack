@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import PatientFormModal from "../components/PatientFormModal";
+import BedHistoryModal from "../components/BedHistoryModal";
 import { TYPE_CONFIG } from "../components/RoomCard";
 import {
   FaArrowLeft,
@@ -12,6 +13,7 @@ import {
   FaUserEdit,
   FaUserCheck,
   FaExclamationCircle,
+  FaHistory,
 } from "react-icons/fa";
 
 const STATUS_CONFIG = {
@@ -44,6 +46,7 @@ export default function RoomDetail({ rooms, role, onChangeBedStatus }) {
   const { roomId }                    = useParams();
   const navigate                      = useNavigate();
   const [modalState, setModalState]   = useState(null); // { bed, mode: "create"|"edit" }
+  const [historyBed, setHistoryBed]   = useState(null);
 
   const room = rooms.find((r) => r.id === Number(roomId));
 
@@ -169,10 +172,33 @@ export default function RoomDetail({ rooms, role, onChangeBedStatus }) {
                     <FaBed size={15} aria-hidden="true" />
                     <span>Cama {bedNum}</span>
                   </div>
-                  <span className={`room-card-status ${bedCfg.cls}`}>
-                    <BedIcon size={10} aria-hidden="true" />
-                    {bedCfg.label}
-                  </span>
+                  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                    <button
+                      onClick={() => setHistoryBed({ ...bed, roomNumber: room.number })}
+                      title="Ver historial de cambios"
+                      aria-label={`Ver historial de Cama ${bedNum}`}
+                      style={{
+                        background: "#F1F5F9",
+                        border: "none",
+                        borderRadius: "6px",
+                        padding: "3px 7px",
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "4px",
+                        fontSize: "0.725rem",
+                        color: "#2563EB",
+                        fontWeight: "600",
+                      }}
+                    >
+                      <FaHistory size={10} />
+                      Historial
+                    </button>
+                    <span className={`room-card-status ${bedCfg.cls}`}>
+                      <BedIcon size={10} aria-hidden="true" />
+                      {bedCfg.label}
+                    </span>
+                  </div>
                 </div>
 
                 {/* Tarjeta del paciente */}
@@ -264,6 +290,16 @@ export default function RoomDetail({ rooms, role, onChangeBedStatus }) {
           isEditing={modalState.mode === "edit"}
         />
       )}
+
+      {/* ── Modal de historial de cama ────────────────────────── */}
+      {historyBed && (
+        <BedHistoryModal
+          bed={historyBed}
+          room={room}
+          onClose={() => setHistoryBed(null)}
+        />
+      )}
     </div>
   );
 }
+

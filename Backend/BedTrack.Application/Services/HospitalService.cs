@@ -452,13 +452,37 @@ public class HospitalService : IHospitalService
         }
 
         await _repo.AgregarCamaAsync(cama);
+
+        var operatorName = string.IsNullOrWhiteSpace(dto.OperatorName) ? "Desarrollador / Administrador" : dto.OperatorName;
+        var operatorEmail = string.IsNullOrWhiteSpace(dto.OperatorEmail) ? "dev@bedtrack.com" : dto.OperatorEmail;
+        var operatorRole = string.IsNullOrWhiteSpace(dto.OperatorRole) ? "developer" : dto.OperatorRole;
+        var sucursalId = hab.Piso?.SucursalId;
+        var nosocomioId = hab.Piso?.Sucursal?.NosocomioId;
+
+        var statusStr = cama.Estado == EstadoCama.EnLimpieza ? "enlimpieza" : cama.Estado.ToString().ToLower();
+        var historial = new HistorialCama(
+            cama.Id,
+            cama.Numero,
+            hab.Id,
+            hab.Numero,
+            operatorName,
+            operatorEmail,
+            $"Creó la Cama #{cama.Numero} en Habitación #{hab.Numero}",
+            "-",
+            statusStr,
+            DateTime.UtcNow,
+            operatorRole,
+            sucursalId,
+            nosocomioId
+        );
+        await _repo.AgregarHistorialCamaAsync(historial);
         await _repo.GuardarCambiosAsync();
 
         return new CamaDto
         {
             Id = cama.Id,
             Number = cama.Numero,
-            Status = cama.Estado == EstadoCama.EnLimpieza ? "enlimpieza" : cama.Estado.ToString().ToLower(),
+            Status = statusStr,
             Patient = null
         };
     }
@@ -468,6 +492,8 @@ public class HospitalService : IHospitalService
         var cama = await _repo.ObtenerCamaPorIdAsync(bedId);
         if (cama == null) throw new KeyNotFoundException("Cama no encontrada");
 
+        var estadoAnteriorStr = cama.Estado.ToString().ToLower();
+
         EstadoCama? estado = null;
         if (!string.IsNullOrWhiteSpace(dto.Status) && Enum.TryParse<EstadoCama>(dto.Status, true, out var parsedEstado))
         {
@@ -475,13 +501,37 @@ public class HospitalService : IHospitalService
         }
 
         cama.ActualizarDatos(dto.Numero, dto.HabitacionId, estado);
+
+        var operatorName = string.IsNullOrWhiteSpace(dto.OperatorName) ? "Desarrollador / Administrador" : dto.OperatorName;
+        var operatorEmail = string.IsNullOrWhiteSpace(dto.OperatorEmail) ? "dev@bedtrack.com" : dto.OperatorEmail;
+        var operatorRole = string.IsNullOrWhiteSpace(dto.OperatorRole) ? "developer" : dto.OperatorRole;
+        var sucursalId = cama.Habitacion?.Piso?.SucursalId;
+        var nosocomioId = cama.Habitacion?.Piso?.Sucursal?.NosocomioId;
+
+        var estadoNuevoStr = cama.Estado == EstadoCama.EnLimpieza ? "enlimpieza" : cama.Estado.ToString().ToLower();
+        var historial = new HistorialCama(
+            cama.Id,
+            cama.Numero,
+            cama.HabitacionId,
+            cama.Habitacion?.Numero ?? cama.HabitacionId,
+            operatorName,
+            operatorEmail,
+            $"Modificó datos/estado de la Cama #{cama.Numero}",
+            estadoAnteriorStr,
+            estadoNuevoStr,
+            DateTime.UtcNow,
+            operatorRole,
+            sucursalId,
+            nosocomioId
+        );
+        await _repo.AgregarHistorialCamaAsync(historial);
         await _repo.GuardarCambiosAsync();
 
         return new CamaDto
         {
             Id = cama.Id,
             Number = cama.Numero,
-            Status = cama.Estado.ToString().ToLower(),
+            Status = estadoNuevoStr,
             Patient = cama.Paciente == null ? null : new PacienteDto
             {
                 Id = cama.Paciente.Id,
@@ -499,6 +549,27 @@ public class HospitalService : IHospitalService
     {
         var cama = await _repo.ObtenerCamaPorIdAsync(bedId);
         if (cama == null) return false;
+
+        var sucursalId = cama.Habitacion?.Piso?.SucursalId;
+        var nosocomioId = cama.Habitacion?.Piso?.Sucursal?.NosocomioId;
+        var estadoAnteriorStr = cama.Estado.ToString().ToLower();
+
+        var historial = new HistorialCama(
+            cama.Id,
+            cama.Numero,
+            cama.HabitacionId,
+            cama.Habitacion?.Numero ?? cama.HabitacionId,
+            "Desarrollador / Administrador",
+            "dev@bedtrack.com",
+            $"Eliminó la Cama #{cama.Numero} de la Habitación #{cama.Habitacion?.Numero ?? cama.HabitacionId}",
+            estadoAnteriorStr,
+            "eliminada",
+            DateTime.UtcNow,
+            "developer",
+            sucursalId,
+            nosocomioId
+        );
+        await _repo.AgregarHistorialCamaAsync(historial);
 
         _repo.EliminarCama(cama);
         await _repo.GuardarCambiosAsync();

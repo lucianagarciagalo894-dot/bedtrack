@@ -461,6 +461,22 @@ export async function createBed(data, sucursalId = null) {
     saveStoredRooms(updatedRooms, sId);
   } catch (e) {}
 
+  addLocalAuditLog({
+    id: Date.now(),
+    camaId: created.id,
+    camaNumero: created.number || created.numero || 1,
+    habitacionId: Number(data.habitacionId) || 1,
+    habitacionNumero: Number(data.habitacionId) || 1,
+    usuarioNombre: data.operatorName || "Desarrollador / SuperAdmin",
+    usuarioEmail: data.operatorEmail || "developer@bedtrack.com",
+    usuarioRol: data.operatorRole || "developer",
+    accion: `Creó la Cama #${created.number || created.numero || 1} (${data.status || "disponible"})`,
+    estadoAnterior: "-",
+    estadoNuevo: data.status || "disponible",
+    fechaHora: new Date().toLocaleString("es-AR"),
+    sucursalId: sId ? Number(sId) : null,
+  });
+
   return created;
 }
 
@@ -498,10 +514,38 @@ export async function updateBed(bedId, data, sucursalId = null) {
     saveStoredRooms(updatedRooms, sId);
   } catch (e) {}
 
+  addLocalAuditLog({
+    id: Date.now(),
+    camaId: Number(bedId),
+    camaNumero: updated.number || updated.numero || 1,
+    habitacionId: Number(data.habitacionId) || 1,
+    habitacionNumero: Number(data.habitacionId) || 1,
+    usuarioNombre: data.operatorName || "Desarrollador / SuperAdmin",
+    usuarioEmail: data.operatorEmail || "developer@bedtrack.com",
+    usuarioRol: data.operatorRole || "developer",
+    accion: `Modificó datos/estado de la Cama #${updated.number || updated.numero || 1}`,
+    estadoAnterior: "modificado",
+    estadoNuevo: data.status || "disponible",
+    fechaHora: new Date().toLocaleString("es-AR"),
+    sucursalId: sId ? Number(sId) : null,
+  });
+
   return updated;
 }
 
 export async function deleteBed(bedId, sucursalId = null) {
+  let targetBedNum = bedId;
+  try {
+    const currentRooms = await getAllRooms(sucursalId);
+    for (const r of currentRooms) {
+      const found = (r.beds || []).find((b) => b.id === Number(bedId));
+      if (found) {
+        targetBedNum = found.number || found.numero || bedId;
+        break;
+      }
+    }
+  } catch (e) {}
+
   try {
     await fetch(`${API_BASE}/superadmin/beds/${bedId}`, {
       method: "DELETE",
@@ -518,6 +562,22 @@ export async function deleteBed(bedId, sucursalId = null) {
     }));
     saveStoredRooms(updatedRooms, sucursalId);
   } catch (e) {}
+
+  addLocalAuditLog({
+    id: Date.now(),
+    camaId: Number(bedId),
+    camaNumero: Number(targetBedNum) || 1,
+    habitacionId: 1,
+    habitacionNumero: 1,
+    usuarioNombre: "Desarrollador / SuperAdmin",
+    usuarioEmail: "developer@bedtrack.com",
+    usuarioRol: "developer",
+    accion: `Eliminó la Cama #${targetBedNum}`,
+    estadoAnterior: "disponible",
+    estadoNuevo: "eliminada",
+    fechaHora: new Date().toLocaleString("es-AR"),
+    sucursalId: sucursalId ? Number(sucursalId) : null,
+  });
 
   return true;
 }

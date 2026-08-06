@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import BedHistoryModal from "../components/BedHistoryModal";
 import { FLOORS } from "../data/beds";
 import {
   FaBed,
@@ -14,10 +15,11 @@ import {
 import { getGlobalAuditHistory } from "../services/roomService";
 
 export default function Dashboard({ role, sessionHospital, beds }) {
-  const userName = role === "enfermeria" ? "Enfermero/a" : "Encargado";
+  const userName = role === "enfermeria" ? "Enfermero/a" : role === "encargado" ? "Encargado" : "Administrador / Desarrollador";
   const [recentLogs, setRecentLogs] = useState([]);
   const [userFilter, setUserFilter] = useState("");
   const [roleFilter, setRoleFilter] = useState("todos");
+  const [historyBed, setHistoryBed] = useState(null);
 
   const activeSucursalId = sessionHospital?.sucursalId || sessionHospital?.nosocomioId;
 
@@ -63,6 +65,16 @@ export default function Dashboard({ role, sessionHospital, beds }) {
   });
 
   const criticalFloors = floorStats.filter((f) => f.total > 0 && f.available < 3);
+
+  // Derivar la lista de roles presentes para el filtro
+  const logRoles = Array.from(
+    new Set(
+      recentLogs
+        .map((l) => l.usuarioRol?.toLowerCase())
+        .filter(Boolean)
+        .concat(["enfermeria", "encargado", "administrador", "developer", "superadmin"])
+    )
+  );
 
   return (
     <div className="page-wrapper">
@@ -218,25 +230,33 @@ export default function Dashboard({ role, sessionHospital, beds }) {
           <div style={{ display: "flex", gap: "12px", marginBottom: "16px", flexWrap: "wrap" }}>
             <input
               type="text"
-              placeholder="🔍 Filtrar por nombre del usuario..."
+              placeholder="🔍 Buscar por nombre, email o acción del usuario..."
               value={userFilter}
               onChange={(e) => setUserFilter(e.target.value)}
-              style={{ padding: "8px 12px", borderRadius: "8px", border: "1px solid #CBD5E1", fontSize: "0.85rem", flex: 1, minWidth: "200px" }}
+              style={{ padding: "8px 12px", borderRadius: "8px", border: "1px solid #CBD5E1", fontSize: "0.85rem", flex: 1, minWidth: "220px" }}
             />
             <select
               value={roleFilter}
               onChange={(e) => setRoleFilter(e.target.value)}
-              style={{ padding: "8px 12px", borderRadius: "8px", border: "1px solid #CBD5E1", fontSize: "0.85rem" }}
+              style={{ padding: "8px 12px", borderRadius: "8px", border: "1px solid #CBD5E1", fontSize: "0.85rem", textTransform: "capitalize" }}
             >
               <option value="todos">Todos los Roles</option>
-              <option value="enfermeria">Enfermería</option>
-              <option value="encargado">Encargado</option>
+              {logRoles.map((r) => (
+                <option key={r} value={r} style={{ textTransform: "capitalize" }}>
+                  {r}
+                </option>
+              ))}
             </select>
           </div>
 
           {(() => {
             const filtered = recentLogs.filter((log) => {
-              const matchesUser = !userFilter || (log.usuarioNombre && log.usuarioNombre.toLowerCase().includes(userFilter.toLowerCase()));
+              const query = userFilter.toLowerCase();
+              const matchesUser = !userFilter ||
+                (log.usuarioNombre && log.usuarioNombre.toLowerCase().includes(query)) ||
+                (log.usuarioEmail && log.usuarioEmail.toLowerCase().includes(query)) ||
+                (log.accion && log.accion.toLowerCase().includes(query));
+
               const matchesRole = roleFilter === "todos" || (log.usuarioRol && log.usuarioRol.toLowerCase() === roleFilter.toLowerCase());
               return matchesUser && matchesRole;
             });
@@ -251,9 +271,15 @@ export default function Dashboard({ role, sessionHospital, beds }) {
 
             return (
               <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                {filtered.slice(0, 10).map((log) => (
+                {filtered.slice(0, 15).map((log) => (
                   <div
-                    key={log.id}
+                    key={log.id || Math.random()}
+                    onClick={() => {
+                      if (log.camaId) {
+                        setHistoryBed({ id: log.camaId, number: log.camaNumero, roomNumber: log.habitacionNumero });
+                      }
+                    }}
+                    title="Haz clic para ver el historial detallado de esta cama"
                     style={{
                       display: "flex",
                       alignItems: "center",
@@ -263,14 +289,18 @@ export default function Dashboard({ role, sessionHospital, beds }) {
                       borderRadius: "8px",
                       border: "1px solid #E2E8F0",
                       fontSize: "0.85rem",
+                      cursor: log.camaId ? "pointer" : "default",
+                      transition: "background 0.2s ease",
                     }}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = "#F1F5F9")}
+                    onMouseLeave={(e) => (e.currentTarget.style.background = "#F8FAFC")}
                   >
                     <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
                       <FaUserNurse style={{ color: "#2563EB", fontSize: "18px" }} />
                       <div>
                         <div style={{ fontWeight: "600", color: "#1E293B", display: "flex", alignItems: "center", gap: "8px" }}>
-                          <span>{log.usuarioNombre}</span>
-                          <span style={{ fontSize: "0.7rem", background: "#DBEAFE", color: "#1D4ED8", padding: "2px 6px", borderRadius: "4px", fontWeight: "600" }}>
+                          <span>{log.usuarioNombre || "Usuario del Sistema"}</span>
+                          <span style={{ fontSize: "0.7rem", background: "#DBEAFE", color: "#1D4ED8", padding: "2px 6px", borderRadius: "4px", fontWeight: "600", textTransform: "capitalize" }}>
                             {log.usuarioRol || "enfermeria"}
                           </span>
                         </div>
@@ -279,9 +309,16 @@ export default function Dashboard({ role, sessionHospital, beds }) {
                         </div>
                       </div>
                     </div>
-                    <span style={{ fontSize: "0.75rem", color: "#94A3B8", whiteSpace: "nowrap" }}>
-                      {log.fechaHora}
-                    </span>
+                    <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                      <span style={{ fontSize: "0.75rem", color: "#94A3B8", whiteSpace: "nowrap" }}>
+                        {log.fechaHora}
+                      </span>
+                      {log.camaId && (
+                        <span style={{ fontSize: "0.75rem", color: "#2563EB", fontWeight: "600" }}>
+                          Ver trazabilidad →
+                        </span>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>
@@ -289,6 +326,16 @@ export default function Dashboard({ role, sessionHospital, beds }) {
           })()}
         </div>
       </div>
+
+      {/* Modal de historial de cama al hacer clic en un registro */}
+      {historyBed && (
+        <BedHistoryModal
+          bed={historyBed}
+          room={{ number: historyBed.roomNumber }}
+          onClose={() => setHistoryBed(null)}
+        />
+      )}
     </div>
   );
 }
+

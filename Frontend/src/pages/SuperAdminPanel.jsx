@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   FaBuilding,
   FaHospital,
@@ -101,8 +101,7 @@ export default function SuperAdminPanel({ onLogout }) {
     setTimeout(() => setMessage(null), 4000);
   };
 
-  const loadInitialData = async () => {
-    setLoading(true);
+  const loadInitialData = useCallback(async () => {
     try {
       const [nosData, roomsData, floorsData, usersData, logsData] = await Promise.all([
         getNosocomios(),
@@ -144,12 +143,20 @@ export default function SuperAdminPanel({ onLogout }) {
     } finally {
       setLoading(false);
     }
-  };
-
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => {
-    loadInitialData();
   }, []);
+
+  useEffect(() => {
+    let ignore = false;
+    const init = async () => {
+      if (!ignore) {
+        await loadInitialData();
+      }
+    };
+    init();
+    return () => {
+      ignore = true;
+    };
+  }, [loadInitialData]);
 
   useEffect(() => {
     const handleSyncRooms = async () => {
@@ -930,7 +937,10 @@ export default function SuperAdminPanel({ onLogout }) {
 
             <button
               className="btn-action-refresh"
-              onClick={loadInitialData}
+              onClick={() => {
+                setLoading(true);
+                loadInitialData();
+              }}
             >
               <FaExchangeAlt /> Recargar Datos de Servidor
             </button>
@@ -1032,27 +1042,32 @@ export default function SuperAdminPanel({ onLogout }) {
           <div style={{ display: "flex", gap: "12px", marginBottom: "16px", flexWrap: "wrap", alignItems: "center" }}>
             <input
               type="text"
-              placeholder="🔍 Buscar por nombre o email del operador..."
+              placeholder="🔍 Buscar por nombre, email o acción del operador..."
               value={auditUserFilter}
               onChange={(e) => setAuditUserFilter(e.target.value)}
-              style={{ padding: "8px 12px", borderRadius: "8px", border: "1px solid #CBD5E1", fontSize: "0.85rem", minWidth: "260px" }}
+              style={{ padding: "8px 12px", borderRadius: "8px", border: "1px solid #CBD5E1", fontSize: "0.85rem", minWidth: "280px", flex: 1 }}
             />
             <select
               value={auditRoleFilter}
               onChange={(e) => setAuditRoleFilter(e.target.value)}
-              style={{ padding: "8px 12px", borderRadius: "8px", border: "1px solid #CBD5E1", fontSize: "0.85rem" }}
+              style={{ padding: "8px 12px", borderRadius: "8px", border: "1px solid #CBD5E1", fontSize: "0.85rem", textTransform: "capitalize" }}
             >
               <option value="todos">Todos los Roles</option>
               <option value="enfermeria">Enfermería</option>
               <option value="encargado">Encargado</option>
+              <option value="administrador">Administrador</option>
+              <option value="developer">Desarrollador</option>
+              <option value="superadmin">SuperAdmin</option>
             </select>
           </div>
 
           {(() => {
             const filteredLogs = auditLogs.filter((log) => {
+              const query = auditUserFilter.toLowerCase();
               const matchesUser = !auditUserFilter ||
-                (log.usuarioNombre && log.usuarioNombre.toLowerCase().includes(auditUserFilter.toLowerCase())) ||
-                (log.usuarioEmail && log.usuarioEmail.toLowerCase().includes(auditUserFilter.toLowerCase()));
+                (log.usuarioNombre && log.usuarioNombre.toLowerCase().includes(query)) ||
+                (log.usuarioEmail && log.usuarioEmail.toLowerCase().includes(query)) ||
+                (log.accion && log.accion.toLowerCase().includes(query));
               const matchesRole = auditRoleFilter === "todos" ||
                 (log.usuarioRol && log.usuarioRol.toLowerCase() === auditRoleFilter.toLowerCase());
               return matchesUser && matchesRole;

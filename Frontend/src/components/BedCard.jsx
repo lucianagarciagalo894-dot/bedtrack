@@ -1,4 +1,4 @@
-import { FaBed, FaCheckCircle, FaTimesCircle, FaBroom } from "react-icons/fa";
+import { FaBed, FaCheckCircle, FaTimesCircle, FaBroom, FaHistory } from "react-icons/fa";
 
 const STATUS_CONFIG = {
   disponible: { cardClass: "status-available", badgeClass: "badge-available", label: "Disponible", Icon: FaCheckCircle },
@@ -18,7 +18,7 @@ const ALL_ACTIONS = [
   { key: "enlimpieza",   label: "Limpieza",   cls: "btn-clean" },
 ];
 
-export default function BedCard({ bed, onChangeStatus, role }) {
+export default function BedCard({ bed, onChangeStatus, role, onViewHistory }) {
   const statusKey = bed.status?.toLowerCase();
   const cfg    = STATUS_CONFIG[statusKey] ?? STATUS_CONFIG.enlimpieza;
   const { Icon } = cfg;
@@ -35,10 +35,35 @@ export default function BedCard({ bed, onChangeStatus, role }) {
         <div className="bed-icon-wrap" aria-hidden="true">
           <FaBed />
         </div>
-        <span className={`bed-status-badge ${cfg.badgeClass}`}>
-          <Icon size={9} aria-hidden="true" />
-          {cfg.label}
-        </span>
+        <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+          {onViewHistory && (
+            <button
+              onClick={() => onViewHistory(bed)}
+              title="Ver historial de cambios"
+              aria-label={`Ver historial de Cama ${bedNum}`}
+              style={{
+                background: "#F1F5F9",
+                border: "none",
+                borderRadius: "6px",
+                padding: "4px 8px",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                gap: "4px",
+                fontSize: "0.75rem",
+                color: "#2563EB",
+                fontWeight: "600",
+              }}
+            >
+              <FaHistory size={11} />
+              Historial
+            </button>
+          )}
+          <span className={`bed-status-badge ${cfg.badgeClass}`}>
+            <Icon size={9} aria-hidden="true" />
+            {cfg.label}
+          </span>
+        </div>
       </div>
 
       {/* Info */}
@@ -71,3 +96,4 @@ export default function BedCard({ bed, onChangeStatus, role }) {
     </article>
   );
 }
+

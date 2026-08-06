@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import BedCard from "../components/BedCard";
 import PatientFormModal from "../components/PatientFormModal";
+import BedHistoryModal from "../components/BedHistoryModal";
 import { FLOORS } from "../data/beds";
 import {
   FaCheckCircle,
@@ -31,6 +32,7 @@ export default function Beds({ role, beds, onChangeStatus }) {
 
   const [floor, setFloor] = useState(() => getUrlFloor() || floorList[0] || "Piso 1");
   const [pendingBed, setPendingBed] = useState(null);
+  const [historyBed, setHistoryBed] = useState(null);
 
   useEffect(() => {
     const urlFloor = getUrlFloor();
@@ -165,6 +167,7 @@ export default function Beds({ role, beds, onChangeStatus }) {
             bed={bed}
             onChangeStatus={handleChangeStatus}
             role={role}
+            onViewHistory={(b) => setHistoryBed(b)}
           />
         ))}
       </div>
@@ -182,6 +185,16 @@ export default function Beds({ role, beds, onChangeStatus }) {
           onCancel={() => setPendingBed(null)}
         />
       )}
+
+      {/* ── Modal de historial de cama ────────────────────────── */}
+      {historyBed && (
+        <BedHistoryModal
+          bed={historyBed}
+          room={{ number: historyBed.roomNumber }}
+          onClose={() => setHistoryBed(null)}
+        />
+      )}
     </div>
   );
 }
+

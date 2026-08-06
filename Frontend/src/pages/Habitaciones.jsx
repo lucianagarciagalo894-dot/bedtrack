@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 import RoomCard from "../components/RoomCard";
 import { FLOOR_CONFIG } from "../data/beds";
 import {
@@ -54,11 +54,10 @@ export default function Habitaciones({ rooms = [] }) {
     });
   }, [rooms]);
 
-  useEffect(() => {
-    if (dynamicFloors.length > 0 && !dynamicFloors.some((f) => String(f.id) === String(selectedFloorId))) {
-      setSelectedFloorId(dynamicFloors[0].id);
-    }
-  }, [dynamicFloors, selectedFloorId]);
+  const isValidFloor = dynamicFloors.some((f) => String(f.id) === String(selectedFloorId));
+  if (dynamicFloors.length > 0 && !isValidFloor) {
+    setSelectedFloorId(dynamicFloors[0].id);
+  }
 
   const currentFloor = dynamicFloors.find((f) => String(f.id) === String(selectedFloorId)) || dynamicFloors[0];
   const theme        = TYPE_THEME[currentFloor?.typeKey] ?? TYPE_THEME.privada;

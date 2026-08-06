@@ -195,6 +195,9 @@ public class CreateCamaDto
     public int Numero { get; set; }
     public int HabitacionId { get; set; }
     public string Status { get; set; } = "disponible";
+    public string? OperatorName { get; set; }
+    public string? OperatorEmail { get; set; }
+    public string? OperatorRole { get; set; }
 }
 
 public class UpdateCamaDto
@@ -202,6 +205,9 @@ public class UpdateCamaDto
     public int Numero { get; set; }
     public int HabitacionId { get; set; }
     public string Status { get; set; } = "disponible";
+    public string? OperatorName { get; set; }
+    public string? OperatorEmail { get; set; }
+    public string? OperatorRole { get; set; }
 }
 
 public class DevLoginRequestDto
