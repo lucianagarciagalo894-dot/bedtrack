@@ -29,39 +29,47 @@ export default function Habitaciones({ rooms = [] }) {
     const map = new Map();
     if (rooms && rooms.length > 0) {
       rooms.forEach((r) => {
-        const fId = r.floorId ?? 1;
-        if (!map.has(fId)) {
-          const baseConfig = FLOOR_CONFIG.find((f) => String(f.id) === String(fId));
-          map.set(fId, {
-            id: fId,
-            label: r.floor || baseConfig?.label || (fId === 0 ? "Planta Baja" : `Piso ${fId}`),
-            type: r.type || baseConfig?.type || "General",
-            typeKey: r.typeKey || baseConfig?.typeKey || "privada",
+        const floorName = r.floor ? r.floor.trim() : (r.floorId === 0 ? "Planta Baja" : `Piso ${r.floorId ?? 1}`);
+        const normKey = floorName.toLowerCase();
+        if (!map.has(normKey)) {
+          map.set(normKey, {
+            id: r.floorId ?? normKey,
+            label: floorName,
+            type: r.type || "General",
+            typeKey: r.typeKey || "privada",
           });
         }
       });
     }
     return Array.from(map.values()).sort((a, b) => {
-      const numA = Number(a.id);
-      const numB = Number(b.id);
+      const numA = parseInt(a.label.replace(/\D/g, ""), 10);
+      const numB = parseInt(b.label.replace(/\D/g, ""), 10);
       if (!isNaN(numA) && !isNaN(numB)) {
         return numA - numB;
       }
-      return String(a.id).localeCompare(String(b.id));
+      return a.label.localeCompare(b.label);
     });
   }, [rooms]);
 
-  const isValidFloor = dynamicFloors.some((f) => String(f.id) === String(selectedFloorId));
+  const isValidFloor = dynamicFloors.some((f) => String(f.id) === String(selectedFloorId) || f.label.toLowerCase() === String(selectedFloorId).toLowerCase());
   if (dynamicFloors.length > 0 && !isValidFloor) {
     setSelectedFloorId(dynamicFloors[0].id);
   }
 
-  const currentFloor = dynamicFloors.find((f) => String(f.id) === String(selectedFloorId)) || dynamicFloors[0];
+  const currentFloor = dynamicFloors.find((f) => String(f.id) === String(selectedFloorId) || f.label.toLowerCase() === String(selectedFloorId).toLowerCase()) || dynamicFloors[0];
   const theme        = TYPE_THEME[currentFloor?.typeKey] ?? TYPE_THEME.privada;
 
   const floorRooms = useMemo(
-    () => rooms.filter((r) => String(r.floorId ?? 1) === String(selectedFloorId)),
-    [rooms, selectedFloorId]
+    () =>
+      rooms.filter((r) => {
+        if (!currentFloor) return false;
+        const floorName = r.floor ? r.floor.trim().toLowerCase() : (r.floorId === 0 ? "planta baja" : `piso ${r.floorId ?? 1}`);
+        return (
+          floorName === currentFloor.label.toLowerCase() ||
+          String(r.floorId) === String(currentFloor.id)
+        );
+      }),
+    [rooms, currentFloor]
   );
 
   const totalBeds     = floorRooms.reduce((s, r) => s + (r.beds?.length || 0), 0);

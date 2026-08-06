@@ -159,18 +159,20 @@ function AppContent() {
         handleHospitalsUpdated();
       } else if (e.key === "bedtrack_staff_users_data") {
         handleUsersUpdated();
-      } else if (e.key && e.key.startsWith("bedtrack_rooms_data")) {
+      } else if (e.key && (e.key.startsWith("bedtrack_rooms_data") || e.key.startsWith("bedtrack_floors_data"))) {
         fetchRooms();
       }
     };
 
     window.addEventListener("bedtrack_rooms_updated", handleRoomsUpdated);
+    window.addEventListener("bedtrack_floors_updated", handleRoomsUpdated);
     window.addEventListener("bedtrack_hospitals_updated", handleHospitalsUpdated);
     window.addEventListener("bedtrack_users_updated", handleUsersUpdated);
     window.addEventListener("storage", handleStorageEvent);
 
     return () => {
       window.removeEventListener("bedtrack_rooms_updated", handleRoomsUpdated);
+      window.removeEventListener("bedtrack_floors_updated", handleRoomsUpdated);
       window.removeEventListener("bedtrack_hospitals_updated", handleHospitalsUpdated);
       window.removeEventListener("bedtrack_users_updated", handleUsersUpdated);
       window.removeEventListener("storage", handleStorageEvent);

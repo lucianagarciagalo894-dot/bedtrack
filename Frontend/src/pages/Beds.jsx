@@ -13,7 +13,13 @@ import {
 export default function Beds({ role, beds, onChangeStatus }) {
   // Extraer lista única de pisos presentes en las camas del hospital activo
   const floorList = useMemo(() => {
-    const uniqueFloors = Array.from(new Set(beds.map((b) => b.floor).filter(Boolean)));
+    const uniqueFloors = Array.from(new Set(beds.map((b) => (b.floor ? b.floor.trim() : null)).filter(Boolean)));
+    uniqueFloors.sort((a, b) => {
+      const numA = parseInt(a.replace(/\D/g, ""), 10);
+      const numB = parseInt(b.replace(/\D/g, ""), 10);
+      if (!isNaN(numA) && !isNaN(numB)) return numA - numB;
+      return a.localeCompare(b);
+    });
     return uniqueFloors.length > 0 ? uniqueFloors : ["Piso 1"];
   }, [beds]);
 
