@@ -287,6 +287,16 @@ public class HospitalService : IHospitalService
         };
     }
 
+    public async Task<bool> DeleteNosocomioAsync(int id)
+    {
+        var nosocomio = await _repo.ObtenerNosocomioPorIdAsync(id);
+        if (nosocomio == null) return false;
+
+        _repo.EliminarNosocomio(nosocomio);
+        await _repo.GuardarCambiosAsync();
+        return true;
+    }
+
     public async Task<IEnumerable<SucursalDto>> GetSucursalesAsync(int nosocomioId)
     {
         var sucursales = await _repo.ObtenerSucursalesPorNosocomioAsync(nosocomioId);

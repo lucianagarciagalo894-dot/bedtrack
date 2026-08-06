@@ -7,6 +7,7 @@ public interface IHospitalRepository
     Task<IEnumerable<Nosocomio>> ObtenerNosocomiosAsync();
     Task<Nosocomio?> ObtenerNosocomioPorIdAsync(int id);
     Task AgregarNosocomioAsync(Nosocomio nosocomio);
+    void EliminarNosocomio(Nosocomio nosocomio);
 
     Task<IEnumerable<Sucursal>> ObtenerSucursalesPorNosocomioAsync(int nosocomioId);
     Task<Sucursal?> ObtenerSucursalPorIdAsync(int id);

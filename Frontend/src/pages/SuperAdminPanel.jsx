@@ -42,6 +42,8 @@ import {
   deleteStaffUser,
   getAuditLogs,
   normalizeRole,
+  deleteNosocomio,
+  exportHospitalAuditHistoryCSV,
 } from "../services/superAdminService";
 import { getAllRooms, getFloors } from "../services/roomService";
 
@@ -71,6 +73,7 @@ export default function SuperAdminPanel({ onLogout }) {
   const [showBedModal, setShowBedModal] = useState(false);
   const [showFullHospitalModal, setShowFullHospitalModal] = useState(false);
   const [showUserModal, setShowUserModal] = useState(false);
+  const [showDeleteNosocomioModal, setShowDeleteNosocomioModal] = useState(false);
 
   // Forms data
   const [newNosocomio, setNewNosocomio] = useState({ nombre: "", codigo: "", direccion: "" });
@@ -269,6 +272,28 @@ export default function SuperAdminPanel({ onLogout }) {
       showNotification("Nosocomio registrado correctamente");
     } catch (err) {
       showNotification(err.message, "error");
+    }
+  };
+
+  const handleDeleteNosocomioConfirm = async () => {
+    if (!selectedNosocomioId) return;
+    const targetId = selectedNosocomioId;
+    const targetName = currentNosocomio?.nombre || "Nosocomio";
+    setShowDeleteNosocomioModal(false);
+    try {
+      await deleteNosocomio(targetId);
+      const updatedList = await getNosocomios();
+      setNosocomios(updatedList || []);
+      if (updatedList && updatedList.length > 0) {
+        setSelectedNosocomioId(updatedList[0].id.toString());
+        setSelectedSucursalId(updatedList[0].sucursales?.[0]?.id?.toString() || "");
+      } else {
+        setSelectedNosocomioId("");
+        setSelectedSucursalId("");
+      }
+      showNotification(`Nosocomio "${targetName}" y todas sus dependencias eliminadas con éxito.`);
+    } catch (err) {
+      showNotification("Error al eliminar el nosocomio: " + err.message, "error");
     }
   };
 
@@ -814,6 +839,23 @@ export default function SuperAdminPanel({ onLogout }) {
                 title={currentNosocomio?.activo !== false ? "Desactivar Nosocomio (Borrado Lógico)" : "Activar Nosocomio"}
               >
                 {currentNosocomio?.activo !== false ? <FaToggleOn size={16} /> : <FaToggleOff size={16} />}
+              </button>
+              <button
+                className="btn-secondary-sm"
+                onClick={() => exportHospitalAuditHistoryCSV(selectedNosocomioId, selectedSucursalId, currentNosocomio?.nombre)}
+                disabled={!selectedNosocomioId}
+                title="Descargar Historial de Actividad (CSV)"
+              >
+                <FaHistory /> Exportar CSV
+              </button>
+              <button
+                className="btn-secondary-sm"
+                style={{ color: "#DC2626", borderColor: "#FCA5A5" }}
+                onClick={() => setShowDeleteNosocomioModal(true)}
+                disabled={!selectedNosocomioId}
+                title="Eliminar Nosocomio de la Base de Datos"
+              >
+                <FaTrash /> Eliminar
               </button>
             </div>
 
@@ -1913,6 +1955,57 @@ export default function SuperAdminPanel({ onLogout }) {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Confirmación de Eliminación de Nosocomio con Descarga de Historial */}
+      {showDeleteNosocomioModal && (
+        <div className="modal-overlay" style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(15, 23, 42, 0.65)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1200, padding: "16px" }}>
+          <div style={{ background: "#FFFFFF", borderRadius: "16px", padding: "24px", maxWidth: "520px", width: "100%", boxShadow: "0 20px 25px -5px rgba(0,0,0,0.1)", border: "1px solid #E2E8F0" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "16px", color: "#DC2626" }}>
+              <FaExclamationTriangle style={{ fontSize: "24px" }} />
+              <h3 style={{ margin: 0, fontSize: "1.2rem", fontWeight: "700" }}>
+                ¿Eliminar Nosocomio Definitivamente?
+              </h3>
+            </div>
+            <p style={{ color: "#334155", fontSize: "0.9rem", lineHeight: "1.5", marginBottom: "16px" }}>
+              Estás a punto de eliminar <strong>{currentNosocomio?.nombre}</strong> de la base de datos.
+              <br />
+              <span style={{ color: "#991B1B", fontWeight: "600", display: "block", marginTop: "6px" }}>
+                ⚠️ Se borrarán físicamente todas sus sedes, pisos, habitaciones, camas, usuarios de staff y URLs asociadas. Esta acción no se puede deshacer.
+              </span>
+            </p>
+
+            <div style={{ background: "#EFF6FF", border: "1px solid #BFDBFE", borderRadius: "10px", padding: "12px 16px", marginBottom: "20px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px" }}>
+              <div style={{ fontSize: "0.85rem", color: "#1E40AF" }}>
+                💡 Podés descargar un respaldo del historial de actividad antes de continuar.
+              </div>
+              <button
+                type="button"
+                onClick={() => exportHospitalAuditHistoryCSV(selectedNosocomioId, selectedSucursalId, currentNosocomio?.nombre)}
+                style={{ background: "#2563EB", color: "#FFFFFF", border: "none", borderRadius: "8px", padding: "8px 14px", fontSize: "0.8rem", fontWeight: "600", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px", flexShrink: 0 }}
+              >
+                📥 Descargar CSV
+              </button>
+            </div>
+
+            <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end" }}>
+              <button
+                type="button"
+                onClick={() => setShowDeleteNosocomioModal(false)}
+                style={{ padding: "8px 16px", borderRadius: "8px", border: "1px solid #CBD5E1", background: "#FFFFFF", cursor: "pointer", fontSize: "0.85rem", fontWeight: "600", color: "#475569" }}
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={handleDeleteNosocomioConfirm}
+                style={{ padding: "8px 16px", borderRadius: "8px", border: "none", background: "#DC2626", color: "#FFFFFF", cursor: "pointer", fontSize: "0.85rem", fontWeight: "700", display: "flex", alignItems: "center", gap: "6px" }}
+              >
+                <FaTrash /> Confirmar y Eliminar
+              </button>
+            </div>
           </div>
         </div>
       )}

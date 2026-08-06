@@ -13,6 +13,7 @@ public interface IHospitalService
     Task<IEnumerable<NosocomioDto>> GetNosocomiosAsync();
     Task<NosocomioDto> CreateNosocomioAsync(CreateNosocomioDto dto);
     Task<NosocomioDto> UpdateNosocomioAsync(int id, UpdateNosocomioDto dto);
+    Task<bool> DeleteNosocomioAsync(int id);
     Task<IEnumerable<SucursalDto>> GetSucursalesAsync(int nosocomioId);
     Task<SucursalDto> CreateSucursalAsync(CreateSucursalDto dto);
     Task<SucursalDto> UpdateSucursalAsync(int id, UpdateSucursalDto dto);

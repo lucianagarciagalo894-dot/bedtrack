@@ -33,6 +33,11 @@ public class HospitalRepository : IHospitalRepository
         await _context.Nosocomios.AddAsync(nosocomio);
     }
 
+    public void EliminarNosocomio(Nosocomio nosocomio)
+    {
+        _context.Nosocomios.Remove(nosocomio);
+    }
+
     public async Task<IEnumerable<Sucursal>> ObtenerSucursalesPorNosocomioAsync(int nosocomioId)
     {
         return await _context.Sucursales

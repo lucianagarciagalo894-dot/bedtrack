@@ -247,6 +247,96 @@ export async function createNosocomio(data) {
   return createdNos;
 }
 
+export async function deleteNosocomio(id) {
+  try {
+    const res = await fetch(`${API_BASE}/superadmin/nosocomios/${id}`, {
+      method: "DELETE",
+    });
+    if (!res.ok && res.status !== 404) {
+      console.warn("Error API eliminando nosocomio:", res.statusText);
+    }
+  } catch (err) {
+    console.warn("Falla de conexión al eliminar nosocomio:", err);
+  }
+
+  const currentStore = getStoredNosocomios();
+  const updatedList = currentStore.filter((n) => n.id.toString() !== id.toString());
+  saveStoredNosocomios(updatedList);
+
+  const currentStaff = getStoredStaffUsers();
+  const updatedStaff = currentStaff.filter((u) => !u.nosocomioId || u.nosocomioId.toString() !== id.toString());
+  saveStoredStaffUsers(updatedStaff);
+
+  return true;
+}
+
+export async function exportHospitalAuditHistoryCSV(nosocomioId = null, sucursalId = null, hospitalName = "Hospital") {
+  let logs = [];
+  try {
+    logs = await getAuditLogs(sucursalId, nosocomioId);
+  } catch (e) {
+    logs = getStoredAuditLogs(sucursalId, nosocomioId) || [];
+  }
+
+  if (!logs || logs.length === 0) {
+    logs = getStoredAuditLogs() || [];
+  }
+
+  if (nosocomioId || sucursalId) {
+    logs = logs.filter((log) => {
+      const matchNos = !nosocomioId || (log.nosocomioId && log.nosocomioId.toString() === nosocomioId.toString());
+      const matchSuc = !sucursalId || (log.sucursalId && log.sucursalId.toString() === sucursalId.toString());
+      return matchNos || matchSuc;
+    });
+  }
+
+  const headers = [
+    "ID Evento",
+    "Fecha y Hora",
+    "Operador",
+    "Correo Electrónico",
+    "Rol",
+    "Habitación",
+    "Cama N°",
+    "Acción Realizada",
+    "Estado Anterior",
+    "Estado Nuevo",
+  ];
+
+  const escapeCSV = (val) => {
+    if (val === null || val === undefined) return '""';
+    const str = String(val).replace(/"/g, '""');
+    return `"${str}"`;
+  };
+
+  const rows = logs.map((log) => [
+    escapeCSV(log.id || "-"),
+    escapeCSV(log.fechaHora || "-"),
+    escapeCSV(log.usuarioNombre || "Personal Hospitalario"),
+    escapeCSV(log.usuarioEmail || "-"),
+    escapeCSV(log.usuarioRol || "-"),
+    escapeCSV(log.habitacionNumero || log.habitacionId || "-"),
+    escapeCSV(log.camaNumero || log.camaId || "-"),
+    escapeCSV(log.accion || "-"),
+    escapeCSV(log.estadoAnterior || "-"),
+    escapeCSV(log.estadoNuevo || "-"),
+  ]);
+
+  const csvContent = "\uFEFF" + [headers.map((h) => `"${h}"`).join(","), ...rows.map((r) => r.join(","))].join("\r\n");
+
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  const cleanName = (hospitalName || "Hospital").toLowerCase().replace(/[^a-z0-9]/g, "_");
+  const dateSuffix = new Date().toISOString().slice(0, 10);
+  link.setAttribute("href", url);
+  link.setAttribute("download", `historial_${cleanName}_${dateSuffix}.csv`);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
 export async function getSucursales(nosocomioId) {
   try {
     const res = await fetch(`${API_BASE}/superadmin/nosocomios/${nosocomioId}/sucursales`);

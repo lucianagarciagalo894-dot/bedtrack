@@ -58,6 +58,14 @@ public class SuperAdminController : ControllerBase
         }
     }
 
+    [HttpDelete("nosocomios/{id}")]
+    public async Task<IActionResult> DeleteNosocomio(int id)
+    {
+        var deleted = await _service.DeleteNosocomioAsync(id);
+        if (!deleted) return NotFound(new { message = "Nosocomio no encontrado" });
+        return NoContent();
+    }
+
     [HttpGet("nosocomios/{nosocomioId}/sucursales")]
     public async Task<ActionResult<IEnumerable<SucursalDto>>> GetSucursales(int nosocomioId)
     {
