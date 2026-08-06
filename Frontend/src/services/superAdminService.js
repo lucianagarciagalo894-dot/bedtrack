@@ -961,7 +961,18 @@ export async function updateFloor(id, data, sucursalId = null) {
 
   if (targetSucursalId) {
     const currentFloors = getStoredFloors(targetSucursalId);
-    const updatedFloors = currentFloors.map((f) => (f.id.toString() === id.toString() ? { ...f, ...updatedFloor } : f));
+    const exists = currentFloors.some((f) => String(f.id) === String(id) || f.nombre?.trim().toLowerCase() === data.nombre?.trim().toLowerCase());
+    let updatedFloors;
+    if (exists) {
+      updatedFloors = currentFloors.map((f) => {
+        if (String(f.id) === String(id) || f.nombre?.trim().toLowerCase() === data.nombre?.trim().toLowerCase()) {
+          return { ...f, ...updatedFloor };
+        }
+        return f;
+      });
+    } else {
+      updatedFloors = [...currentFloors, updatedFloor];
+    }
     saveStoredFloors(updatedFloors, targetSucursalId);
 
     const floorNumData = parseInt(data.nombre?.replace(/\D/g, ""), 10);

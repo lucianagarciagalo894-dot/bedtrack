@@ -442,24 +442,33 @@ export default function SuperAdminPanel({ onLogout }) {
     if (!floorForm.nombre) return;
     try {
       if (floorForm.id) {
-        const updated = await updateFloor(floorForm.id, {
-          nombre: floorForm.nombre,
-          tipo: floorForm.tipo,
-          tipoKey: floorForm.tipoKey,
-          sucursalId: selectedSucursalId,
-        }, selectedSucursalId);
-        setFloors((prev) => prev.map((f) => (f.id === floorForm.id ? { ...f, ...updated } : f)));
+        const updated = await updateFloor(
+          floorForm.id,
+          {
+            nombre: floorForm.nombre,
+            tipo: floorForm.tipo,
+            tipoKey: floorForm.tipoKey,
+            sucursalId: selectedSucursalId,
+          },
+          selectedSucursalId
+        );
+        const freshFloors = await getFloors(selectedSucursalId);
+        setFloors(freshFloors && freshFloors.length > 0 ? freshFloors : [(updated || floorForm)]);
         const freshRooms = await getAllRooms(selectedSucursalId);
         setRooms(freshRooms || []);
-        showNotification("Piso hospitalario actualizado");
+        showNotification("Piso hospitalario actualizado exitosamente");
       } else {
-        const created = await createFloor({
-          nombre: floorForm.nombre,
-          tipo: floorForm.tipo,
-          tipoKey: floorForm.tipoKey,
-          sucursalId: parseInt(selectedSucursalId, 10),
-        });
-        setFloors((prev) => [...prev, created]);
+        const created = await createFloor(
+          {
+            nombre: floorForm.nombre,
+            tipo: floorForm.tipo,
+            tipoKey: floorForm.tipoKey,
+            sucursalId: selectedSucursalId,
+          },
+          selectedSucursalId
+        );
+        const freshFloors = await getFloors(selectedSucursalId);
+        setFloors(freshFloors && freshFloors.length > 0 ? freshFloors : [created]);
         showNotification("Piso hospitalario creado exitosamente");
       }
       setShowFloorModal(false);
