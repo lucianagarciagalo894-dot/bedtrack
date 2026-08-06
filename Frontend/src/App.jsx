@@ -22,11 +22,25 @@ const VALID_TRANSITIONS = {
 function AppContent() {
   const [role, setRole] = useState(() => {
     try {
-      return localStorage.getItem("bedtrack_role") || null;
+      const stored = localStorage.getItem("bedtrack_role");
+      return stored && stored !== "superadmin" && stored !== "developer" ? stored : null;
     } catch (e) {
       return null;
     }
   });
+
+  const [devRole, setDevRole] = useState(() => {
+    try {
+      const storedDev = localStorage.getItem("bedtrack_dev_role");
+      if (storedDev) return storedDev;
+      const storedRole = localStorage.getItem("bedtrack_role");
+      if (storedRole === "superadmin" || storedRole === "developer") return storedRole;
+      return null;
+    } catch (e) {
+      return null;
+    }
+  });
+
   const [sessionHospital, setSessionHospital] = useState(() => {
     try {
       const stored = localStorage.getItem("bedtrack_session_hospital");
@@ -35,6 +49,7 @@ function AppContent() {
       return null;
     }
   });
+
   const [sidebarOpen, setSidebarOpen]         = useState(false);
   const [rooms, setRooms]                     = useState([]);
   const location = useLocation();
@@ -46,11 +61,37 @@ function AppContent() {
       localStorage.removeItem("bedtrack_role");
       localStorage.removeItem("bedtrack_session_hospital");
     } catch (e) {
-      console.error("Error eliminando sesión de localStorage:", e);
+      console.error("Error eliminando sesión de hospital de localStorage:", e);
     }
   };
 
+  const handleDevLogout = () => {
+    setDevRole(null);
+    try {
+      localStorage.removeItem("bedtrack_dev_role");
+      const currentRole = localStorage.getItem("bedtrack_role");
+      if (currentRole === "superadmin" || currentRole === "developer") {
+        localStorage.removeItem("bedtrack_role");
+      }
+    } catch (e) {
+      console.error("Error eliminando sesión de desarrollador de localStorage:", e);
+    }
+  };
+
+  const handleDevLogin = (selectedDevRole) => {
+    setDevRole(selectedDevRole);
+    try {
+      localStorage.setItem("bedtrack_dev_role", selectedDevRole);
+      localStorage.setItem("bedtrack_role", selectedDevRole);
+    } catch (e) {}
+  };
+
   const handleUserLogin = (selectedRole, hospitalData = null) => {
+    if (selectedRole === "superadmin" || selectedRole === "developer") {
+      handleDevLogin(selectedRole);
+      return;
+    }
+
     setRole(selectedRole);
     try {
       if (selectedRole) {
@@ -150,7 +191,10 @@ function AppContent() {
 
     const handleStorageEvent = (e) => {
       if (e.key === "bedtrack_role" && !e.newValue) {
-        handleLogout();
+        setRole(null);
+        setSessionHospital(null);
+      } else if (e.key === "bedtrack_dev_role" && !e.newValue) {
+        setDevRole(null);
       } else if (e.key === "bedtrack_session_hospital" && e.newValue) {
         try {
           setSessionHospital(JSON.parse(e.newValue));
@@ -159,8 +203,6 @@ function AppContent() {
         handleHospitalsUpdated();
       } else if (e.key === "bedtrack_staff_users_data") {
         handleUsersUpdated();
-      } else if (e.key && (e.key.startsWith("bedtrack_rooms_data") || e.key.startsWith("bedtrack_floors_data"))) {
-        fetchRooms();
       }
     };
 
@@ -179,7 +221,6 @@ function AppContent() {
     };
   }, [role, sessionHospital]);
 
-  // Fuente única de verdad: beds derivado de rooms
   const beds = useMemo(
     () =>
       rooms.flatMap((room) =>
@@ -256,25 +297,31 @@ function AppContent() {
     location.pathname === "/superadmin" ||
     location.pathname === "/dev";
 
-  if (isHospitalDedicatedUrl && (!role || role === "superadmin" || role === "developer")) {
+  const activeDevRole = devRole || (role === "superadmin" || role === "developer" ? role : null);
+
+  if (isDevUrl) {
+    if (activeDevRole === "superadmin" || activeDevRole === "developer") {
+      return <SuperAdminPanel onLogout={handleDevLogout} />;
+    }
+    return <DevLogin onLogin={(r) => handleDevLogin(r)} />;
+  }
+
+  const hospitalRole = role && role !== "superadmin" && role !== "developer" ? role : null;
+
+  if (isHospitalDedicatedUrl && !hospitalRole) {
     return (
       <Routes>
+        <Route path="/h/:hospitalCode/:sucursalId?" element={<Login onLogin={handleUserLogin} />} />
         <Route path="/h/:hospitalCode" element={<Login onLogin={handleUserLogin} />} />
         <Route path="*" element={<Login onLogin={handleUserLogin} />} />
       </Routes>
     );
   }
 
-  if (isDevUrl) {
-    if (role === "superadmin" || role === "developer") {
-      return <SuperAdminPanel onLogout={handleLogout} />;
-    }
-    return <DevLogin onLogin={(devRole) => handleUserLogin(devRole)} />;
-  }
-
-  if (!role) {
+  if (!hospitalRole) {
     return (
       <Routes>
+        <Route path="/h/:hospitalCode/:sucursalId?" element={<Login onLogin={handleUserLogin} />} />
         <Route path="/h/:hospitalCode" element={<Login onLogin={handleUserLogin} />} />
         <Route path="*" element={<Login onLogin={handleUserLogin} />} />
       </Routes>

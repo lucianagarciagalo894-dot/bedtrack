@@ -927,57 +927,119 @@ export default function SuperAdminPanel({ onLogout }) {
               <div
                 style={{
                   marginTop: "12px",
-                  padding: "10px 12px",
+                  padding: "12px",
                   background: "#F8FAFC",
                   border: "1px solid #E2E8F0",
                   borderRadius: "8px",
                   fontSize: "0.8rem",
                   display: "flex",
                   flexDirection: "column",
-                  gap: "6px",
+                  gap: "10px",
                 }}
               >
                 <div style={{ fontWeight: "600", color: "#334155", display: "flex", alignItems: "center", gap: "6px" }}>
-                  <FaLink style={{ color: "#2563EB" }} /> Enlace de Acceso Dedicado:
+                  <FaLink style={{ color: "#2563EB" }} /> Enlaces de Acceso Dedicados por Establecimiento:
                 </div>
-                <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
-                  <input
-                    type="text"
-                    readOnly
-                    value={`${window.location.origin}/h/${currentNosocomio.codigo}`}
-                    style={{
-                      flex: 1,
-                      minWidth: "180px",
-                      padding: "6px 10px",
-                      fontSize: "0.75rem",
-                      border: "1px solid #CBD5E1",
-                      borderRadius: "6px",
-                      background: "#FFFFFF",
-                      color: "#1E293B",
-                    }}
-                  />
-                  <button
-                    className="btn-secondary-sm"
-                    style={{ margin: 0, padding: "6px 12px", fontSize: "0.75rem", display: "flex", alignItems: "center", gap: "4px" }}
-                    onClick={() => {
-                      const url = `${window.location.origin}/h/${currentNosocomio.codigo}`;
-                      navigator.clipboard.writeText(url);
-                      showNotification(`URL copiada al portapapeles: ${url}`);
-                    }}
-                  >
-                    <FaCopy /> Copiar URL
-                  </button>
-                  <a
-                    href={`/h/${currentNosocomio.codigo}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="btn-secondary-sm"
-                    style={{ margin: 0, padding: "6px 12px", fontSize: "0.75rem", display: "flex", alignItems: "center", gap: "4px", textDecoration: "none" }}
-                    title="Abrir panel de usuario para este hospital"
-                  >
-                    <FaLink /> Abrir Enlace
-                  </a>
-                </div>
+                {sucursalesList.length === 0 ? (
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+                    <input
+                      type="text"
+                      readOnly
+                      value={`${window.location.origin}/h/${currentNosocomio.codigo}`}
+                      style={{
+                        flex: 1,
+                        minWidth: "180px",
+                        padding: "6px 10px",
+                        fontSize: "0.75rem",
+                        border: "1px solid #CBD5E1",
+                        borderRadius: "6px",
+                        background: "#FFFFFF",
+                        color: "#1E293B",
+                      }}
+                    />
+                    <button
+                      className="btn-secondary-sm"
+                      style={{ margin: 0, padding: "6px 12px", fontSize: "0.75rem", display: "flex", alignItems: "center", gap: "4px" }}
+                      onClick={() => {
+                        const url = `${window.location.origin}/h/${currentNosocomio.codigo}`;
+                        navigator.clipboard.writeText(url);
+                        showNotification(`URL copiada al portapapeles: ${url}`);
+                      }}
+                    >
+                      <FaCopy /> Copiar URL
+                    </button>
+                    <a
+                      href={`/h/${currentNosocomio.codigo}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="btn-secondary-sm"
+                      style={{ margin: 0, padding: "6px 12px", fontSize: "0.75rem", display: "flex", alignItems: "center", gap: "4px", textDecoration: "none" }}
+                      title="Abrir panel de usuario para este hospital"
+                    >
+                      <FaLink /> Abrir Enlace
+                    </a>
+                  </div>
+                ) : (
+                  sucursalesList.map((s) => {
+                    const sucursalUrl = `${window.location.origin}/h/${currentNosocomio.codigo}/${s.id}`;
+                    const relativeUrl = `/h/${currentNosocomio.codigo}/${s.id}`;
+                    const isSelected = s.id.toString() === selectedSucursalId;
+                    return (
+                      <div
+                        key={s.id}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "8px",
+                          flexWrap: "wrap",
+                          padding: "8px 10px",
+                          background: isSelected ? "#EFF6FF" : "#FFFFFF",
+                          border: isSelected ? "1px solid #93C5FD" : "1px solid #CBD5E1",
+                          borderRadius: "6px",
+                        }}
+                      >
+                        <span style={{ fontWeight: "600", color: isSelected ? "#1D4ED8" : "#475569", minWidth: "150px", fontSize: "0.78rem" }}>
+                          {s.nombre}:
+                        </span>
+                        <input
+                          type="text"
+                          readOnly
+                          value={sucursalUrl}
+                          style={{
+                            flex: 1,
+                            minWidth: "180px",
+                            padding: "5px 8px",
+                            fontSize: "0.75rem",
+                            border: "1px solid #CBD5E1",
+                            borderRadius: "4px",
+                            background: "#FFFFFF",
+                            color: "#1E293B",
+                          }}
+                        />
+                        <button
+                          className="btn-secondary-sm"
+                          style={{ margin: 0, padding: "5px 10px", fontSize: "0.75rem", display: "flex", alignItems: "center", gap: "4px" }}
+                          onClick={() => {
+                            navigator.clipboard.writeText(sucursalUrl);
+                            showNotification(`URL para ${s.nombre} copiada al portapapeles: ${sucursalUrl}`);
+                          }}
+                        >
+                          <FaCopy /> Copiar URL
+                        </button>
+                        <a
+                          href={relativeUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="btn-secondary-sm"
+                          style={{ margin: 0, padding: "5px 10px", fontSize: "0.75rem", display: "flex", alignItems: "center", gap: "4px", textDecoration: "none" }}
+                          title={`Abrir panel de usuario dedicado para ${s.nombre}`}
+                        >
+                          <FaLink /> Abrir Enlace
+                        </a>
+                      </div>
+                    );
+                  })
+                )}
               </div>
             )}
           </div>

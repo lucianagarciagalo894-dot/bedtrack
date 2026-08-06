@@ -9,6 +9,7 @@ export default function Login({ onLogin }) {
   const queryParams = new URLSearchParams(location.search);
 
   const targetCode = params.hospitalCode || queryParams.get("hospital") || queryParams.get("nosocomio") || "";
+  const targetSucursal = params.sucursalId || queryParams.get("sucursal") || queryParams.get("sede") || "";
 
   const [role, setRole] = useState("enfermeria");
   const [email, setEmail] = useState("");
@@ -27,16 +28,35 @@ export default function Login({ onLogin }) {
 
         if (list.length > 0) {
           let matched = null;
+          let matchedSuc = null;
+
           if (targetCode) {
             matched = list.find(
               (n) => n.codigo?.toLowerCase() === targetCode.toLowerCase() || n.id.toString() === targetCode
             );
+            if (!matched) {
+              matched = list.find((n) =>
+                (n.sucursales || []).some((s) => s.id.toString() === targetCode)
+              );
+              if (matched) {
+                matchedSuc = (matched.sucursales || []).find((s) => s.id.toString() === targetCode);
+              }
+            }
           }
 
           if (matched) {
             setSelectedNosocomioId(matched.id.toString());
             setIsDedicatedUrl(true);
-            if (matched.sucursales && matched.sucursales.length > 0) {
+
+            if (targetSucursal) {
+              matchedSuc = (matched.sucursales || []).find(
+                (s) => s.id.toString() === targetSucursal.toString() || s.nombre?.toLowerCase() === targetSucursal.toLowerCase()
+              );
+            }
+
+            if (matchedSuc) {
+              setSelectedSucursalId(matchedSuc.id.toString());
+            } else if (matched.sucursales && matched.sucursales.length > 0) {
               setSelectedSucursalId(matched.sucursales[0].id.toString());
             }
           } else {
@@ -48,10 +68,11 @@ export default function Login({ onLogin }) {
         }
       })
       .catch((err) => console.warn("Error cargando nosocomios en login", err));
-  }, [targetCode]);
+  }, [targetCode, targetSucursal]);
 
   const currentNosocomio = nosocomios.find((n) => n.id.toString() === selectedNosocomioId);
   const sucursalesList = currentNosocomio?.sucursales || [];
+  const currentSucursal = sucursalesList.find((s) => s.id.toString() === selectedSucursalId) || sucursalesList[0];
 
   const handleNosocomioChange = (e) => {
     const id = e.target.value;
@@ -149,7 +170,7 @@ export default function Login({ onLogin }) {
         </div>
       </div>
 
-      {/* ── Right form panel ── */}
+      {/* ── Right form container ── */}
       <div className="login-right">
         <main className="login-card" role="main">
           <div className="login-header">
@@ -162,19 +183,14 @@ export default function Login({ onLogin }) {
 
           {errors.api && (
             <div
-              className="login-error-banner"
-              role="alert"
               style={{
                 background: "#FEF2F2",
-                border: "1px solid #FCA5A5",
+                border: "1px solid #FECACA",
                 color: "#991B1B",
                 padding: "10px 14px",
                 borderRadius: "8px",
                 marginBottom: "16px",
                 fontSize: "0.875rem",
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
               }}
             >
               <FaExclamationCircle />
@@ -192,19 +208,45 @@ export default function Login({ onLogin }) {
                 borderRadius: "10px",
                 marginBottom: "18px",
                 display: "flex",
-                alignItems: "center",
-                gap: "10px",
+                flexDirection: "column",
+                gap: "8px",
               }}
             >
-              <FaCheckCircle style={{ color: "#2563EB", fontSize: "18px" }} />
-              <div>
-                <div style={{ fontWeight: "700", color: "#1E40AF", fontSize: "0.875rem" }}>
-                  {currentNosocomio.nombre}
-                </div>
-                <div style={{ fontSize: "0.75rem", color: "#3B82F6" }}>
-                  Establecimiento: {sucursalesList[0]?.nombre || "Establecimiento Central"}
+              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                <FaCheckCircle style={{ color: "#2563EB", fontSize: "18px" }} />
+                <div>
+                  <div style={{ fontWeight: "700", color: "#1E40AF", fontSize: "0.875rem" }}>
+                    {currentNosocomio.nombre}
+                  </div>
+                  <div style={{ fontSize: "0.75rem", color: "#3B82F6" }}>
+                    Código de Institución: {currentNosocomio.codigo}
+                  </div>
                 </div>
               </div>
+              {sucursalesList.length > 1 ? (
+                <div style={{ marginTop: "4px" }}>
+                  <label htmlFor="sucursal-dedicated-select" style={{ fontSize: "0.75rem", fontWeight: "600", color: "#1E40AF", display: "block", marginBottom: "4px" }}>
+                    Establecimiento / Sede:
+                  </label>
+                  <select
+                    id="sucursal-dedicated-select"
+                    className="form-select"
+                    style={{ fontSize: "0.8rem", padding: "6px 10px" }}
+                    value={selectedSucursalId}
+                    onChange={(e) => setSelectedSucursalId(e.target.value)}
+                  >
+                    {sucursalesList.map((s) => (
+                      <option key={s.id} value={s.id.toString()}>
+                        {s.nombre} ({s.direccion})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              ) : (
+                <div style={{ fontSize: "0.75rem", color: "#3B82F6", fontWeight: "600" }}>
+                  Establecimiento: {currentSucursal?.nombre || "Establecimiento Central"}
+                </div>
+              )}
             </div>
           ) : (
             <>
