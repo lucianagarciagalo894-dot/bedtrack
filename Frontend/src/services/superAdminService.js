@@ -1,4 +1,4 @@
-import { getAllRooms, saveStoredRooms, getStoredAuditLogs } from "./roomService";
+import { getAllRooms, saveStoredRooms, getStoredRooms, getStoredFloors, saveStoredFloors, getStoredAuditLogs } from "./roomService";
 
 const API_BASE = "https://bedtrack-frontend-final-production.up.railway.app/api";
 
@@ -294,6 +294,13 @@ export async function createNosocomio(data) {
   const currentNosocomios = getStoredNosocomios();
   const updatedNosocomios = [...currentNosocomios, createdNos];
   saveStoredNosocomios(updatedNosocomios);
+
+  const newSucId = createdNos.sucursales?.[0]?.id;
+  if (newSucId) {
+    saveStoredRooms([], newSucId);
+    saveStoredFloors([], newSucId);
+  }
+
   return createdNos;
 }
 
@@ -804,6 +811,13 @@ export async function createFullHospitalSetup(data) {
     const generatedRooms = [];
     let rIdSeq = Date.now();
     let bIdSeq = Date.now() + 10000;
+    const generatedFloors = (data.pisos || []).map((floorSpec, fIdx) => ({
+      id: fIdx + 1,
+      nombre: floorSpec.nombre || `Piso ${fIdx + 1}`,
+      tipo: floorSpec.tipo || "General",
+      tipoKey: floorSpec.tipoKey || "general",
+      roomCount: parseInt(floorSpec.cantidadHabitaciones, 10) || 2,
+    }));
 
     (data.pisos || []).forEach((floorSpec, fIdx) => {
       const fId = fIdx + 1;
@@ -837,6 +851,11 @@ export async function createFullHospitalSetup(data) {
     const sucursalId = createdNos?.sucursales?.[0]?.id;
     if (generatedRooms.length > 0) {
       saveStoredRooms(generatedRooms, sucursalId);
+      saveStoredRooms(generatedRooms, null);
+    }
+    if (generatedFloors.length > 0) {
+      saveStoredFloors(generatedFloors, sucursalId);
+      saveStoredFloors(generatedFloors, null);
     }
   } catch (e) {
     console.error("Error al generar habitaciones para nuevo hospital:", e);

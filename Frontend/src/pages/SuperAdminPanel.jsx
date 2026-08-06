@@ -203,28 +203,38 @@ export default function SuperAdminPanel({ onLogout }) {
   }, [selectedNosocomioId, selectedSucursalId]);
 
   useEffect(() => {
+    let isSubscribed = true;
+
     if (selectedNosocomioId || selectedSucursalId) {
       getStaffUsers(selectedNosocomioId, selectedSucursalId)
-        .then((users) => setStaffUsers(users || []))
+        .then((users) => { if (isSubscribed) setStaffUsers(users || []); })
         .catch((err) => console.warn("Error al filtrar usuarios de enfermería por sucursal:", err));
 
       getAllRooms(selectedSucursalId)
-        .then((r) => setRooms(r || []))
+        .then((r) => { if (isSubscribed) setRooms(r || []); })
         .catch((err) => console.warn("Error al cargar habitaciones por sucursal:", err));
 
       getFloors(selectedSucursalId)
-        .then((f) => setFloors(f || []))
+        .then((f) => { if (isSubscribed) setFloors(f || []); })
         .catch((err) => console.warn("Error al cargar pisos por sucursal:", err));
 
       getAuditLogs(selectedSucursalId, selectedNosocomioId)
-        .then((logs) => setAuditLogs(logs || []))
+        .then((logs) => { if (isSubscribed) setAuditLogs(logs || []); })
         .catch((err) => console.warn("Error al filtrar auditoría por sucursal:", err));
     } else {
-      setStaffUsers([]);
-      setRooms([]);
-      setFloors([]);
-      setAuditLogs([]);
+      Promise.resolve().then(() => {
+        if (isSubscribed) {
+          setStaffUsers([]);
+          setRooms([]);
+          setFloors([]);
+          setAuditLogs([]);
+        }
+      });
     }
+
+    return () => {
+      isSubscribed = false;
+    };
   }, [selectedNosocomioId, selectedSucursalId]);
 
   useEffect(() => {

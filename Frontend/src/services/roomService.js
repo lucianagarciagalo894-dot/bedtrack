@@ -546,13 +546,13 @@ function getFallbackRooms(sucursalId) {
     ];
   }
 
-  if (sId !== "1") {
-    // Hospital / Establecimiento personalizado creado recientemente
+  if (sId !== "1" && sId !== "2" && sId !== "3") {
+    // Hospital / Establecimiento personalizado creado recientemente (3 pisos por defecto)
     const seed = Math.abs(hashCode(sId)) % 1000 + 300;
     return [
       {
         id: seed,
-        number: seed,
+        number: 101,
         floorId: 1,
         floor: "Piso 1",
         type: "General",
@@ -564,7 +564,7 @@ function getFallbackRooms(sucursalId) {
       },
       {
         id: seed + 1,
-        number: seed + 1,
+        number: 201,
         floorId: 2,
         floor: "Piso 2",
         type: "Intensiva",
@@ -572,6 +572,18 @@ function getFallbackRooms(sucursalId) {
         beds: [
           { id: seed * 10 + 3, number: 1, status: "enlimpieza", patient: null },
           { id: seed * 10 + 4, number: 2, status: "disponible", patient: null }
+        ]
+      },
+      {
+        id: seed + 2,
+        number: 301,
+        floorId: 3,
+        floor: "Piso 3",
+        type: "General",
+        typeKey: "general",
+        beds: [
+          { id: seed * 10 + 5, number: 1, status: "disponible", patient: null },
+          { id: seed * 10 + 6, number: 2, status: "disponible", patient: null }
         ]
       }
     ];
