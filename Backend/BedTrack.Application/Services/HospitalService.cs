@@ -293,7 +293,6 @@ public class HospitalService : IHospitalService
         if (nosocomio == null) return false;
 
         _repo.EliminarNosocomio(nosocomio);
-        await _repo.GuardarCambiosAsync();
         return true;
     }
 
