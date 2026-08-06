@@ -436,8 +436,11 @@ export default function SuperAdminPanel({ onLogout }) {
           nombre: floorForm.nombre,
           tipo: floorForm.tipo,
           tipoKey: floorForm.tipoKey,
-        });
+          sucursalId: selectedSucursalId,
+        }, selectedSucursalId);
         setFloors((prev) => prev.map((f) => (f.id === floorForm.id ? { ...f, ...updated } : f)));
+        const freshRooms = await getAllRooms(selectedSucursalId);
+        setRooms(freshRooms || []);
         showNotification("Piso hospitalario actualizado");
       } else {
         const created = await createFloor({

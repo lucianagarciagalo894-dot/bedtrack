@@ -196,6 +196,8 @@ export async function updateRoom(roomId, data, sucursalId = null) {
     number: num,
     floorId: pId,
     floor: data.floor || existingRoom?.floor || `Piso ${pId}`,
+    type: data.tipo || data.type || existingRoom?.type || "General",
+    typeKey: data.tipoKey || data.typeKey || existingRoom?.typeKey || "general",
     beds: existingRoom?.beds || [],
   };
 

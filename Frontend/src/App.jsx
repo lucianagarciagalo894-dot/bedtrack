@@ -99,16 +99,19 @@ function AppContent() {
       if (!sessionHospital) return;
       try {
         const nosData = await getNosocomios();
+        if (!nosData || nosData.length === 0) return;
         const activeNosId = sessionHospital.nosocomioId?.toString();
-        const matchedNos = nosData.find((n) => n.id.toString() === activeNosId || n.nombre === sessionHospital.hospital);
+        const matchedNos = nosData.find((n) => n.id?.toString() === activeNosId || n.nombre === sessionHospital.hospital);
         
-        if (!matchedNos || matchedNos.activo === false) {
+        if (matchedNos && matchedNos.activo === false) {
           handleLogout();
           return;
         }
 
+        if (!matchedNos) return;
+
         const activeSucId = sessionHospital.sucursalId?.toString();
-        const matchedSuc = (matchedNos.sucursales || []).find((s) => s.id.toString() === activeSucId || s.nombre === sessionHospital.sede);
+        const matchedSuc = (matchedNos.sucursales || []).find((s) => s.id?.toString() === activeSucId || s.nombre === sessionHospital.sede);
 
         if (matchedSuc && matchedSuc.activo === false) {
           handleLogout();
@@ -136,9 +139,10 @@ function AppContent() {
         const activeNosId = sessionHospital.nosocomioId;
         const activeSucId = sessionHospital.sucursalId;
         const users = await getStaffUsers(activeNosId, activeSucId);
+        if (!users || users.length === 0) return;
         const currentUser = users.find((u) => u.email && u.email.trim().toLowerCase() === activeEmail);
 
-        if (!currentUser || currentUser.activo === false || normalizeRole(currentUser.rol) !== normalizeRole(role)) {
+        if (currentUser && (currentUser.activo === false || normalizeRole(currentUser.rol) !== normalizeRole(role))) {
           handleLogout();
         }
       } catch (err) {}
@@ -264,10 +268,6 @@ function AppContent() {
       return <SuperAdminPanel onLogout={handleLogout} />;
     }
     return <DevLogin onLogin={(devRole) => handleUserLogin(devRole)} />;
-  }
-
-  if ((role === "superadmin" || role === "developer") && !sessionHospital) {
-    return <SuperAdminPanel onLogout={handleLogout} />;
   }
 
   if (!role) {
