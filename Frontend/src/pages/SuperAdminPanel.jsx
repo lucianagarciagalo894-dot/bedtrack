@@ -104,6 +104,14 @@ export default function SuperAdminPanel({ onLogout }) {
     setTimeout(() => setMessage(null), 4000);
   };
 
+  const selectedNosIdRef = useRef(selectedNosocomioId);
+  const selectedSucIdRef = useRef(selectedSucursalId);
+
+  useEffect(() => {
+    selectedNosIdRef.current = selectedNosocomioId;
+    selectedSucIdRef.current = selectedSucursalId;
+  }, [selectedNosocomioId, selectedSucursalId]);
+
   const loadInitialData = useCallback(async () => {
     try {
       const nosData = await getNosocomios();
@@ -111,8 +119,8 @@ export default function SuperAdminPanel({ onLogout }) {
       setNosocomios(activeNosocomios);
 
       if (activeNosocomios.length > 0) {
-        let currentNosId = selectedNosocomioId;
-        let currentSucId = selectedSucursalId;
+        let currentNosId = selectedNosIdRef.current;
+        let currentSucId = selectedSucIdRef.current;
 
         if (!currentNosId || !activeNosocomios.some((n) => n.id?.toString() === currentNosId.toString())) {
           currentNosId = activeNosocomios[0].id.toString();
@@ -154,11 +162,10 @@ export default function SuperAdminPanel({ onLogout }) {
       }
     } catch (err) {
       console.error("Error al cargar datos iniciales:", err);
-      showNotification("Error al cargar la información del servidor", "error");
     } finally {
       setLoading(false);
     }
-  }, [selectedNosocomioId, selectedSucursalId]);
+  }, []);
 
   useEffect(() => {
     let ignore = false;
@@ -180,102 +187,44 @@ export default function SuperAdminPanel({ onLogout }) {
   }, [loadInitialData]);
 
   useEffect(() => {
-    const handleSyncRooms = async () => {
-      try {
-        const freshRooms = await getAllRooms(selectedSucursalId);
-        setRooms(freshRooms || []);
-      } catch (error) {
-        console.warn("Error sincronizando habitaciones:", error);
-      }
-    };
-
-    const handleSyncHospitals = async () => {
-      try {
-        const freshNosocomios = await getNosocomios();
-        setNosocomios(freshNosocomios || []);
-      } catch (error) {
-        console.warn("Error sincronizando nosocomios:", error);
-      }
-    };
-
-    const handleSyncUsers = async () => {
-      try {
-        const freshUsers = await getStaffUsers(selectedNosocomioId, selectedSucursalId);
-        setStaffUsers(freshUsers || []);
-      } catch (error) {
-        console.warn("Error sincronizando usuarios:", error);
-      }
-    };
-
-    const handleStorage = (e) => {
-      if (e.key === "bedtrack_nosocomios_data") handleSyncHospitals();
-      if (e.key === "bedtrack_staff_users_data") handleSyncUsers();
-      if (e.key && e.key.startsWith("bedtrack_rooms_data")) handleSyncRooms();
-    };
-
-    window.addEventListener("bedtrack_rooms_updated", handleSyncRooms);
-    window.addEventListener("bedtrack_hospitals_updated", handleSyncHospitals);
-    window.addEventListener("bedtrack_users_updated", handleSyncUsers);
-    window.addEventListener("storage", handleStorage);
-
-    return () => {
-      window.removeEventListener("bedtrack_rooms_updated", handleSyncRooms);
-      window.removeEventListener("bedtrack_hospitals_updated", handleSyncHospitals);
-      window.removeEventListener("bedtrack_users_updated", handleSyncUsers);
-      window.removeEventListener("storage", handleStorage);
-    };
-  }, [selectedNosocomioId, selectedSucursalId]);
-
-  useEffect(() => {
     let isSubscribed = true;
-
-    if (selectedNosocomioId || selectedSucursalId) {
-      getStaffUsers(selectedNosocomioId, selectedSucursalId)
-        .then((users) => { if (isSubscribed) setStaffUsers(users || []); })
-        .catch((err) => console.warn("Error al filtrar usuarios de enfermería por sucursal:", err));
-
-      getAllRooms(selectedSucursalId)
-        .then((r) => { if (isSubscribed) setRooms(r || []); })
-        .catch((err) => console.warn("Error al cargar habitaciones por sucursal:", err));
-
-      getFloors(selectedSucursalId)
-        .then((f) => { if (isSubscribed) setFloors(f || []); })
-        .catch((err) => console.warn("Error al cargar pisos por sucursal:", err));
-
-      getAuditLogs(selectedSucursalId, selectedNosocomioId)
-        .then((logs) => { if (isSubscribed) setAuditLogs(logs || []); })
-        .catch((err) => console.warn("Error al filtrar auditoría por sucursal:", err));
-    } else {
-      Promise.resolve().then(() => {
+    if (selectedNosocomioId && selectedSucursalId) {
+      Promise.all([
+        getAllRooms(selectedSucursalId),
+        getFloors(selectedSucursalId),
+        getStaffUsers(selectedNosocomioId, selectedSucursalId),
+        getAuditLogs(selectedSucursalId, selectedNosocomioId),
+      ]).then(([r, f, u, l]) => {
         if (isSubscribed) {
-          setStaffUsers([]);
-          setRooms([]);
-          setFloors([]);
-          setAuditLogs([]);
+          setRooms(r || []);
+          setFloors(f || []);
+          setStaffUsers(u || []);
+          setAuditLogs(l || []);
         }
-      });
+      }).catch((err) => console.warn("Error al cargar datos de sucursal:", err));
     }
-
     return () => {
       isSubscribed = false;
     };
   }, [selectedNosocomioId, selectedSucursalId]);
 
   useEffect(() => {
-    const handleAuditUpdated = () => {
-      getAuditLogs(selectedSucursalId, selectedNosocomioId)
-        .then((logs) => setAuditLogs(logs || []))
-        .catch((err) => console.warn("Error re-cargando auditoría:", err));
+    const handleSyncAll = () => {
+      loadInitialData();
     };
 
-    window.addEventListener("bedtrack_audit_updated", handleAuditUpdated);
-    window.addEventListener("bedtrack_rooms_updated", handleAuditUpdated);
+    window.addEventListener("bedtrack_rooms_updated", handleSyncAll);
+    window.addEventListener("bedtrack_hospitals_updated", handleSyncAll);
+    window.addEventListener("bedtrack_users_updated", handleSyncAll);
+    window.addEventListener("bedtrack_audit_updated", handleSyncAll);
 
     return () => {
-      window.removeEventListener("bedtrack_audit_updated", handleAuditUpdated);
-      window.removeEventListener("bedtrack_rooms_updated", handleAuditUpdated);
+      window.removeEventListener("bedtrack_rooms_updated", handleSyncAll);
+      window.removeEventListener("bedtrack_hospitals_updated", handleSyncAll);
+      window.removeEventListener("bedtrack_users_updated", handleSyncAll);
+      window.removeEventListener("bedtrack_audit_updated", handleSyncAll);
     };
-  }, [selectedSucursalId]);
+  }, [loadInitialData]);
 
   const currentNosocomio = nosocomios.find((n) => n.id.toString() === selectedNosocomioId);
   const sucursalesList = currentNosocomio?.sucursales || [];
