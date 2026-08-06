@@ -221,8 +221,8 @@ export default function BedHistoryModal({ bed, room, onClose }) {
                         {roleBadge.label}
                       </span>
                     </div>
-                    <span style={{ fontSize: "0.75rem", color: "#64748B" }}>
-                      {log.fechaHora || "Recientemente"}
+                    <span style={{ fontSize: "0.75rem", color: "#475569", fontWeight: "600", display: "flex", alignItems: "center", gap: "4px" }}>
+                      🕒 {log.fechaHora || "Recientemente"}
                     </span>
                   </div>
 

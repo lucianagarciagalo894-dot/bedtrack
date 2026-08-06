@@ -554,24 +554,49 @@ function hashCode(str) {
 }
 
 export async function getGlobalAuditHistory(sucursalId = null) {
+  let logs = [];
   try {
     const url = sucursalId ? `${API_BASE}/beds/history?sucursalId=${sucursalId}` : `${API_BASE}/beds/history`;
     const res = await fetch(url);
     if (res.ok) {
       const data = await res.json();
-      if (Array.isArray(data)) return data;
+      if (Array.isArray(data) && data.length > 0) {
+        logs = data;
+      }
     }
   } catch (err) {}
-  return [];
+
+  if (!logs || logs.length === 0) {
+    logs = getStoredAuditLogs(sucursalId);
+  }
+
+  // Filtrar exclusivamente los 2 roles existentes en el panel de usuario hospitalario (enfermeria y encargado)
+  return logs.filter((log) => {
+    const role = (log.usuarioRol || "").toLowerCase();
+    return role === "enfermeria" || role === "encargado" || role === "administrador" || role === "admin" || !role;
+  });
 }
 
 export async function getBedHistory(bedId) {
+  let logs = [];
   try {
     const res = await fetch(`${API_BASE}/beds/${bedId}/history`);
     if (res.ok) {
       const data = await res.json();
-      if (Array.isArray(data)) return data;
+      if (Array.isArray(data) && data.length > 0) {
+        logs = data;
+      }
     }
   } catch (err) {}
-  return [];
+
+  if (!logs || logs.length === 0) {
+    const localLogs = getStoredAuditLogs();
+    logs = localLogs.filter((l) => Number(l.camaId) === Number(bedId));
+  }
+
+  // Filtrar exclusivamente los 2 roles del hospital (enfermería y encargado)
+  return logs.filter((log) => {
+    const role = (log.usuarioRol || "").toLowerCase();
+    return role === "enfermeria" || role === "encargado" || role === "administrador" || role === "admin" || !role;
+  });
 }

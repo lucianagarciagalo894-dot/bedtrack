@@ -238,14 +238,11 @@ export default function Dashboard({ role, sessionHospital, beds }) {
             <select
               value={roleFilter}
               onChange={(e) => setRoleFilter(e.target.value)}
-              style={{ padding: "8px 12px", borderRadius: "8px", border: "1px solid #CBD5E1", fontSize: "0.85rem", textTransform: "capitalize" }}
+              style={{ padding: "8px 12px", borderRadius: "8px", border: "1px solid #CBD5E1", fontSize: "0.85rem" }}
             >
-              <option value="todos">Todos los Roles</option>
-              {logRoles.map((r) => (
-                <option key={r} value={r} style={{ textTransform: "capitalize" }}>
-                  {r}
-                </option>
-              ))}
+              <option value="todos">Todos los Roles del Hospital</option>
+              <option value="enfermeria">Enfermería</option>
+              <option value="encargado">Encargado / Administrador</option>
             </select>
           </div>
 

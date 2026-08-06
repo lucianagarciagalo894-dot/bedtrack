@@ -811,7 +811,7 @@ public class HospitalService : IHospitalService
                 Accion = h.Accion ?? "Actualización",
                 EstadoAnterior = h.EstadoAnterior ?? "disponible",
                 EstadoNuevo = h.EstadoNuevo ?? "disponible",
-                FechaHora = h.FechaHora.ToString("yyyy-MM-dd HH:mm:ss"),
+                FechaHora = h.FechaHora.ToString("dd/MM/yyyy HH:mm:ss"),
                 SucursalId = h.SucursalId,
                 NosocomioId = h.NosocomioId
             }).ToList();
