@@ -118,10 +118,21 @@ export default function SuperAdminPanel({ onLogout }) {
       setNosocomios(activeNosocomios);
 
       if (activeNosocomios.length > 0) {
-        setSelectedNosocomioId(activeNosocomios[0].id.toString());
-        if (activeNosocomios[0].sucursales && activeNosocomios[0].sucursales.length > 0) {
-          setSelectedSucursalId(activeNosocomios[0].sucursales[0].id.toString());
-        }
+        setSelectedNosocomioId((prevNosId) => {
+          if (prevNosId && activeNosocomios.some((n) => n.id?.toString() === prevNosId.toString())) {
+            return prevNosId;
+          }
+          return activeNosocomios[0].id.toString();
+        });
+        setSelectedSucursalId((prevSucId) => {
+          if (prevSucId) {
+            const allSucursales = activeNosocomios.flatMap((n) => n.sucursales || []);
+            if (allSucursales.some((s) => s.id?.toString() === prevSucId.toString())) {
+              return prevSucId;
+            }
+          }
+          return activeNosocomios[0].sucursales?.[0]?.id?.toString() || "";
+        });
         setRooms(roomsData || []);
         setFloors(floorsData || []);
         setStaffUsers(usersData || []);
@@ -154,7 +165,7 @@ export default function SuperAdminPanel({ onLogout }) {
       if (!ignore) {
         loadInitialData();
       }
-    }, 5000);
+    }, 3000);
     return () => {
       ignore = true;
       clearInterval(timer);

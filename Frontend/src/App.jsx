@@ -131,7 +131,7 @@ function AppContent() {
       fetchRooms();
       const timer = setInterval(() => {
         fetchRooms();
-      }, 4000);
+      }, 3000);
       return () => clearInterval(timer);
     }
   }, [role, sessionHospital]);
