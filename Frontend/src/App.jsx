@@ -296,11 +296,15 @@ function AppContent() {
   const closeSidebar = () => setSidebarOpen(false);
 
   const isHospitalDedicatedUrl = location.pathname.startsWith("/h/");
+  const cleanPath = location.pathname.toLowerCase().replace(/\/$/, "");
   const isDevUrl =
-    location.pathname === "/dev-login" ||
-    location.pathname === "/superadmin-login" ||
-    location.pathname === "/superadmin" ||
-    location.pathname === "/dev";
+    cleanPath === "/dev-login" ||
+    cleanPath === "/superadmin-login" ||
+    cleanPath === "/superadmin" ||
+    cleanPath === "/dev" ||
+    cleanPath.startsWith("/dev-login") ||
+    cleanPath.startsWith("/superadmin") ||
+    cleanPath.startsWith("/dev");
 
   const activeDevRole = devRole;
 

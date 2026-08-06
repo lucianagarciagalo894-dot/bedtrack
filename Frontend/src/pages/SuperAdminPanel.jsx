@@ -226,7 +226,7 @@ export default function SuperAdminPanel({ onLogout }) {
     };
   }, [loadInitialData]);
 
-  const currentNosocomio = nosocomios.find((n) => n.id.toString() === selectedNosocomioId);
+  const currentNosocomio = nosocomios.find((n) => n?.id?.toString() === selectedNosocomioId?.toString());
   const sucursalesList = currentNosocomio?.sucursales || [];
 
   const handleNosocomioChange = (e) => {
