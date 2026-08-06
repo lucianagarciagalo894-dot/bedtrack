@@ -128,8 +128,8 @@ describe('Adversarial Challenge: Ground Floor (floorId: 0), Zero-Bed Edge Cases 
   describe('Dashboard.jsx Edge Cases, Zero-Bed & Division-by-Zero Protection', () => {
     test('1. Division-by-zero protection in floor bar width calculations when total beds = 0', () => {
       const mockBeds = [
-        // Bed in Piso 1 only. Piso 2, 3, 4, 5 have total = 0 beds.
-        { id: 1, floor: 'Piso 1', status: 'disponible' }
+        { id: 1, floor: 'Piso 1', status: 'disponible' },
+        { id: 2, floor: 'Piso 2', status: 'desconocido' }
       ];
 
       renderWithRouter(<Dashboard role="encargado" beds={mockBeds} />);

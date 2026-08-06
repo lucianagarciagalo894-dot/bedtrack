@@ -851,11 +851,9 @@ export async function createFullHospitalSetup(data) {
     const sucursalId = createdNos?.sucursales?.[0]?.id;
     if (generatedRooms.length > 0) {
       saveStoredRooms(generatedRooms, sucursalId);
-      saveStoredRooms(generatedRooms, null);
     }
     if (generatedFloors.length > 0) {
       saveStoredFloors(generatedFloors, sucursalId);
-      saveStoredFloors(generatedFloors, null);
     }
   } catch (e) {
     console.error("Error al generar habitaciones para nuevo hospital:", e);
@@ -1060,11 +1058,12 @@ function getFallbackStaffUsers(nosocomioId = null, sucursalId = null) {
 }
 
 function filterUsersBySucursal(users, nosocomioId, sucursalId) {
+  if (!nosocomioId && !sucursalId) return users;
   return users.filter((u) => {
-    if (nosocomioId && u.nosocomioId && parseInt(u.nosocomioId, 10) !== parseInt(nosocomioId, 10)) {
+    if (nosocomioId && u.nosocomioId && String(u.nosocomioId) !== String(nosocomioId)) {
       return false;
     }
-    if (sucursalId && u.sucursalId && parseInt(u.sucursalId, 10) !== parseInt(sucursalId, 10)) {
+    if (sucursalId && u.sucursalId && String(u.sucursalId) !== String(sucursalId)) {
       return false;
     }
     return true;
@@ -1121,8 +1120,8 @@ export async function updateStaffUser(id, userData) {
       body: JSON.stringify(userData),
     });
     if (res.ok) {
-      const resJson = await res.json();
-      updatedObj = { ...updatedObj, ...resJson };
+      const serverRes = await res.json();
+      updatedObj = { ...updatedObj, ...serverRes };
     }
   } catch (err) {}
   const currentStaff = getStoredStaffUsers();
@@ -1141,12 +1140,23 @@ export async function deleteStaffUser(id) {
   return true;
 }
 
-export async function getAuditLogs(camaId = null, sucursalId = null) {
+export async function getAuditLogs(sucursalId = null, nosocomioId = null, camaId = null) {
+  let targetSucursalId = sucursalId;
+  let targetNosocomioId = nosocomioId;
+  let targetCamaId = camaId;
+
+  if (typeof sucursalId === "object" && sucursalId !== null) {
+    targetSucursalId = sucursalId.sucursalId;
+    targetNosocomioId = sucursalId.nosocomioId;
+    targetCamaId = sucursalId.camaId;
+  }
+
   try {
     let url = `${API_BASE}/superadmin/audit-logs`;
     const params = new URLSearchParams();
-    if (camaId) params.append("camaId", camaId);
-    if (sucursalId) params.append("sucursalId", sucursalId);
+    if (targetCamaId) params.append("camaId", targetCamaId);
+    if (targetSucursalId) params.append("sucursalId", targetSucursalId);
+    if (targetNosocomioId) params.append("nosocomioId", targetNosocomioId);
     if (params.toString()) url += `?${params.toString()}`;
 
     const res = await fetch(url);
@@ -1155,10 +1165,10 @@ export async function getAuditLogs(camaId = null, sucursalId = null) {
       if (Array.isArray(data) && data.length > 0) return data;
     }
   } catch (err) {}
-  const localLogs = getStoredAuditLogs(sucursalId);
-  if (camaId) {
-    return localLogs.filter((l) => l.camaId === Number(camaId));
+
+  const localLogs = getStoredAuditLogs(targetSucursalId);
+  if (targetCamaId) {
+    return localLogs.filter((l) => String(l.camaId) === String(targetCamaId));
   }
   return localLogs;
 }
-

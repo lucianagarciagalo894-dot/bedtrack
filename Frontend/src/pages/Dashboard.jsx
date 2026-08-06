@@ -1,7 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Link } from "react-router-dom";
 import BedHistoryModal from "../components/BedHistoryModal";
-import { FLOORS } from "../data/beds";
 import {
   FaBed,
   FaCheckCircle,
@@ -12,7 +11,7 @@ import {
   FaHistory,
   FaUserNurse,
 } from "react-icons/fa";
-import { getGlobalAuditHistory } from "../services/roomService";
+import { getGlobalAuditHistory, getFloors } from "../services/roomService";
 
 export default function Dashboard({ role, sessionHospital, beds }) {
   const userName = role === "enfermeria" ? "Enfermero/a" : "Encargado";
@@ -20,8 +19,21 @@ export default function Dashboard({ role, sessionHospital, beds }) {
   const [userFilter, setUserFilter] = useState("");
   const [roleFilter, setRoleFilter] = useState("todos");
   const [historyBed, setHistoryBed] = useState(null);
+  const [definedFloors, setDefinedFloors] = useState([]);
 
   const activeSucursalId = sessionHospital?.sucursalId || sessionHospital?.nosocomioId;
+
+  useEffect(() => {
+    if (activeSucursalId) {
+      getFloors(activeSucursalId)
+        .then((fList) => {
+          if (Array.isArray(fList) && fList.length > 0) {
+            setDefinedFloors(fList.map((f) => f.nombre));
+          }
+        })
+        .catch(() => {});
+    }
+  }, [activeSucursalId]);
 
   const fetchAuditLogs = () => {
     getGlobalAuditHistory(activeSucursalId)
@@ -38,10 +50,12 @@ export default function Dashboard({ role, sessionHospital, beds }) {
 
     window.addEventListener("bedtrack_audit_updated", handleAuditUpdated);
     window.addEventListener("bedtrack_rooms_updated", handleAuditUpdated);
+    window.addEventListener("bedtrack_floors_updated", handleAuditUpdated);
 
     return () => {
       window.removeEventListener("bedtrack_audit_updated", handleAuditUpdated);
       window.removeEventListener("bedtrack_rooms_updated", handleAuditUpdated);
+      window.removeEventListener("bedtrack_floors_updated", handleAuditUpdated);
     };
   }, [activeSucursalId]);
 
@@ -50,11 +64,20 @@ export default function Dashboard({ role, sessionHospital, beds }) {
   const totalOccupied = beds.filter((b) => b.status?.toLowerCase() === "ocupada").length;
   const totalCleaning = beds.filter((b) => b.status?.toLowerCase() === "enlimpieza").length;
 
-  const uniqueFloors = Array.from(new Set(beds.map((b) => b.floor).filter(Boolean)));
-  const floorList = Array.from(new Set([...FLOORS, ...uniqueFloors]));
+  const floorList = useMemo(() => {
+    const fromBeds = Array.from(new Set(beds.map((b) => b.floor?.trim()).filter(Boolean)));
+    const combined = Array.from(new Set([...definedFloors, ...fromBeds]));
+    combined.sort((a, b) => {
+      const numA = parseInt(a.replace(/\D/g, ""), 10);
+      const numB = parseInt(b.replace(/\D/g, ""), 10);
+      if (!isNaN(numA) && !isNaN(numB)) return numA - numB;
+      return a.localeCompare(b);
+    });
+    return combined.length > 0 ? combined : ["Piso 1"];
+  }, [definedFloors, beds]);
 
   const floorStats = floorList.map((floor) => {
-    const fb = beds.filter((b) => b.floor === floor);
+    const fb = beds.filter((b) => b.floor?.trim() === floor);
     return {
       floor,
       total: fb.length,

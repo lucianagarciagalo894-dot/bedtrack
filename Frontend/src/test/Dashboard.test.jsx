@@ -122,7 +122,7 @@ describe('Componente Dashboard', () => {
     renderWithRouter(<Dashboard role="admin" beds={mockBeds} />);
 
     
-    FLOORS.forEach((floor) => {
+    ['Piso 1', 'Piso 2'].forEach((floor) => {
       expect(screen.getByText(floor)).toBeInTheDocument();
     });
 
@@ -140,7 +140,7 @@ describe('Componente Dashboard', () => {
 
     
     const links = screen.getAllByLabelText(/Ver camas del/);
-    expect(links).toHaveLength(FLOORS.length);
+    expect(links).toHaveLength(2);
     links.forEach(link => {
       expect(link.getAttribute('href')).toContain('/camas');
     });

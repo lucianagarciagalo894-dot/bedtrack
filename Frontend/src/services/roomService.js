@@ -61,6 +61,11 @@ export function getStoredRooms(sucursalId = null) {
       localStorage.removeItem(key);
     } catch (e) {}
   }
+  const sId = sucursalId ? sucursalId.toString() : null;
+  if (sId && sId !== "1" && sId !== "2" && sId !== "3") {
+    return [];
+  }
+
   const fallback = getFallbackRooms(sucursalId);
   try {
     localStorage.setItem(key, JSON.stringify(fallback));

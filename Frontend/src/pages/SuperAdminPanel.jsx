@@ -239,7 +239,7 @@ export default function SuperAdminPanel({ onLogout }) {
 
   useEffect(() => {
     const handleAuditUpdated = () => {
-      getAuditLogs(null, selectedSucursalId)
+      getAuditLogs(selectedSucursalId, selectedNosocomioId)
         .then((logs) => setAuditLogs(logs || []))
         .catch((err) => console.warn("Error re-cargando auditoría:", err));
     };
