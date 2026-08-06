@@ -295,8 +295,18 @@ export default function SuperAdminPanel({ onLogout }) {
         direccion: newNosocomio.direccion,
         codigo: autoCodigo,
       });
-      setNosocomios((prev) => [...prev, created]);
+
+      const updatedList = await getNosocomios();
+      setNosocomios(updatedList || []);
       setSelectedNosocomioId(created.id.toString());
+      if (created.sucursales && created.sucursales.length > 0) {
+        setSelectedSucursalId(created.sucursales[0].id.toString());
+      } else if (updatedList) {
+        const match = updatedList.find((n) => n.id.toString() === created.id.toString());
+        if (match && match.sucursales && match.sucursales.length > 0) {
+          setSelectedSucursalId(match.sucursales[0].id.toString());
+        }
+      }
       setNewNosocomio({ nombre: "", codigo: "", direccion: "" });
       setShowNosocomioModal(false);
       showNotification("Nosocomio registrado correctamente");

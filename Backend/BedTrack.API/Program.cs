@@ -86,7 +86,6 @@ using (var scope = app.Services.CreateScope())
                         n.Nombre.ToLower().Contains("hospital nuevo") || 
                         n.Nombre.ToLower().Contains("hospital central bedtrack") || 
                         n.Nombre.ToLower().Contains("sanatorio allende") || 
-                        n.Codigo.StartsWith("HOSP-") || 
                         n.Codigo == "HC-01" || 
                         n.Codigo == "SA-02" || 
                         n.Nombre.ToLower().Contains("cypress"))
@@ -141,10 +140,48 @@ using (var scope = app.Services.CreateScope())
             context.Pisos.RemoveRange(orphanFloors);
             context.SaveChanges();
         }
+
+        var validNosocomioIds = context.Nosocomios.Select(n => n.Id).ToList();
+        var validSucursalIds = context.Sucursales.Select(s => s.Id).ToList();
+        var validBedIds = context.Camas.Select(c => c.Id).ToList();
+
+        // Purga de todos los pacientes huérfanos/residuales sin cama activa válida
+        var leftoverPacientes = context.Pacientes.Where(p => p.Cama == null || !validBedIds.Contains(p.Cama.Id)).ToList();
+        if (leftoverPacientes.Any())
+        {
+            context.Pacientes.RemoveRange(leftoverPacientes);
+            context.SaveChanges();
+        }
+
+        // Purga de todos los usuarios de staff huérfanos o de prueba
+        var leftoverUsers = context.UsuariosStaff
+            .Where(u => (u.NosocomioId.HasValue && !validNosocomioIds.Contains(u.NosocomioId.Value)) ||
+                        (u.SucursalId.HasValue && !validSucursalIds.Contains(u.SucursalId.Value)) ||
+                        (u.Email != null && (u.Email.Contains("hospital.com") || u.Email.Contains("prueba") || u.Email.Contains("test.com"))))
+            .ToList();
+        if (leftoverUsers.Any())
+        {
+            context.UsuariosStaff.RemoveRange(leftoverUsers);
+            context.SaveChanges();
+        }
+
+        // Purga de todos los registros de HistorialCamas huérfanos o ficticios
+        var leftoverHistorial = context.HistorialCamas
+            .Where(h => !validBedIds.Contains(h.CamaId) ||
+                        (h.NosocomioId.HasValue && !validNosocomioIds.Contains(h.NosocomioId.Value)) ||
+                        (h.SucursalId.HasValue && !validSucursalIds.Contains(h.SucursalId.Value)) ||
+                        (h.UsuarioEmail != null && (h.UsuarioEmail.Contains("hospital.com") || h.UsuarioEmail.Contains("prueba") || h.UsuarioEmail.Contains("test"))) ||
+                        (h.UsuarioNombre != null && (h.UsuarioNombre.Contains("María Elena") || h.UsuarioNombre.Contains("Carlos Encargado") || h.UsuarioNombre.Contains("Cristian Rodríguez") || h.UsuarioNombre.ToLower().Contains("prueba"))))
+            .ToList();
+        if (leftoverHistorial.Any())
+        {
+            context.HistorialCamas.RemoveRange(leftoverHistorial);
+            context.SaveChanges();
+        }
     }
     catch (Exception ex)
     {
-        Console.WriteLine($"Error al purgar pisos huérfanos: {ex.Message}");
+        Console.WriteLine($"Error al purgar pisos, pacientes, usuarios o historial huérfanos: {ex.Message}");
     }
 }
 

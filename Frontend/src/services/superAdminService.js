@@ -110,17 +110,7 @@ export function registerDeletedNosocomio(id, codigo = null) {
 }
 
 function filterDeletedNosocomios(list) {
-  return (list || []).filter((n) => {
-    if (!n) return false;
-    const nameLower = (n.nombre || "").toLowerCase();
-    const codeStr = n.codigo ? n.codigo.toString().toLowerCase() : "";
-
-    if (nameLower.includes("prueba") || nameLower === "hospital nuevo" || codeStr.startsWith("hosp-")) {
-      return false;
-    }
-
-    return true;
-  });
+  return (list || []).filter((n) => Boolean(n && n.nombre));
 }
 
 function getBaseNosocomios() {

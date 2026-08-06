@@ -226,13 +226,26 @@ public class HospitalService : IHospitalService
         await _repo.AgregarNosocomioAsync(nosocomio);
         await _repo.GuardarCambiosAsync();
 
+        var sucursal = new Sucursal("Establecimiento Principal", direccion, nosocomio.Id);
+        await _repo.AgregarSucursalAsync(sucursal);
+        await _repo.GuardarCambiosAsync();
+
         return new NosocomioDto
         {
             Id = nosocomio.Id,
             Nombre = nosocomio.Nombre,
             Codigo = nosocomio.Codigo,
             Direccion = nosocomio.Direccion,
-            Sucursales = new List<SucursalDto>()
+            Sucursales = new List<SucursalDto>
+            {
+                new SucursalDto
+                {
+                    Id = sucursal.Id,
+                    Nombre = sucursal.Nombre,
+                    Direccion = sucursal.Direccion,
+                    NosocomioId = sucursal.NosocomioId
+                }
+            }
         };
     }
 
