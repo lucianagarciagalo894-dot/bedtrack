@@ -77,6 +77,16 @@ html {
   scroll-behavior: smooth;
 }
 
+/* Every dropdown (native <select>) in the app: never overflow its
+   container and truncate long option text cleanly with an ellipsis
+   instead of an abrupt mid-character cut, at any viewport size. */
+select {
+  max-width: 100%;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
 body {
   font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
   background: var(--bg);
@@ -627,6 +637,13 @@ body {
   font-weight: 700;
   color: var(--text-primary);
   letter-spacing: -0.02em;
+  margin-bottom: 2px;
+}
+
+.bed-room-label {
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+  font-weight: 600;
   margin-bottom: 2px;
 }
 

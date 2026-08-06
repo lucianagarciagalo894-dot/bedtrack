@@ -69,6 +69,11 @@ export default function BedCard({ bed, onChangeStatus, role, onViewHistory }) {
       {/* Info */}
       <div className="bed-name">Cama {bedNum}</div>
 
+      {/* Habitación a la que pertenece */}
+      {bed.roomNumber != null && (
+        <div className="bed-room-label">Habitación {bed.roomNumber}</div>
+      )}
+
       {/* Paciente (si está ocupada) */}
       {bed.patient && (
         <div className="bed-patient-info">
