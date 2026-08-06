@@ -209,10 +209,7 @@ export function saveStoredStaffUsers(list) {
 export async function getNosocomios() {
   const stored = getStoredNosocomios();
   try {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 1200);
-    const res = await fetch(`${API_BASE}/superadmin/nosocomios`, { signal: controller.signal });
-    clearTimeout(timer);
+    const res = await fetch(`${API_BASE}/superadmin/nosocomios`);
     if (res.ok) {
       const data = await res.json();
       if (Array.isArray(data)) {

@@ -42,15 +42,18 @@ public class HospitalRepository : IHospitalRepository
         var habitaciones = _context.Habitaciones.Where(h => pisoIds.Contains(h.PisoId)).ToList();
         var habitacionIds = habitaciones.Select(h => h.Id).ToList();
         var camas = _context.Camas.Where(c => habitacionIds.Contains(c.HabitacionId)).ToList();
+        var camaIds = camas.Select(c => c.Id).ToList();
+        var pacientes = _context.Pacientes.Where(p => p.Cama != null && camaIds.Contains(p.Cama.Id)).ToList();
         var usuarios = _context.UsuariosStaff.Where(u => u.NosocomioId == nosocomio.Id).ToList();
-        var historial = _context.HistorialCamas.Where(h => h.NosocomioId.HasValue && h.NosocomioId.Value == nosocomio.Id).ToList();
+        var historial = _context.HistorialCamas.Where(h => (h.NosocomioId.HasValue && h.NosocomioId.Value == nosocomio.Id) || (h.CamaId > 0 && camaIds.Contains(h.CamaId))).ToList();
 
+        if (historial.Any()) _context.HistorialCamas.RemoveRange(historial);
+        if (pacientes.Any()) _context.Pacientes.RemoveRange(pacientes);
         if (camas.Any()) _context.Camas.RemoveRange(camas);
         if (habitaciones.Any()) _context.Habitaciones.RemoveRange(habitaciones);
         if (pisos.Any()) _context.Pisos.RemoveRange(pisos);
-        if (sucursales.Any()) _context.Sucursales.RemoveRange(sucursales);
         if (usuarios.Any()) _context.UsuariosStaff.RemoveRange(usuarios);
-        if (historial.Any()) _context.HistorialCamas.RemoveRange(historial);
+        if (sucursales.Any()) _context.Sucursales.RemoveRange(sucursales);
 
         _context.Nosocomios.Remove(nosocomio);
     }
