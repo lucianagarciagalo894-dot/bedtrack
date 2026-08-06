@@ -15,7 +15,7 @@ import {
 import { getGlobalAuditHistory } from "../services/roomService";
 
 export default function Dashboard({ role, sessionHospital, beds }) {
-  const userName = role === "enfermeria" ? "Enfermero/a" : role === "encargado" ? "Encargado" : "Administrador / Desarrollador";
+  const userName = role === "enfermeria" ? "Enfermero/a" : "Encargado";
   const [recentLogs, setRecentLogs] = useState([]);
   const [userFilter, setUserFilter] = useState("");
   const [roleFilter, setRoleFilter] = useState("todos");

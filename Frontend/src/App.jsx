@@ -11,7 +11,7 @@ import Habitaciones from "./pages/Habitaciones";
 import RoomDetail from "./pages/RoomDetail";
 import Pacientes from "./pages/Pacientes";
 import { getAllRooms, updateBedStatus } from "./services/roomService";
-import { getNosocomios, getStaffUsers } from "./services/superAdminService";
+import { getNosocomios, getStaffUsers, normalizeRole } from "./services/superAdminService";
 
 const VALID_TRANSITIONS = {
   disponible: ["ocupada", "enlimpieza"],
@@ -138,7 +138,7 @@ function AppContent() {
         const users = await getStaffUsers(activeNosId, activeSucId);
         const currentUser = users.find((u) => u.email && u.email.trim().toLowerCase() === activeEmail);
 
-        if (!currentUser || currentUser.activo === false || currentUser.rol !== role) {
+        if (!currentUser || currentUser.activo === false || normalizeRole(currentUser.rol) !== normalizeRole(role)) {
           handleLogout();
         }
       } catch (err) {}
@@ -244,6 +244,11 @@ function AppContent() {
   const closeSidebar = () => setSidebarOpen(false);
 
   const isHospitalDedicatedUrl = location.pathname.startsWith("/h/");
+  const isDevUrl =
+    location.pathname === "/dev-login" ||
+    location.pathname === "/superadmin-login" ||
+    location.pathname === "/superadmin" ||
+    location.pathname === "/dev";
 
   if (isHospitalDedicatedUrl && (!role || role === "superadmin" || role === "developer")) {
     return (
@@ -254,18 +259,15 @@ function AppContent() {
     );
   }
 
-  if (role === "superadmin" || role === "developer") {
-    return <SuperAdminPanel onLogout={handleLogout} />;
+  if (isDevUrl) {
+    if (role === "superadmin" || role === "developer") {
+      return <SuperAdminPanel onLogout={handleLogout} />;
+    }
+    return <DevLogin onLogin={(devRole) => handleUserLogin(devRole)} />;
   }
 
-  const isDevUrl =
-    location.pathname === "/dev-login" ||
-    location.pathname === "/superadmin-login" ||
-    location.pathname === "/superadmin" ||
-    location.pathname === "/dev";
-
-  if (isDevUrl) {
-    return <DevLogin onLogin={(devRole) => handleUserLogin(devRole)} />;
+  if ((role === "superadmin" || role === "developer") && !sessionHospital) {
+    return <SuperAdminPanel onLogout={handleLogout} />;
   }
 
   if (!role) {
