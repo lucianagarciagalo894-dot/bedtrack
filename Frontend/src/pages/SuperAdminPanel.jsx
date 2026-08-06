@@ -122,15 +122,15 @@ export default function SuperAdminPanel({ onLogout }) {
         let currentNosId = selectedNosIdRef.current;
         let currentSucId = selectedSucIdRef.current;
 
-        if (!currentNosId || !activeNosocomios.some((n) => n.id?.toString() === currentNosId.toString())) {
-          currentNosId = activeNosocomios[0].id.toString();
-          setSelectedNosocomioId(currentNosId);
+        if (!currentNosId || !activeNosocomios.some((n) => n?.id?.toString() === currentNosId?.toString())) {
+          currentNosId = activeNosocomios[0]?.id?.toString() || "";
+          if (currentNosId) setSelectedNosocomioId(currentNosId);
         }
 
-        const nosObj = activeNosocomios.find((n) => n.id?.toString() === currentNosId.toString());
+        const nosObj = activeNosocomios.find((n) => n?.id?.toString() === currentNosId?.toString());
         const sucs = nosObj?.sucursales || [];
 
-        if (!currentSucId || !sucs.some((s) => s.id?.toString() === currentSucId.toString())) {
+        if (!currentSucId || !sucs.some((s) => s?.id?.toString() === currentSucId?.toString())) {
           currentSucId = sucs[0]?.id?.toString() || "";
           setSelectedSucursalId(currentSucId);
         }
