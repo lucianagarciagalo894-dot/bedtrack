@@ -106,37 +106,44 @@ export default function SuperAdminPanel({ onLogout }) {
 
   const loadInitialData = useCallback(async () => {
     try {
-      const [nosData, roomsData, floorsData, usersData, logsData] = await Promise.all([
-        getNosocomios(),
-        getAllRooms(),
-        getFloors(),
-        getStaffUsers(),
-        getAuditLogs(),
-      ]);
-
+      const nosData = await getNosocomios();
       const activeNosocomios = nosData || [];
       setNosocomios(activeNosocomios);
 
       if (activeNosocomios.length > 0) {
-        setSelectedNosocomioId((prevNosId) => {
-          if (prevNosId && activeNosocomios.some((n) => n.id?.toString() === prevNosId.toString())) {
-            return prevNosId;
-          }
-          return activeNosocomios[0].id.toString();
-        });
-        setSelectedSucursalId((prevSucId) => {
-          if (prevSucId) {
-            const allSucursales = activeNosocomios.flatMap((n) => n.sucursales || []);
-            if (allSucursales.some((s) => s.id?.toString() === prevSucId.toString())) {
-              return prevSucId;
-            }
-          }
-          return activeNosocomios[0].sucursales?.[0]?.id?.toString() || "";
-        });
-        setRooms(roomsData || []);
-        setFloors(floorsData || []);
-        setStaffUsers(usersData || []);
-        setAuditLogs(logsData || []);
+        let currentNosId = selectedNosocomioId;
+        let currentSucId = selectedSucursalId;
+
+        if (!currentNosId || !activeNosocomios.some((n) => n.id?.toString() === currentNosId.toString())) {
+          currentNosId = activeNosocomios[0].id.toString();
+          setSelectedNosocomioId(currentNosId);
+        }
+
+        const nosObj = activeNosocomios.find((n) => n.id?.toString() === currentNosId.toString());
+        const sucs = nosObj?.sucursales || [];
+
+        if (!currentSucId || !sucs.some((s) => s.id?.toString() === currentSucId.toString())) {
+          currentSucId = sucs[0]?.id?.toString() || "";
+          setSelectedSucursalId(currentSucId);
+        }
+
+        if (currentSucId) {
+          const [roomsData, floorsData, usersData, logsData] = await Promise.all([
+            getAllRooms(currentSucId),
+            getFloors(currentSucId),
+            getStaffUsers(currentNosId, currentSucId),
+            getAuditLogs(currentSucId, currentNosId),
+          ]);
+          setRooms(roomsData || []);
+          setFloors(floorsData || []);
+          setStaffUsers(usersData || []);
+          setAuditLogs(logsData || []);
+        } else {
+          setRooms([]);
+          setFloors([]);
+          setStaffUsers([]);
+          setAuditLogs([]);
+        }
       } else {
         setSelectedNosocomioId("");
         setSelectedSucursalId("");
@@ -151,7 +158,7 @@ export default function SuperAdminPanel({ onLogout }) {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [selectedNosocomioId, selectedSucursalId]);
 
   useEffect(() => {
     let ignore = false;
@@ -275,6 +282,10 @@ export default function SuperAdminPanel({ onLogout }) {
 
   const handleNosocomioChange = (e) => {
     const id = e.target.value;
+    setRooms([]);
+    setFloors([]);
+    setStaffUsers([]);
+    setAuditLogs([]);
     setSelectedNosocomioId(id);
     const nos = nosocomios.find((n) => n.id.toString() === id);
     if (nos && nos.sucursales && nos.sucursales.length > 0) {
@@ -282,6 +293,15 @@ export default function SuperAdminPanel({ onLogout }) {
     } else {
       setSelectedSucursalId("");
     }
+  };
+
+  const handleSucursalChange = (e) => {
+    const newSucId = e.target.value;
+    setRooms([]);
+    setFloors([]);
+    setStaffUsers([]);
+    setAuditLogs([]);
+    setSelectedSucursalId(newSucId);
   };
 
   // --- Handlers para Nosocomios y Establecimientos ---
@@ -919,7 +939,7 @@ export default function SuperAdminPanel({ onLogout }) {
               <label>Establecimiento:</label>
               <select
                 value={selectedSucursalId}
-                onChange={(e) => setSelectedSucursalId(e.target.value)}
+                onChange={handleSucursalChange}
                 disabled={!sucursalesList.length}
               >
                 {sucursalesList.length === 0 ? (
