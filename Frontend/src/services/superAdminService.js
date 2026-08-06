@@ -253,10 +253,10 @@ export async function deleteNosocomio(id) {
       method: "DELETE",
     });
     if (!res.ok && res.status !== 404) {
-      console.warn("Error API eliminando nosocomio:", res.statusText);
+      // Ignorar error HTTP no crítico para continuar con la eliminación local
     }
   } catch (err) {
-    console.warn("Falla de conexión al eliminar nosocomio:", err);
+    // Continuar silenciosamente con el fallback de almacenamiento local
   }
 
   const currentStore = getStoredNosocomios();
