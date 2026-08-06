@@ -869,13 +869,14 @@ export default function SuperAdminPanel({ onLogout }) {
                 <div style={{ fontWeight: "600", color: "#334155", display: "flex", alignItems: "center", gap: "6px" }}>
                   <FaLink style={{ color: "#2563EB" }} /> Enlace de Acceso Dedicado:
                 </div>
-                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
                   <input
                     type="text"
                     readOnly
                     value={`${window.location.origin}/h/${currentNosocomio.codigo}`}
                     style={{
                       flex: 1,
+                      minWidth: "180px",
                       padding: "6px 10px",
                       fontSize: "0.75rem",
                       border: "1px solid #CBD5E1",
@@ -1045,7 +1046,11 @@ export default function SuperAdminPanel({ onLogout }) {
               placeholder="🔍 Buscar por nombre, email o acción del operador..."
               value={auditUserFilter}
               onChange={(e) => setAuditUserFilter(e.target.value)}
+<<<<<<< HEAD
               style={{ padding: "8px 12px", borderRadius: "8px", border: "1px solid #CBD5E1", fontSize: "0.85rem", minWidth: "280px", flex: 1 }}
+=======
+              style={{ padding: "8px 12px", borderRadius: "8px", border: "1px solid #CBD5E1", fontSize: "0.85rem", flex: "1 1 200px", minWidth: "0" }}
+>>>>>>> cd11055bf8ded0815b89f35eabe762ec0d25ec30
             />
             <select
               value={auditRoleFilter}
@@ -1250,6 +1255,8 @@ export default function SuperAdminPanel({ onLogout }) {
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "space-between",
+                        flexWrap: "wrap",
+                        gap: "12px",
                         borderBottom: "2px solid #F1F5F9",
                         paddingBottom: "12px",
                         marginBottom: "16px",
@@ -1274,7 +1281,7 @@ export default function SuperAdminPanel({ onLogout }) {
                         </div>
                       </div>
 
-                      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
                         <button
                           className="btn-xs-add"
                           onClick={() => {
@@ -1620,7 +1627,7 @@ export default function SuperAdminPanel({ onLogout }) {
                 />
               </div>
 
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "10px", background: "#F8FAFC", padding: "12px", borderRadius: "10px", border: "1px solid #E2E8F0" }}>
+              <div className="hospital-wizard-grid" style={{ background: "#F8FAFC", padding: "12px", borderRadius: "10px", border: "1px solid #E2E8F0" }}>
                 <div className="form-group">
                   <label style={{ fontSize: "0.75rem" }}>Cantidad de Pisos:</label>
                   <input

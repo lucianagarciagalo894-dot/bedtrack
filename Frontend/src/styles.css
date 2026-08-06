@@ -2929,11 +2929,19 @@ body {
   border-radius: 16px;
   width: 100%;
   max-width: 440px;
+  max-height: 90vh;
+  overflow-y: auto;
   padding: 24px;
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
   display: flex;
   flex-direction: column;
   gap: 16px;
+}
+
+.hospital-wizard-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
 }
 
 .modal-content h3 {
@@ -3001,5 +3009,110 @@ body {
 
 .btn-confirm:hover {
   background: #1D4ED8;
+}
+
+/* ─── Responsive – SuperAdmin & Dev Login ───────────────────── */
+
+@media (max-width: 1023px) {
+  .superadmin-container {
+    padding: 16px;
+  }
+
+  .superadmin-header {
+    padding: 16px 18px;
+  }
+
+  .superadmin-brand h1 {
+    font-size: 1.2rem;
+  }
+
+  .superadmin-grid {
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  }
+
+  .rooms-matrix-grid {
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  }
+
+  .superadmin-main-section {
+    padding: 18px;
+  }
+}
+
+@media (max-width: 640px) {
+  .superadmin-container {
+    padding: 12px;
+  }
+
+  .superadmin-header {
+    padding: 14px 16px;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .superadmin-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .superadmin-brand {
+    gap: 12px;
+  }
+
+  .superadmin-icon {
+    font-size: 26px;
+    padding: 8px;
+  }
+
+  .superadmin-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .superadmin-card {
+    padding: 16px;
+  }
+
+  .superadmin-main-section {
+    padding: 14px;
+  }
+
+  .section-toolbar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .toolbar-btns {
+    width: 100%;
+  }
+
+  .toolbar-btns .btn-primary-add {
+    flex: 1;
+    justify-content: center;
+  }
+
+  .rooms-matrix-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .bed-admin-item {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .modal-content {
+    padding: 18px;
+  }
+
+  .hospital-wizard-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dev-login-card {
+    padding: 22px;
+  }
+
+  .dev-login-header h2 {
+    font-size: 1.4rem;
+  }
 }
 
