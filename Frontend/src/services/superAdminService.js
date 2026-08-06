@@ -964,10 +964,16 @@ export async function updateFloor(id, data, sucursalId = null) {
     const updatedFloors = currentFloors.map((f) => (f.id.toString() === id.toString() ? { ...f, ...updatedFloor } : f));
     saveStoredFloors(updatedFloors, targetSucursalId);
 
+    const floorNumData = parseInt(data.nombre?.replace(/\D/g, ""), 10);
     const currentRooms = getStoredRooms(targetSucursalId);
     if (Array.isArray(currentRooms) && currentRooms.length > 0) {
       const updatedRooms = currentRooms.map((r) => {
-        if (r.floorId?.toString() === id?.toString() || (r.floor && r.floor.toString() === data.nombre)) {
+        const rFloorNum = r.floorId ? parseInt(r.floorId, 10) : Math.floor((r.number || 101) / 100);
+        const matchesId = r.floorId?.toString() === id?.toString();
+        const matchesName = r.floor && r.floor.trim().toLowerCase() === data.nombre?.trim().toLowerCase();
+        const matchesNum = Boolean(floorNumData && floorNumData === rFloorNum);
+
+        if (matchesId || matchesName || matchesNum) {
           return {
             ...r,
             floor: data.nombre || r.floor,

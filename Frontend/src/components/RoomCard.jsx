@@ -2,11 +2,28 @@ import { useNavigate } from "react-router-dom";
 import { FaBed, FaCheckCircle, FaTimesCircle, FaBroom, FaUsers, FaChevronRight } from "react-icons/fa";
 
 export const TYPE_CONFIG = {
+  general:     { label: "General",           color: "#059669", bg: "#ECFDF5" },
   privada:     { label: "Privada",           color: "#2563EB", bg: "#EFF6FF" },
   compartida:  { label: "Compartida",         color: "#7C3AED", bg: "#F5F3FF" },
   intensiva:   { label: "Terapia Intensiva",  color: "#EF4444", bg: "#FEF2F2" },
-  aislamiento: { label: "Aislamiento",        color: "#F59E0B", bg: "#FFFBEB" },
+  guardia:     { label: "Guardia",           color: "#D97706", bg: "#FFFBEB" },
+  aislamiento: { label: "Aislamiento",        color: "#DC2626", bg: "#FEF2F2" },
 };
+
+export function getTypeConfig(typeKey, typeLabel = null) {
+  const normKey = typeKey ? typeKey.toString().toLowerCase().replace(/ /g, "") : "general";
+  if (TYPE_CONFIG[normKey]) {
+    return {
+      ...TYPE_CONFIG[normKey],
+      label: typeLabel || TYPE_CONFIG[normKey].label,
+    };
+  }
+  return {
+    label: typeLabel || "General",
+    color: "#059669",
+    bg: "#ECFDF5",
+  };
+}
 
 const STATUS_CONFIG = {
   disponible: { label: "Disponible",    cls: "room-status-available", Icon: FaCheckCircle },
@@ -24,7 +41,7 @@ function getRoomStatus(beds) {
 
 export default function RoomCard({ room }) {
   const navigate   = useNavigate();
-  const typeCfg    = TYPE_CONFIG[room.typeKey] ?? TYPE_CONFIG.privada;
+  const typeCfg    = getTypeConfig(room.typeKey, room.type);
   const roomStatus = getRoomStatus(room.beds);
   const statusCfg  = STATUS_CONFIG[roomStatus] ?? STATUS_CONFIG.disponible;
   const { Icon }   = statusCfg;

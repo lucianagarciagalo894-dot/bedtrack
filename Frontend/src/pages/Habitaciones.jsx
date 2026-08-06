@@ -14,11 +14,18 @@ import {
 } from "react-icons/fa";
 
 const TYPE_THEME = {
+  general:     { color: "#059669", bg: "#ECFDF5", border: "#A7F3D0" },
   privada:     { color: "#2563EB", bg: "#EFF6FF", border: "#DBEAFE" },
   compartida:  { color: "#7C3AED", bg: "#F5F3FF", border: "#DDD6FE" },
   intensiva:   { color: "#EF4444", bg: "#FEF2F2", border: "#FECACA" },
-  aislamiento: { color: "#F59E0B", bg: "#FFFBEB", border: "#FDE68A" },
+  guardia:     { color: "#D97706", bg: "#FFFBEB", border: "#FDE68A" },
+  aislamiento: { color: "#DC2626", bg: "#FEF2F2", border: "#FECACA" },
 };
+
+function getTypeTheme(typeKey) {
+  const normKey = typeKey ? typeKey.toString().toLowerCase().replace(/ /g, "") : "general";
+  return TYPE_THEME[normKey] || TYPE_THEME.general;
+}
 
 export default function Habitaciones({ rooms = [] }) {
   const [selectedFloorId, setSelectedFloorId] = useState(1);
@@ -36,7 +43,7 @@ export default function Habitaciones({ rooms = [] }) {
             id: r.floorId ?? normKey,
             label: floorName,
             type: r.type || "General",
-            typeKey: r.typeKey || "privada",
+            typeKey: r.typeKey ? r.typeKey.toString().toLowerCase().replace(/ /g, "") : "general",
           });
         }
       });
@@ -57,7 +64,7 @@ export default function Habitaciones({ rooms = [] }) {
   }
 
   const currentFloor = dynamicFloors.find((f) => String(f.id) === String(selectedFloorId) || f.label.toLowerCase() === String(selectedFloorId).toLowerCase()) || dynamicFloors[0];
-  const theme        = TYPE_THEME[currentFloor?.typeKey] ?? TYPE_THEME.privada;
+  const theme        = getTypeTheme(currentFloor?.typeKey);
 
   const floorRooms = useMemo(
     () =>
@@ -91,7 +98,7 @@ export default function Habitaciones({ rooms = [] }) {
       {/* ── Selector de piso ───────────────────────────────────── */}
       <div className="floor-tabs-wrap" role="group" aria-label="Selector de piso">
         {dynamicFloors.map((floor) => {
-          const ft       = TYPE_THEME[floor.typeKey] ?? TYPE_THEME.privada;
+          const ft       = getTypeTheme(floor.typeKey);
           const isActive = String(floor.id) === String(selectedFloorId);
           return (
             <button

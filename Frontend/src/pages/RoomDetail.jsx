@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import PatientFormModal from "../components/PatientFormModal";
 import BedHistoryModal from "../components/BedHistoryModal";
-import { TYPE_CONFIG } from "../components/RoomCard";
+import { TYPE_CONFIG, getTypeConfig } from "../components/RoomCard";
 import {
   FaArrowLeft,
   FaBed,
@@ -66,7 +66,7 @@ export default function RoomDetail({ rooms, role, onChangeBedStatus }) {
     );
   }
 
-  const typeCfg    = TYPE_CONFIG[room.typeKey] ?? TYPE_CONFIG.privada;
+  const typeCfg    = getTypeConfig(room.typeKey, room.type);
   const roomStatus = getRoomStatus(room.beds);
   const statusCfg  = STATUS_CONFIG[roomStatus] ?? STATUS_CONFIG.disponible;
   const StatusIcon = statusCfg.Icon;
