@@ -67,18 +67,28 @@ using (var scope = app.Services.CreateScope())
                         n.Codigo.StartsWith("HOSP-"))
             .ToList();
 
-        foreach (var nos in testHospitals)
+        if (testHospitals.Any())
         {
-            var id = nos.Id;
-            context.Database.ExecuteSqlRaw(@"UPDATE ""Camas"" SET ""PacienteId"" = NULL WHERE ""HabitacionId"" IN (SELECT h.""Id"" FROM ""Habitaciones"" h JOIN ""Pisos"" p ON h.""PisoId"" = p.""Id"" JOIN ""Sucursales"" s ON p.""SucursalId"" = s.""Id"" WHERE s.""NosocomioId"" = {0})", id);
-            context.Database.ExecuteSqlRaw(@"DELETE FROM ""HistorialCamas"" WHERE ""NosocomioId"" = {0} OR ""CamaId"" IN (SELECT c.""Id"" FROM ""Camas"" c JOIN ""Habitaciones"" h ON c.""HabitacionId"" = h.""Id"" JOIN ""Pisos"" p ON h.""PisoId"" = p.""Id"" JOIN ""Sucursales"" s ON p.""SucursalId"" = s.""Id"" WHERE s.""NosocomioId"" = {0})", id);
-            context.Database.ExecuteSqlRaw(@"DELETE FROM ""Camas"" WHERE ""HabitacionId"" IN (SELECT h.""Id"" FROM ""Habitaciones"" h JOIN ""Pisos"" p ON h.""PisoId"" = p.""Id"" JOIN ""Sucursales"" s ON p.""SucursalId"" = s.""Id"" WHERE s.""NosocomioId"" = {0})", id);
-            context.Database.ExecuteSqlRaw(@"DELETE FROM ""Pacientes"" WHERE ""Id"" NOT IN (SELECT ""PacienteId"" FROM ""Camas"" WHERE ""PacienteId"" IS NOT NULL)");
-            context.Database.ExecuteSqlRaw(@"DELETE FROM ""Habitaciones"" WHERE ""PisoId"" IN (SELECT p.""Id"" FROM ""Pisos"" p JOIN ""Sucursales"" s ON p.""SucursalId"" = s.""Id"" WHERE s.""NosocomioId"" = {0})", id);
-            context.Database.ExecuteSqlRaw(@"DELETE FROM ""Pisos"" WHERE ""SucursalId"" IN (SELECT s.""Id"" FROM ""Sucursales"" s WHERE s.""NosocomioId"" = {0})", id);
-            context.Database.ExecuteSqlRaw(@"DELETE FROM ""UsuariosStaff"" WHERE ""NosocomioId"" = {0}", id);
-            context.Database.ExecuteSqlRaw(@"DELETE FROM ""Sucursales"" WHERE ""NosocomioId"" = {0}", id);
-            context.Database.ExecuteSqlRaw(@"DELETE FROM ""Nosocomios"" WHERE ""Id"" = {0}", id);
+            var testIds = testHospitals.Select(h => h.Id).ToList();
+            var sucursalIds = context.Sucursales.Where(s => testIds.Contains(s.NosocomioId)).Select(s => s.Id).ToList();
+            var pisoIds = context.Pisos.Where(p => p.SucursalId.HasValue && sucursalIds.Contains(p.SucursalId.Value)).Select(p => p.Id).ToList();
+            var roomIds = context.Habitaciones.Where(h => pisoIds.Contains(h.PisoId)).Select(h => h.Id).ToList();
+            var beds = context.Camas.Where(c => roomIds.Contains(c.HabitacionId)).ToList();
+            var bedIds = beds.Select(b => b.Id).ToList();
+            var pacientes = context.Pacientes.Where(p => p.Cama != null && bedIds.Contains(p.Cama.Id)).ToList();
+            var historial = context.HistorialCamas.Where(h => (h.NosocomioId.HasValue && testIds.Contains(h.NosocomioId.Value)) || (h.CamaId > 0 && bedIds.Contains(h.CamaId))).ToList();
+
+            if (historial.Any()) context.HistorialCamas.RemoveRange(historial);
+            if (pacientes.Any()) context.Pacientes.RemoveRange(pacientes);
+            if (beds.Any()) context.Camas.RemoveRange(beds);
+            context.SaveChanges();
+
+            if (roomIds.Any()) context.Habitaciones.RemoveRange(context.Habitaciones.Where(h => roomIds.Contains(h.Id)));
+            if (pisoIds.Any()) context.Pisos.RemoveRange(context.Pisos.Where(p => pisoIds.Contains(p.Id)));
+            if (sucursalIds.Any()) context.Sucursales.RemoveRange(context.Sucursales.Where(s => sucursalIds.Contains(s.Id)));
+            context.UsuariosStaff.RemoveRange(context.UsuariosStaff.Where(u => u.NosocomioId.HasValue && testIds.Contains(u.NosocomioId.Value)));
+            context.Nosocomios.RemoveRange(testHospitals);
+            context.SaveChanges();
         }
     }
     catch (Exception ex)

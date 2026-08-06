@@ -47,14 +47,11 @@ public class HospitalRepository : IHospitalRepository
         var usuarios = _context.UsuariosStaff.Where(u => u.NosocomioId == nosocomio.Id).ToList();
         var historial = _context.HistorialCamas.Where(h => (h.NosocomioId.HasValue && h.NosocomioId.Value == nosocomio.Id) || (h.CamaId > 0 && camaIds.Contains(h.CamaId))).ToList();
 
-        foreach (var c in camas)
-        {
-            c.Habilitar();
-        }
-
         if (historial.Any()) _context.HistorialCamas.RemoveRange(historial);
         if (pacientes.Any()) _context.Pacientes.RemoveRange(pacientes);
         if (camas.Any()) _context.Camas.RemoveRange(camas);
+        _context.SaveChanges();
+
         if (habitaciones.Any()) _context.Habitaciones.RemoveRange(habitaciones);
         if (pisos.Any()) _context.Pisos.RemoveRange(pisos);
         if (usuarios.Any()) _context.UsuariosStaff.RemoveRange(usuarios);
