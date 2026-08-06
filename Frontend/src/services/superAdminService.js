@@ -84,9 +84,41 @@ export async function validateStaffLogin(email = "", password = "", role = "enfe
 
 export const NOSOCOMIOS_STORAGE_KEY = "bedtrack_nosocomios_data";
 export const STAFF_USERS_STORAGE_KEY = "bedtrack_staff_users_data";
+export const DELETED_NOSOCOMIOS_STORAGE_KEY = "bedtrack_deleted_nosocomio_ids";
 
 let localNosocomiosStore = [];
 let localStaffUsersStore = [];
+
+export function getDeletedNosocomioIds() {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem(DELETED_NOSOCOMIOS_STORAGE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch (e) {}
+  return [];
+}
+
+export function registerDeletedNosocomio(id, codigo = null) {
+  if (typeof window === "undefined") return;
+  try {
+    const current = getDeletedNosocomioIds();
+    const next = [...current];
+    if (id && !next.includes(id.toString())) next.push(id.toString());
+    if (codigo && !next.includes(codigo.toString().toLowerCase())) next.push(codigo.toString().toLowerCase());
+    localStorage.setItem(DELETED_NOSOCOMIOS_STORAGE_KEY, JSON.stringify(next));
+  } catch (e) {}
+}
+
+function filterDeletedNosocomios(list) {
+  const deleted = getDeletedNosocomioIds();
+  if (!deleted || deleted.length === 0) return list || [];
+  return (list || []).filter((n) => {
+    if (!n) return false;
+    const idStr = n.id ? n.id.toString() : "";
+    const codeStr = n.codigo ? n.codigo.toString().toLowerCase() : "";
+    return !deleted.includes(idStr) && !deleted.includes(codeStr);
+  });
+}
 
 function getBaseNosocomios() {
   return [
@@ -113,21 +145,28 @@ function getBaseNosocomios() {
 }
 
 export function getStoredNosocomios() {
-  if (typeof window === "undefined") return localNosocomiosStore.length > 0 ? localNosocomiosStore : getBaseNosocomios();
+  if (typeof window === "undefined") {
+    const rawList = localNosocomiosStore.length > 0 ? localNosocomiosStore : getBaseNosocomios();
+    return filterDeletedNosocomios(rawList);
+  }
   try {
     const raw = localStorage.getItem(NOSOCOMIOS_STORAGE_KEY);
-    if (raw !== null) return JSON.parse(raw);
+    if (raw !== null) {
+      return filterDeletedNosocomios(JSON.parse(raw));
+    }
   } catch (e) {}
-  return localNosocomiosStore.length > 0 ? localNosocomiosStore : getBaseNosocomios();
+  const fallback = localNosocomiosStore.length > 0 ? localNosocomiosStore : getBaseNosocomios();
+  return filterDeletedNosocomios(fallback);
 }
 
 export function saveStoredNosocomios(list) {
-  localNosocomiosStore = list;
+  const filtered = filterDeletedNosocomios(list);
+  localNosocomiosStore = filtered;
   if (typeof window !== "undefined") {
     try {
-      localStorage.setItem(NOSOCOMIOS_STORAGE_KEY, JSON.stringify(list));
+      localStorage.setItem(NOSOCOMIOS_STORAGE_KEY, JSON.stringify(filtered));
     } catch (e) {}
-    window.dispatchEvent(new CustomEvent("bedtrack_hospitals_updated", { detail: { nosocomios: list } }));
+    window.dispatchEvent(new CustomEvent("bedtrack_hospitals_updated", { detail: { nosocomios: filtered } }));
   }
 }
 
@@ -171,13 +210,12 @@ export async function getNosocomios() {
             combined.push(localNos);
           }
         }
-        return combined;
+        return filterDeletedNosocomios(combined);
       }
     }
-    return getFallbackNosocomios();
+    return filterDeletedNosocomios(getFallbackNosocomios());
   } catch (err) {
-    console.warn("Usando datos locales de nosocomios:", err);
-    return getFallbackNosocomios();
+    return filterDeletedNosocomios(getFallbackNosocomios());
   }
 }
 
@@ -193,7 +231,7 @@ function getFallbackNosocomios() {
       combined.push(localNos);
     }
   }
-  return combined;
+  return filterDeletedNosocomios(combined);
 }
 
 export async function createNosocomio(data) {
@@ -248,18 +286,18 @@ export async function createNosocomio(data) {
 }
 
 export async function deleteNosocomio(id) {
+  const currentStore = getStoredNosocomios();
+  const targetNos = currentStore.find((n) => n.id.toString() === id.toString());
+  registerDeletedNosocomio(id, targetNos?.codigo);
+
   try {
-    const res = await fetch(`${API_BASE}/superadmin/nosocomios/${id}`, {
+    await fetch(`${API_BASE}/superadmin/nosocomios/${id}`, {
       method: "DELETE",
     });
-    if (!res.ok && res.status !== 404) {
-      // Ignorar error HTTP no crítico para continuar con la eliminación local
-    }
   } catch (err) {
-    // Continuar silenciosamente con el fallback de almacenamiento local
+    // Manejar fallo de red en silencio
   }
 
-  const currentStore = getStoredNosocomios();
   const updatedList = currentStore.filter((n) => n.id.toString() !== id.toString());
   saveStoredNosocomios(updatedList);
 
