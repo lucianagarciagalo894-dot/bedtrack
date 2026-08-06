@@ -36,6 +36,7 @@ public class ApplicationDbContext : DbContext
             entity.HasKey(e => e.Id);
             entity.Property(e => e.UsuarioNombre).IsRequired().HasMaxLength(100);
             entity.Property(e => e.Accion).IsRequired().HasMaxLength(300);
+            entity.Ignore(e => e.UsuarioRol);
             entity.Ignore(e => e.NosocomioId);
             entity.Ignore(e => e.SucursalId);
         });
