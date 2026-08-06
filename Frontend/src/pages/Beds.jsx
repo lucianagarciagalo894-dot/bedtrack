@@ -14,7 +14,7 @@ export default function Beds({ role, beds, onChangeStatus }) {
   // Extraer lista única de pisos presentes en las camas del hospital activo
   const floorList = useMemo(() => {
     const uniqueFloors = Array.from(new Set(beds.map((b) => b.floor).filter(Boolean)));
-    return uniqueFloors.length > 0 ? uniqueFloors : FLOORS;
+    return uniqueFloors.length > 0 ? uniqueFloors : ["Piso 1"];
   }, [beds]);
 
   const getUrlFloor = () => {

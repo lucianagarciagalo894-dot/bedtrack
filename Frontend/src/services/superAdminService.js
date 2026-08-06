@@ -893,21 +893,35 @@ export async function updateSucursal(id, data) {
   return updated;
 }
 
-export async function createFloor(data) {
+export async function createFloor(data, sucursalId = null) {
+  const sId = sucursalId || data?.sucursalId;
+  let created = null;
   try {
     const res = await fetch(`${API_BASE}/floors`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
-    if (res.ok) return await res.json();
+    if (res.ok) created = await res.json();
   } catch (err) {
     console.warn("Creación local de piso por fallback:", err);
   }
-  return { id: Date.now(), ...data, roomCount: 0 };
+
+  if (!created) {
+    created = { id: Date.now(), ...data, roomCount: 0 };
+  }
+
+  if (sId) {
+    const currentFloors = getStoredFloors(sId);
+    const updatedFloors = [...currentFloors, created];
+    saveStoredFloors(updatedFloors, sId);
+  }
+
+  return created;
 }
 
 export async function updateFloor(id, data, sucursalId = null) {
+  const targetSucursalId = sucursalId || data?.sucursalId;
   let updatedFloor = null;
   try {
     const res = await fetch(`${API_BASE}/floors/${id}`, {
@@ -926,35 +940,50 @@ export async function updateFloor(id, data, sucursalId = null) {
     updatedFloor = { id, ...data };
   }
 
-  const targetSucursalId = sucursalId || data?.sucursalId;
-  const currentRooms = getStoredRooms(targetSucursalId);
-  if (Array.isArray(currentRooms) && currentRooms.length > 0) {
-    const updatedRooms = currentRooms.map((r) => {
-      if (r.floorId?.toString() === id?.toString() || (r.floor && r.floor.toString() === data.nombre)) {
-        return {
-          ...r,
-          floor: data.nombre || r.floor,
-          type: data.tipo || data.type || r.type,
-          typeKey: data.tipoKey || data.typeKey || r.typeKey,
-        };
-      }
-      return r;
-    });
-    saveStoredRooms(updatedRooms, targetSucursalId);
+  if (targetSucursalId) {
+    const currentFloors = getStoredFloors(targetSucursalId);
+    const updatedFloors = currentFloors.map((f) => (f.id.toString() === id.toString() ? { ...f, ...updatedFloor } : f));
+    saveStoredFloors(updatedFloors, targetSucursalId);
+
+    const currentRooms = getStoredRooms(targetSucursalId);
+    if (Array.isArray(currentRooms) && currentRooms.length > 0) {
+      const updatedRooms = currentRooms.map((r) => {
+        if (r.floorId?.toString() === id?.toString() || (r.floor && r.floor.toString() === data.nombre)) {
+          return {
+            ...r,
+            floor: data.nombre || r.floor,
+            type: data.tipo || data.type || r.type,
+            typeKey: data.tipoKey || data.typeKey || r.typeKey,
+          };
+        }
+        return r;
+      });
+      saveStoredRooms(updatedRooms, targetSucursalId);
+    }
   }
 
   return updatedFloor;
 }
 
-export async function deleteFloor(id) {
+export async function deleteFloor(id, sucursalId = null) {
   try {
-    const res = await fetch(`${API_BASE}/floors/${id}`, {
+    await fetch(`${API_BASE}/floors/${id}`, {
       method: "DELETE",
     });
-    if (res.ok) return true;
   } catch (err) {
     console.warn("Eliminación local de piso por fallback:", err);
   }
+
+  if (sucursalId) {
+    const currentFloors = getStoredFloors(sucursalId);
+    const updatedFloors = currentFloors.filter((f) => f.id.toString() !== id.toString());
+    saveStoredFloors(updatedFloors, sucursalId);
+
+    const currentRooms = getStoredRooms(sucursalId);
+    const updatedRooms = currentRooms.filter((r) => r.floorId?.toString() !== id.toString());
+    saveStoredRooms(updatedRooms, sucursalId);
+  }
+
   return true;
 }
 

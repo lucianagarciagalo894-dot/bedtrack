@@ -41,9 +41,6 @@ export default function Habitaciones({ rooms = [] }) {
         }
       });
     }
-    if (map.size === 0) {
-      FLOOR_CONFIG.forEach((f) => map.set(f.id, f));
-    }
     return Array.from(map.values()).sort((a, b) => {
       const numA = Number(a.id);
       const numB = Number(b.id);

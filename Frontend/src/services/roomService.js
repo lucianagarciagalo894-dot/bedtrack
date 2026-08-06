@@ -79,18 +79,88 @@ export function saveStoredRooms(rooms, sucursalId = null) {
   window.dispatchEvent(new CustomEvent("bedtrack_rooms_updated", { detail: { sucursalId } }));
 }
 
+export function getStoredFloors(sucursalId = null) {
+  if (!sucursalId || sucursalId === "") return [];
+  const sId = sucursalId.toString();
+  const key = `bedtrack_floors_data_${sId}`;
+  if (typeof window !== "undefined") {
+    try {
+      const raw = localStorage.getItem(key);
+      if (raw !== null) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) {
+          return parsed;
+        }
+      }
+    } catch (e) {}
+  }
+
+  const rooms = getStoredRooms(sId);
+  const floorMap = new Map();
+  if (Array.isArray(rooms)) {
+    rooms.forEach((r) => {
+      const fId = r.floorId ?? 1;
+      if (!floorMap.has(fId)) {
+        floorMap.set(fId, {
+          id: fId,
+          nombre: r.floor || (fId === 0 ? "Planta Baja" : `Piso ${fId}`),
+          tipo: r.type || "General",
+          tipoKey: r.typeKey || "general",
+          roomCount: rooms.filter((rm) => (rm.floorId ?? 1) === fId).length,
+        });
+      }
+    });
+  }
+  const derived = Array.from(floorMap.values());
+  if (derived.length > 0 && typeof window !== "undefined") {
+    try {
+      localStorage.setItem(key, JSON.stringify(derived));
+    } catch (e) {}
+  }
+  return derived;
+}
+
+export function saveStoredFloors(floors, sucursalId = null) {
+  if (typeof window === "undefined" || !sucursalId || sucursalId === "") return;
+  const sId = sucursalId.toString();
+  const key = `bedtrack_floors_data_${sId}`;
+  try {
+    localStorage.setItem(key, JSON.stringify(floors));
+  } catch (e) {}
+  window.dispatchEvent(new CustomEvent("bedtrack_floors_updated", { detail: { sucursalId: sId } }));
+}
+
 export async function getFloors(sucursalId = null) {
   if (sucursalId === "") return [];
-  try {
-    const url = sucursalId ? `${API_BASE}/floors?sucursalId=${sucursalId}` : `${API_BASE}/floors`;
-    const res = await fetch(url);
-    if (!res.ok) throw new Error("Error al obtener los pisos");
-    const data = await res.json();
-    return Array.isArray(data) && data.length > 0 ? data : getFallbackFloors(sucursalId);
-  } catch (err) {
-    console.warn("Usando pisos locales de respaldo para sucursal:", sucursalId, err);
-    return getFallbackFloors(sucursalId);
+  const sId = sucursalId ? sucursalId.toString() : null;
+  if (!sId) return [];
+
+  const key = `bedtrack_floors_data_${sId}`;
+  if (typeof window !== "undefined") {
+    try {
+      const raw = localStorage.getItem(key);
+      if (raw !== null) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed;
+        }
+      }
+    } catch (e) {}
   }
+
+  try {
+    const url = `${API_BASE}/floors?sucursalId=${sId}`;
+    const res = await fetch(url);
+    if (res.ok) {
+      const data = await res.json();
+      if (Array.isArray(data) && data.length > 0) {
+        saveStoredFloors(data, sId);
+        return data;
+      }
+    }
+  } catch (err) {}
+
+  return getStoredFloors(sId);
 }
 
 export async function getAllRooms(sucursalId = null) {
@@ -396,11 +466,7 @@ export async function updateBedStatus(bedId, status, patient = null, operatorInf
 }
 
 function getFallbackFloors(sucursalId) {
-  return [
-    { id: 1, nombre: "Piso 1", tipo: "General", tipoKey: "general", roomCount: 2 },
-    { id: 2, nombre: "Piso 2", tipo: "Intensiva", tipoKey: "intensiva", roomCount: 1 },
-    { id: 3, nombre: "Piso 3", tipo: "General", tipoKey: "general", roomCount: 1 },
-  ];
+  return getStoredFloors(sucursalId);
 }
 
 function getFallbackRooms(sucursalId) {
