@@ -268,25 +268,23 @@ export function getInitialSeedAuditLogs() {
 }
 
 export function getStoredAuditLogs(sucursalId = null) {
-  if (typeof window === "undefined") return getInitialSeedAuditLogs();
+  if (sucursalId === "") return [];
+  if (typeof window === "undefined") return [];
   try {
     const raw = localStorage.getItem(AUDIT_STORAGE_KEY);
     let logs = [];
-    if (!raw) {
-      logs = getInitialSeedAuditLogs();
-      localStorage.setItem(AUDIT_STORAGE_KEY, JSON.stringify(logs));
-    } else {
+    if (raw) {
       logs = JSON.parse(raw);
     }
     if (!Array.isArray(logs)) logs = [];
     if (sucursalId) {
       return logs.filter(
-        (log) => !log.sucursalId || log.sucursalId.toString() === sucursalId.toString()
+        (log) => log.sucursalId && log.sucursalId.toString() === sucursalId.toString()
       );
     }
     return logs;
   } catch (e) {
-    return getInitialSeedAuditLogs();
+    return [];
   }
 }
 

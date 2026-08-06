@@ -146,17 +146,22 @@ function getBaseNosocomios() {
 
 export function getStoredNosocomios() {
   if (typeof window === "undefined") {
-    const rawList = localNosocomiosStore.length > 0 ? localNosocomiosStore : getBaseNosocomios();
-    return filterDeletedNosocomios(rawList);
+    return filterDeletedNosocomios(localNosocomiosStore);
   }
   try {
     const raw = localStorage.getItem(NOSOCOMIOS_STORAGE_KEY);
     if (raw !== null) {
-      return filterDeletedNosocomios(JSON.parse(raw));
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        return filterDeletedNosocomios(parsed);
+      }
     }
   } catch (e) {}
-  const fallback = localNosocomiosStore.length > 0 ? localNosocomiosStore : getBaseNosocomios();
-  return filterDeletedNosocomios(fallback);
+  const deleted = getDeletedNosocomioIds();
+  if (deleted && deleted.length > 0) {
+    return [];
+  }
+  return filterDeletedNosocomios(localNosocomiosStore.length > 0 ? localNosocomiosStore : getBaseNosocomios());
 }
 
 export function saveStoredNosocomios(list) {
@@ -199,7 +204,7 @@ export async function getNosocomios() {
     const res = await fetch(`${API_BASE}/superadmin/nosocomios`);
     if (res.ok) {
       const data = await res.json();
-      if (Array.isArray(data) && data.length > 0) {
+      if (Array.isArray(data)) {
         const combined = [...data];
         const stored = getStoredNosocomios();
         for (const localNos of stored) {
@@ -220,6 +225,10 @@ export async function getNosocomios() {
 }
 
 function getFallbackNosocomios() {
+  const deleted = getDeletedNosocomioIds();
+  if (deleted && deleted.length > 0) {
+    return filterDeletedNosocomios(localNosocomiosStore);
+  }
   const base = getBaseNosocomios();
   const combined = [...base];
   const stored = getStoredNosocomios();
@@ -300,7 +309,7 @@ export async function deleteNosocomio(id) {
     // Manejar fallo de red en silencio
   }
 
-  // Purgar datos de habitaciones/camas de localStorage para cada sede del hospital
+  // Purgar datos de habitaciones/camas/auditoría de localStorage para cada sede del hospital
   if (typeof window !== "undefined") {
     try {
       localStorage.removeItem(`bedtrack_rooms_data_${id}`);
@@ -308,6 +317,18 @@ export async function deleteNosocomio(id) {
         localStorage.removeItem(`bedtrack_rooms_data_${sId}`);
         localStorage.removeItem(`bedtrack_floors_data_${sId}`);
       });
+      const rawAudit = localStorage.getItem("bedtrack_audit_logs_data");
+      if (rawAudit) {
+        const parsed = JSON.parse(rawAudit);
+        if (Array.isArray(parsed)) {
+          const cleaned = parsed.filter((l) => {
+            const nosMatch = l.nosocomioId && l.nosocomioId.toString() === id.toString();
+            const sucMatch = l.sucursalId && sucursalIds.includes(l.sucursalId.toString());
+            return !nosMatch && !sucMatch;
+          });
+          localStorage.setItem("bedtrack_audit_logs_data", JSON.stringify(cleaned));
+        }
+      }
     } catch (e) {}
   }
 

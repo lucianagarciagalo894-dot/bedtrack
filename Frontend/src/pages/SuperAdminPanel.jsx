@@ -114,19 +114,7 @@ export default function SuperAdminPanel({ onLogout }) {
         getAuditLogs(),
       ]);
 
-      const defaultNosocomios = [
-        {
-          id: 1,
-          nombre: "Hospital Central BedTrack",
-          codigo: "HC-01",
-          direccion: "Av. Colón 1234",
-          sucursales: [
-            { id: 1, nombre: "Establecimiento Central", direccion: "Av. Colón 1234", nosocomioId: 1 }
-          ]
-        }
-      ];
-
-      const activeNosocomios = (nosData && nosData.length > 0) ? nosData : defaultNosocomios;
+      const activeNosocomios = nosData || [];
       setNosocomios(activeNosocomios);
 
       if (activeNosocomios.length > 0) {
@@ -134,12 +122,18 @@ export default function SuperAdminPanel({ onLogout }) {
         if (activeNosocomios[0].sucursales && activeNosocomios[0].sucursales.length > 0) {
           setSelectedSucursalId(activeNosocomios[0].sucursales[0].id.toString());
         }
+        setRooms(roomsData || []);
+        setFloors(floorsData || []);
+        setStaffUsers(usersData || []);
+        setAuditLogs(logsData || []);
+      } else {
+        setSelectedNosocomioId("");
+        setSelectedSucursalId("");
+        setRooms([]);
+        setFloors([]);
+        setStaffUsers([]);
+        setAuditLogs([]);
       }
-
-      setRooms(roomsData || []);
-      setFloors(floorsData || []);
-      setStaffUsers(usersData || []);
-      setAuditLogs(logsData || []);
     } catch (err) {
       console.error("Error al cargar datos iniciales:", err);
       showNotification("Error al cargar la información del servidor", "error");
