@@ -22,6 +22,7 @@ import {
 } from "react-icons/fa";
 import {
   getNosocomios,
+  getStoredNosocomios,
   createNosocomio,
   updateNosocomio,
   createSucursal,
@@ -309,7 +310,7 @@ export default function SuperAdminPanel({ onLogout }) {
         codigo: autoCodigo,
       });
 
-      const updatedList = await getNosocomios();
+      const updatedList = getStoredNosocomios();
       setNosocomios(updatedList || []);
       setSelectedNosocomioId(created.id.toString());
       if (created.sucursales && created.sucursales.length > 0) {
@@ -335,7 +336,7 @@ export default function SuperAdminPanel({ onLogout }) {
     setShowDeleteNosocomioModal(false);
     try {
       await deleteNosocomio(targetId);
-      const updatedList = await getNosocomios();
+      const updatedList = getStoredNosocomios();
       setNosocomios(updatedList || []);
       if (updatedList && updatedList.length > 0) {
         setSelectedNosocomioId(updatedList[0].id.toString());

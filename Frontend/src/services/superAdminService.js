@@ -1,7 +1,7 @@
 import { getAllRooms, saveStoredRooms, getStoredRooms, getStoredFloors, saveStoredFloors, getStoredAuditLogs, addLocalAuditLog } from "./roomService";
 
 const API_BASE = "https://bedtrack-frontend-final-production.up.railway.app/api";
-const FETCH_TIMEOUT_MS = 5000;
+const FETCH_TIMEOUT_MS = 2500;
 
 /**
  * Wraps fetch() with an AbortController timeout.
@@ -35,7 +35,7 @@ export async function loginDev(email = "", devKey = "") {
   }
 
   try {
-    const res = await fetch(`${API_BASE}/superadmin/login`, {
+    const res = await fetchWithTimeout(`${API_BASE}/superadmin/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email: cleanEmail, devKey }),
@@ -62,7 +62,7 @@ export function normalizeRole(role) {
 export async function validateStaffLogin(email = "", password = "", role = "enfermeria", nosocomioId = null, sucursalId = null) {
   let apiErrorMessage = null;
   try {
-    const res = await fetch(`${API_BASE}/superadmin/users/login`, {
+    const res = await fetchWithTimeout(`${API_BASE}/superadmin/users/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -197,7 +197,7 @@ export function saveStoredStaffUsers(list) {
 export async function getNosocomios() {
   const stored = getStoredNosocomios();
   try {
-    const res = await fetch(`${API_BASE}/superadmin/nosocomios?_t=${Date.now()}`, { cache: "no-store" });
+    const res = await fetchWithTimeout(`${API_BASE}/superadmin/nosocomios?_t=${Date.now()}`, { cache: "no-store" });
     if (res.ok) {
       const data = await res.json();
       if (Array.isArray(data)) {
@@ -223,7 +223,7 @@ function getFallbackNosocomios() {
 export async function createNosocomio(data) {
   let createdNos = null;
   try {
-    const res = await fetch(`${API_BASE}/superadmin/nosocomios`, {
+    const res = await fetchWithTimeout(`${API_BASE}/superadmin/nosocomios`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
@@ -286,7 +286,7 @@ export async function deleteNosocomio(id) {
   const sucursalIds = (targetNos?.sucursales || []).map((s) => s.id.toString());
 
   try {
-    await fetch(`${API_BASE}/superadmin/nosocomios/${id}`, {
+    await fetchWithTimeout(`${API_BASE}/superadmin/nosocomios/${id}`, {
       method: "DELETE",
     });
   } catch (err) {
@@ -404,7 +404,7 @@ export async function exportHospitalAuditHistoryCSV(nosocomioId = null, sucursal
 
 export async function getSucursales(nosocomioId) {
   try {
-    const res = await fetch(`${API_BASE}/superadmin/nosocomios/${nosocomioId}/sucursales`);
+    const res = await fetchWithTimeout(`${API_BASE}/superadmin/nosocomios/${nosocomioId}/sucursales`);
     if (!res.ok) throw new Error("Error al obtener sucursales");
     return await res.json();
   } catch (err) {
@@ -418,7 +418,7 @@ export async function getSucursales(nosocomioId) {
 export async function createSucursal(data) {
   let created = null;
   try {
-    const res = await fetch(`${API_BASE}/superadmin/sucursales`, {
+    const res = await fetchWithTimeout(`${API_BASE}/superadmin/sucursales`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
@@ -472,7 +472,7 @@ export async function createRoom(data, sucursalId = null) {
   const sId = sucursalId || data?.sucursalId;
   let created = null;
   try {
-    const res = await fetch(`${API_BASE}/superadmin/rooms`, {
+    const res = await fetchWithTimeout(`${API_BASE}/superadmin/rooms`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
@@ -522,7 +522,7 @@ export async function updateRoom(roomId, data, sucursalId = null) {
   const sId = sucursalId || data?.sucursalId;
   let updated = null;
   try {
-    const res = await fetch(`${API_BASE}/superadmin/rooms/${roomId}`, {
+    const res = await fetchWithTimeout(`${API_BASE}/superadmin/rooms/${roomId}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
@@ -562,7 +562,7 @@ export async function updateRoom(roomId, data, sucursalId = null) {
 
 export async function deleteRoom(roomId, sucursalId = null) {
   try {
-    await fetch(`${API_BASE}/superadmin/rooms/${roomId}`, {
+    await fetchWithTimeout(`${API_BASE}/superadmin/rooms/${roomId}`, {
       method: "DELETE",
     });
   } catch (err) {
@@ -584,7 +584,7 @@ export async function createBed(data, sucursalId = null) {
   const sId = sucursalId || data?.sucursalId;
   let created = null;
   try {
-    const res = await fetch(`${API_BASE}/superadmin/beds`, {
+    const res = await fetchWithTimeout(`${API_BASE}/superadmin/beds`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
@@ -639,7 +639,7 @@ export async function updateBed(bedId, data, sucursalId = null) {
   const sId = sucursalId || data?.sucursalId;
   let updated = null;
   try {
-    const res = await fetch(`${API_BASE}/superadmin/beds/${bedId}`, {
+    const res = await fetchWithTimeout(`${API_BASE}/superadmin/beds/${bedId}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
@@ -702,7 +702,7 @@ export async function deleteBed(bedId, sucursalId = null) {
   } catch (e) {}
 
   try {
-    await fetch(`${API_BASE}/superadmin/beds/${bedId}`, {
+    await fetchWithTimeout(`${API_BASE}/superadmin/beds/${bedId}`, {
       method: "DELETE",
     });
   } catch (err) {
@@ -740,7 +740,7 @@ export async function deleteBed(bedId, sucursalId = null) {
 export async function createFullHospitalSetup(data) {
   let createdNos = null;
   try {
-    const res = await fetch(`${API_BASE}/superadmin/hospitals/setup`, {
+    const res = await fetchWithTimeout(`${API_BASE}/superadmin/hospitals/setup`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
@@ -842,7 +842,7 @@ export async function createFullHospitalSetup(data) {
 export async function updateNosocomio(id, data) {
   let updated = { id, ...data };
   try {
-    const res = await fetch(`${API_BASE}/superadmin/nosocomios/${id}`, {
+    const res = await fetchWithTimeout(`${API_BASE}/superadmin/nosocomios/${id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
@@ -863,7 +863,7 @@ export async function updateNosocomio(id, data) {
 export async function updateSucursal(id, data) {
   let updated = { id, ...data };
   try {
-    const res = await fetch(`${API_BASE}/superadmin/sucursales/${id}`, {
+    const res = await fetchWithTimeout(`${API_BASE}/superadmin/sucursales/${id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
@@ -888,7 +888,7 @@ export async function createFloor(data, sucursalId = null) {
   const sId = sucursalId || data?.sucursalId;
   let created = null;
   try {
-    const res = await fetch(`${API_BASE}/floors`, {
+    const res = await fetchWithTimeout(`${API_BASE}/floors`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
@@ -915,7 +915,7 @@ export async function updateFloor(id, data, sucursalId = null) {
   const targetSucursalId = sucursalId || data?.sucursalId;
   let updatedFloor = null;
   try {
-    const res = await fetch(`${API_BASE}/floors/${id}`, {
+    const res = await fetchWithTimeout(`${API_BASE}/floors/${id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
@@ -975,7 +975,7 @@ export async function updateFloor(id, data, sucursalId = null) {
 
 export async function deleteFloor(id, sucursalId = null) {
   try {
-    await fetch(`${API_BASE}/floors/${id}`, {
+    await fetchWithTimeout(`${API_BASE}/floors/${id}`, {
       method: "DELETE",
     });
   } catch (err) {
@@ -1003,7 +1003,7 @@ export async function getStaffUsers(nosocomioId = null, sucursalId = null) {
     if (sucursalId) params.append("sucursalId", sucursalId);
     if (params.toString()) url += `?${params.toString()}`;
 
-    const res = await fetch(url);
+    const res = await fetchWithTimeout(url);
     if (res.ok) {
       const data = await res.json();
       if (Array.isArray(data)) {
@@ -1038,7 +1038,7 @@ function filterUsersBySucursal(users, nosocomioId, sucursalId) {
 export async function createStaffUser(userData) {
   let created = null;
   try {
-    const res = await fetch(`${API_BASE}/superadmin/users`, {
+    const res = await fetchWithTimeout(`${API_BASE}/superadmin/users`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(userData),
@@ -1079,7 +1079,7 @@ export async function createStaffUser(userData) {
 export async function updateStaffUser(id, userData) {
   let updatedObj = { id, ...userData };
   try {
-    const res = await fetch(`${API_BASE}/superadmin/users/${id}`, {
+    const res = await fetchWithTimeout(`${API_BASE}/superadmin/users/${id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(userData),
@@ -1097,7 +1097,7 @@ export async function updateStaffUser(id, userData) {
 
 export async function deleteStaffUser(id) {
   try {
-    await fetch(`${API_BASE}/superadmin/users/${id}`, { method: "DELETE" });
+    await fetchWithTimeout(`${API_BASE}/superadmin/users/${id}`, { method: "DELETE" });
   } catch (err) {}
   const currentStaff = getStoredStaffUsers();
   const updated = currentStaff.filter((u) => u.id.toString() !== id.toString());
@@ -1124,7 +1124,7 @@ export async function getAuditLogs(sucursalId = null, nosocomioId = null, camaId
     if (targetNosocomioId) params.append("nosocomioId", targetNosocomioId);
     if (params.toString()) url += `?${params.toString()}`;
 
-    const res = await fetch(url);
+    const res = await fetchWithTimeout(url);
     if (res.ok) {
       const data = await res.json();
       if (Array.isArray(data)) return data;
